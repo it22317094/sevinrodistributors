@@ -1,0 +1,171 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { 
+  Package, 
+  Users, 
+  CreditCard, 
+  TrendingUp, 
+  AlertTriangle, 
+  FileText,
+  Truck,
+  DollarSign
+} from "lucide-react";
+
+const recentActivity = [
+  { id: 1, type: "invoice", description: "Invoice #INV-001 created for Fashion House Ltd", amount: "$2,450", time: "2 hours ago" },
+  { id: 2, type: "payment", description: "Payment received from Designer Boutique", amount: "$1,200", time: "4 hours ago" },
+  { id: 3, type: "delivery", description: "Delivery completed for order #ORD-045", amount: "$3,890", time: "6 hours ago" },
+  { id: 4, type: "supplier", description: "New fabric order placed with Premium Textiles", amount: "$5,670", time: "1 day ago" },
+];
+
+export default function Dashboard() {
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-primary mb-2">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome to your textile business management system</p>
+        </div>
+
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">$184,320</div>
+              <p className="text-xs text-muted-foreground">+15.3% from last month</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Outstanding Balance</CardTitle>
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-destructive">$46,440</div>
+              <p className="text-xs text-muted-foreground">12 overdue accounts</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Orders</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">95</div>
+              <p className="text-xs text-muted-foreground">+12 from last week</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Deliveries</CardTitle>
+              <Truck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">23</div>
+              <p className="text-xs text-muted-foreground">5 scheduled today</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions & Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>Frequently used actions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <Button className="h-20 flex flex-col items-center justify-center">
+                  <FileText className="h-6 w-6 mb-2" />
+                  Create Invoice
+                </Button>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+                  <Package className="h-6 w-6 mb-2" />
+                  New Order
+                </Button>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+                  <Users className="h-6 w-6 mb-2" />
+                  Add Customer
+                </Button>
+                <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+                  <Truck className="h-6 w-6 mb-2" />
+                  Schedule Delivery
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Latest business transactions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 bg-primary rounded-full"></div>
+                      <div>
+                        <p className="text-sm font-medium">{activity.description}</p>
+                        <p className="text-xs text-muted-foreground">{activity.time}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-primary">{activity.amount}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Alerts & Notifications */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <AlertTriangle className="h-5 w-5 mr-2 text-destructive" />
+              Alerts & Notifications
+            </CardTitle>
+            <CardDescription>Items requiring your attention</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                  <span className="text-sm">12 customer accounts are overdue</span>
+                </div>
+                <Button variant="outline" size="sm">View Details</Button>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <Package className="h-4 w-4 text-yellow-600" />
+                  <span className="text-sm">Low inventory: 5 items need restocking</span>
+                </div>
+                <Button variant="outline" size="sm">Reorder</Button>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <Truck className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm">5 deliveries scheduled for today</span>
+                </div>
+                <Button variant="outline" size="sm">View Schedule</Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
