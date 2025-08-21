@@ -105,7 +105,6 @@ export default function Customers() {
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm">View</Button>
                       <Button variant="outline" size="sm">Invoice</Button>
-                      <Button variant="outline" size="sm">Payment</Button>
                     </div>
                   </div>
                 </div>
