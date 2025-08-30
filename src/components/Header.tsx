@@ -27,8 +27,11 @@ export function Header() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center space-x-2">
-          <Package className="h-8 w-8 text-primary" />
-          <span className="text-xl font-bold text-primary">TextileBiz Suite</span>
+          <img 
+            src="/lovable-uploads/d3e71f67-5eb2-4568-acc2-f04fe120fa6b.png" 
+            alt="Sevinro Distributors" 
+            className="h-10 w-auto"
+          />
         </Link>
 
         {/* Desktop Navigation */}
@@ -58,8 +61,11 @@ export function Header() {
           <SheetContent side="right" className="w-[300px] sm:w-[400px]">
             <div className="flex flex-col space-y-4 mt-8">
               <div className="flex items-center space-x-2 mb-6">
-                <Package className="h-6 w-6 text-primary" />
-                <span className="text-lg font-bold text-primary">TextileBiz Suite</span>
+                <img 
+                  src="/lovable-uploads/d3e71f67-5eb2-4568-acc2-f04fe120fa6b.png" 
+                  alt="Sevinro Distributors" 
+                  className="h-8 w-auto"
+                />
               </div>
               {navigationItems.map((item) => (
                 <Link
