@@ -12,6 +12,7 @@ const navigationItems = [
   { name: "Invoices", href: "/invoices" },
   { name: "Delivery", href: "/delivery" },
   { name: "Reports", href: "/reports" },
+  { name: "Login", href: "/login" },
 ];
 
 export function Header() {
@@ -30,7 +31,7 @@ export function Header() {
           <img 
             src="/lovable-uploads/d3e71f67-5eb2-4568-acc2-f04fe120fa6b.png" 
             alt="Sevinro Distributors" 
-            className="h-10 w-auto"
+            className="h-8 w-auto sm:h-10 md:h-12 lg:h-14 xl:h-16 max-w-none"
           />
         </Link>
 
@@ -64,7 +65,7 @@ export function Header() {
                 <img 
                   src="/lovable-uploads/d3e71f67-5eb2-4568-acc2-f04fe120fa6b.png" 
                   alt="Sevinro Distributors" 
-                  className="h-8 w-auto"
+                  className="h-6 w-auto sm:h-8 md:h-10"
                 />
               </div>
               {navigationItems.map((item) => (
