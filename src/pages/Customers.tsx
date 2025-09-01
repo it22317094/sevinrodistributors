@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AddCustomerModal } from "@/components/AddCustomerModal";
 import { Plus, Users, CreditCard, AlertTriangle, TrendingUp } from "lucide-react";
 
 const customers = [
@@ -10,6 +12,8 @@ const customers = [
 ];
 
 export default function Customers() {
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -19,7 +23,10 @@ export default function Customers() {
             <h1 className="text-3xl font-bold text-primary mb-2">Customer Management</h1>
             <p className="text-muted-foreground">Manage customer accounts and outstanding balances</p>
           </div>
-          <Button className="mt-4 sm:mt-0">
+          <Button 
+            className="mt-4 sm:mt-0"
+            onClick={() => setShowCustomerModal(true)}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Customer
           </Button>
@@ -112,6 +119,12 @@ export default function Customers() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Add Customer Modal */}
+        <AddCustomerModal 
+          open={showCustomerModal} 
+          onOpenChange={setShowCustomerModal} 
+        />
       </div>
     </div>
   );

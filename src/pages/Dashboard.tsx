@@ -1,6 +1,9 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AddSupplierModal } from "@/components/AddSupplierModal";
 import { 
   Package, 
   Users, 
@@ -9,7 +12,8 @@ import {
   AlertTriangle, 
   FileText,
   Truck,
-  DollarSign
+  DollarSign,
+  Plus
 } from "lucide-react";
 
 const recentActivity = [
@@ -20,13 +24,57 @@ const recentActivity = [
 ];
 
 export default function Dashboard() {
+  const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const navigate = useNavigate();
+
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case "invoice":
+        navigate("/invoices/create");
+        break;
+      case "order":
+        navigate("/inventory");
+        break;
+      case "customer":
+        navigate("/customers");
+        break;
+      case "delivery":
+        navigate("/delivery");
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleAlert = (alertType: string) => {
+    switch (alertType) {
+      case "overdue":
+        navigate("/customers");
+        break;
+      case "inventory":
+        navigate("/inventory");
+        break;
+      case "delivery":
+        navigate("/delivery");
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome to your textile business management system</p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-primary mb-2">Dashboard</h1>
+            <p className="text-muted-foreground">Welcome to your textile business management system</p>
+          </div>
+          <Button onClick={() => setShowSupplierModal(true)} className="mt-4 sm:mt-0">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Supplier
+          </Button>
         </div>
 
         {/* Key Metrics */}
@@ -83,19 +131,34 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
-                <Button className="h-20 flex flex-col items-center justify-center">
+                <Button 
+                  className="h-20 flex flex-col items-center justify-center"
+                  onClick={() => handleQuickAction("invoice")}
+                >
                   <FileText className="h-6 w-6 mb-2" />
                   Create Invoice
                 </Button>
-                <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex flex-col items-center justify-center"
+                  onClick={() => handleQuickAction("order")}
+                >
                   <Package className="h-6 w-6 mb-2" />
                   New Order
                 </Button>
-                <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex flex-col items-center justify-center"
+                  onClick={() => handleQuickAction("customer")}
+                >
                   <Users className="h-6 w-6 mb-2" />
                   Add Customer
                 </Button>
-                <Button variant="outline" className="h-20 flex flex-col items-center justify-center">
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex flex-col items-center justify-center"
+                  onClick={() => handleQuickAction("delivery")}
+                >
                   <Truck className="h-6 w-6 mb-2" />
                   Schedule Delivery
                 </Button>
@@ -146,25 +209,49 @@ export default function Dashboard() {
                   <AlertTriangle className="h-4 w-4 text-destructive" />
                   <span className="text-sm">12 customer accounts are overdue</span>
                 </div>
-                <Button variant="outline" size="sm">View Details</Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleAlert("overdue")}
+                >
+                  View Details
+                </Button>
               </div>
               <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <Package className="h-4 w-4 text-yellow-600" />
                   <span className="text-sm">Low inventory: 5 items need restocking</span>
                 </div>
-                <Button variant="outline" size="sm">Reorder</Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleAlert("inventory")}
+                >
+                  Reorder
+                </Button>
               </div>
               <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <Truck className="h-4 w-4 text-blue-600" />
                   <span className="text-sm">5 deliveries scheduled for today</span>
                 </div>
-                <Button variant="outline" size="sm">View Schedule</Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleAlert("delivery")}
+                >
+                  View Schedule
+                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Add Supplier Modal */}
+        <AddSupplierModal 
+          open={showSupplierModal} 
+          onOpenChange={setShowSupplierModal} 
+        />
       </div>
     </div>
   );
