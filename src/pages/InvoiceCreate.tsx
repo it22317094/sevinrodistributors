@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore } from "@/hooks/useFirestore";
+import { ref, push, get, query, orderByChild, limitToLast } from "firebase/database";
+import { realtimeDb } from "@/lib/firebase";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 
 interface InvoiceItem {
@@ -26,8 +27,7 @@ interface Customer {
 const InvoiceCreate = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { addDocument: addInvoice, loading } = useFirestore('invoices');
-  const { documents: customers, getDocuments: getCustomers } = useFirestore('customers');
+  const [loading, setLoading] = useState(false);
   
   const [invoiceNumber, setInvoiceNumber] = useState<string>('');
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
@@ -56,13 +56,29 @@ const InvoiceCreate = () => {
   useEffect(() => {
     // Generate next invoice number (starting from 1000)
     const generateInvoiceNumber = async () => {
-      // In production, query Firebase for last invoice number
-      const nextNumber = 1000; // Mock - would be last invoice + 1
-      setInvoiceNumber(`SI${nextNumber.toString().padStart(6, '0')}`);
+      try {
+        const invoicesRef = ref(realtimeDb, 'invoices');
+        const lastInvoiceQuery = query(invoicesRef, orderByChild('invoiceNumber'), limitToLast(1));
+        const snapshot = await get(lastInvoiceQuery);
+        
+        let nextNumber = 1000;
+        if (snapshot.exists()) {
+          const invoices = Object.values(snapshot.val()) as any[];
+          const lastInvoice = invoices[0];
+          if (lastInvoice?.invoiceNumber) {
+            const lastNumber = parseInt(lastInvoice.invoiceNumber.replace('SI', ''));
+            nextNumber = lastNumber + 1;
+          }
+        }
+        
+        setInvoiceNumber(`SI${nextNumber.toString().padStart(6, '0')}`);
+      } catch (error) {
+        console.error('Error generating invoice number:', error);
+        setInvoiceNumber(`SI${Date.now().toString().slice(-6)}`);
+      }
     };
     
     generateInvoiceNumber();
-    // getCustomers(); // Uncomment when customers collection exists
   }, []);
 
   const addItem = () => {
@@ -113,6 +129,7 @@ const InvoiceCreate = () => {
       return;
     }
 
+    setLoading(true);
     try {
       const subtotal = calculateSubtotal();
       const invoiceData = {
@@ -122,11 +139,15 @@ const InvoiceCreate = () => {
         orderNumber,
         items: items.filter(item => item.description && item.quantity > 0),
         subtotal,
+        total: subtotal,
         date: new Date().toISOString().split('T')[0],
-        status: 'pending'
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
-      await addInvoice(invoiceData);
+      const invoicesRef = ref(realtimeDb, 'invoices');
+      await push(invoicesRef, invoiceData);
       
       toast({
         title: "Success",
@@ -135,11 +156,14 @@ const InvoiceCreate = () => {
       
       navigate('/invoices');
     } catch (error: any) {
+      console.error('Error creating invoice:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to create invoice. Please check your permissions.",
       });
+    } finally {
+      setLoading(false);
     }
   };
 

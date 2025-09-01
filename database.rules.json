@@ -1,0 +1,25 @@
+{
+  "rules": {
+    "invoices": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$invoiceId": {
+        ".validate": "newData.hasChildren(['invoiceNumber', 'customerId', 'customerName', 'items', 'subtotal', 'total', 'date', 'status', 'createdAt', 'updatedAt'])"
+      }
+    },
+    "customers": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$customerId": {
+        ".validate": "newData.hasChildren(['name', 'address', 'telephone', 'uniqueId'])"
+      }
+    },
+    "suppliers": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$supplierId": {
+        ".validate": "newData.hasChildren(['name', 'address', 'phone'])"
+      }
+    }
+  }
+}
