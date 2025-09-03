@@ -24,6 +24,13 @@ interface Customer {
   address: string;
 }
 
+interface ItemCode {
+  id: string;
+  code: string;
+  description: string;
+  price: number;
+}
+
 const InvoiceCreate = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -35,6 +42,11 @@ const InvoiceCreate = () => {
   const [items, setItems] = useState<InvoiceItem[]>([
     { id: '1', description: '', quantity: 0, price: 0, total: 0 }
   ]);
+  
+  // Item codes state
+  const [itemCodes, setItemCodes] = useState<ItemCode[]>([]);
+  const [newItemCode, setNewItemCode] = useState({ code: '', description: '', price: 0 });
+  const [showAddItemCode, setShowAddItemCode] = useState(false);
 
   // Predefined items based on the invoice image
   const predefinedItems = [
@@ -84,14 +96,33 @@ const InvoiceCreate = () => {
     }
   };
 
-  // Load the next invoice number for display when component mounts
+  // Load item codes from Firebase
+  const loadItemCodes = async () => {
+    try {
+      const itemCodesRef = ref(realtimeDb, 'itemCodes');
+      const snapshot = await get(itemCodesRef);
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const codes = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key]
+        }));
+        setItemCodes(codes);
+      }
+    } catch (error) {
+      console.error('Error loading item codes:', error);
+    }
+  };
+
+  // Load the next invoice number and item codes when component mounts
   useEffect(() => {
-    const loadNextInvoiceNumber = async () => {
+    const loadData = async () => {
       const nextNumber = await getNextInvoiceNumber();
       setCurrentInvoiceNumber(nextNumber);
+      await loadItemCodes();
     };
     
-    loadNextInvoiceNumber();
+    loadData();
   }, []);
   const addItem = () => {
     const newId = (items.length + 1).toString();
@@ -118,10 +149,43 @@ const InvoiceCreate = () => {
   };
 
   const selectPredefinedItem = (itemId: string, selectedCode: string) => {
-    const predefined = predefinedItems.find(item => item.code === selectedCode);
+    const predefined = [...predefinedItems, ...itemCodes].find(item => item.code === selectedCode);
     if (predefined) {
       updateItem(itemId, 'description', predefined.description);
       updateItem(itemId, 'price', predefined.price);
+    }
+  };
+
+  // Add new item code to Firebase
+  const addItemCode = async () => {
+    if (!newItemCode.code || !newItemCode.description || newItemCode.price <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Please fill in all item code fields with valid values",
+      });
+      return;
+    }
+
+    try {
+      const itemCodesRef = ref(realtimeDb, 'itemCodes');
+      await push(itemCodesRef, newItemCode);
+      
+      toast({
+        title: "Success",
+        description: "Item code added successfully!",
+      });
+      
+      setNewItemCode({ code: '', description: '', price: 0 });
+      setShowAddItemCode(false);
+      await loadItemCodes(); // Reload the item codes
+    } catch (error) {
+      console.error('Error adding item code:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add item code",
+      });
     }
   };
 
@@ -288,18 +352,79 @@ const InvoiceCreate = () => {
           {/* Invoice Items */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Invoice Items</CardTitle>
-                  <CardDescription>Add products and services</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Invoice Items</CardTitle>
+                    <CardDescription>Add products and services</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      onClick={() => setShowAddItemCode(!showAddItemCode)} 
+                      variant="outline"
+                      size="sm"
+                    >
+                      {showAddItemCode ? 'Cancel' : 'Add Item Code'}
+                    </Button>
+                    <Button type="button" onClick={addItem} variant="outline">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Item
+                    </Button>
+                  </div>
                 </div>
-                <Button type="button" onClick={addItem} variant="outline">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Item
-                </Button>
-              </div>
             </CardHeader>
             <CardContent>
+              {/* Add Item Code Section */}
+              {showAddItemCode && (
+                <div className="mb-6 p-4 border rounded-lg bg-muted/50">
+                  <h4 className="text-sm font-medium mb-3">Add New Item Code</h4>
+                  <div className="grid grid-cols-4 gap-4">
+                    <div>
+                      <Label htmlFor="newCode">Code *</Label>
+                      <Input
+                        id="newCode"
+                        value={newItemCode.code}
+                        onChange={(e) => setNewItemCode({...newItemCode, code: e.target.value})}
+                        placeholder="e.g., AU001"
+                        className="bg-background"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="newDescription">Description *</Label>
+                      <Input
+                        id="newDescription"
+                        value={newItemCode.description}
+                        onChange={(e) => setNewItemCode({...newItemCode, description: e.target.value})}
+                        placeholder="e.g., T Shirt"
+                        className="bg-background"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="newPrice">Price (Rs.) *</Label>
+                      <Input
+                        id="newPrice"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={newItemCode.price || ''}
+                        onChange={(e) => setNewItemCode({...newItemCode, price: parseFloat(e.target.value) || 0})}
+                        placeholder="0.00"
+                        className="bg-background"
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button 
+                        type="button" 
+                        onClick={addItemCode}
+                        className="w-full"
+                      >
+                        Add Code
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="space-y-4">
                 {items.map((item, index) => (
                   <div key={item.id} className="grid grid-cols-12 gap-4 items-end">
@@ -309,10 +434,14 @@ const InvoiceCreate = () => {
                         <SelectTrigger>
                           <SelectValue placeholder="Select item" />
                         </SelectTrigger>
-                        <SelectContent>
-                          {predefinedItems.map((predefined) => (
-                            <SelectItem key={predefined.code} value={predefined.code}>
-                              {predefined.code}
+                        <SelectContent className="bg-background border border-border shadow-lg z-50">
+                          {[...predefinedItems, ...itemCodes].map((predefined) => (
+                            <SelectItem 
+                              key={predefined.code} 
+                              value={predefined.code}
+                              className="bg-background hover:bg-accent"
+                            >
+                              {predefined.code} - Rs. {predefined.price}
                             </SelectItem>
                           ))}
                         </SelectContent>
