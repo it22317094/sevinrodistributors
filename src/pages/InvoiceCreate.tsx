@@ -61,7 +61,7 @@ const InvoiceCreate = () => {
         const lastInvoiceQuery = query(invoicesRef, orderByChild('invoiceNumber'), limitToLast(1));
         const snapshot = await get(lastInvoiceQuery);
         
-        let nextNumber = 1000;
+        let nextNumber = 10000;
         if (snapshot.exists()) {
           const invoices = Object.values(snapshot.val()) as any[];
           const lastInvoice = invoices[0];
@@ -74,7 +74,7 @@ const InvoiceCreate = () => {
         setInvoiceNumber(`SI${nextNumber.toString().padStart(6, '0')}`);
       } catch (error) {
         console.error('Error generating invoice number:', error);
-        setInvoiceNumber(`SI${Date.now().toString().slice(-6)}`);
+        setInvoiceNumber(`SI${(10000 + Math.floor(Math.random() * 1000)).toString()}`);
       }
     };
     
