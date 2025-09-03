@@ -200,12 +200,10 @@ const InvoiceCreate = () => {
                     <Label htmlFor="invoiceNumber">Invoice Number</Label>
                     <Input
                       id="invoiceNumber"
-                      value={invoiceNumber.replace('SI', '').replace(/(\d{2})(\d{3})/, '$1 $2')}
-                      onChange={(e) => {
-                        const numericValue = e.target.value.replace(/\s/g, '');
-                        setInvoiceNumber(`SI${numericValue.padStart(6, '0')}`);
-                      }}
-                      placeholder="10 004"
+                      value={invoiceNumber}
+                      readOnly
+                      className="bg-muted"
+                      placeholder="Auto-generated"
                     />
                   </div>
                   <div>
