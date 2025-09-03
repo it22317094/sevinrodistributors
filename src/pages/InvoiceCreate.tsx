@@ -200,7 +200,7 @@ const InvoiceCreate = () => {
                     <Label htmlFor="invoiceNumber">Invoice Number</Label>
                     <Input
                       id="invoiceNumber"
-                      value={invoiceNumber}
+                      value={invoiceNumber.replace('SI', '').replace(/(\d{2})(\d{4})/, '$1 $2')}
                       readOnly
                       className="bg-muted"
                       placeholder="Auto-generated"
