@@ -202,8 +202,11 @@ const InvoiceCreate = () => {
                     <Input
                       id="invoiceNumber"
                       value={invoiceNumber.replace('SI', '').replace(/(\d{2})(\d{3})/, '$1 $2')}
-                      readOnly
-                      className="bg-muted"
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(/\s/g, '');
+                        setInvoiceNumber(`SI${numericValue.padStart(6, '0')}`);
+                      }}
+                      placeholder="10 004"
                     />
                   </div>
                   <div>
