@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ref, push, get, query, orderByChild, limitToLast } from "firebase/database";
+import { ref, push, get, runTransaction } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 
@@ -53,42 +53,22 @@ const InvoiceCreate = () => {
     { id: '3', name: 'Style Corner', address: 'Kandy' }
   ];
 
-  useEffect(() => {
-    // Generate next invoice number (starting from 10004)
-    const generateInvoiceNumber = async () => {
-      try {
-        const invoicesRef = ref(realtimeDb, 'invoices');
-        const snapshot = await get(invoicesRef);
-        
-        let nextNumber = 10004;
-        if (snapshot.exists()) {
-          const invoices = Object.values(snapshot.val()) as any[];
-          // Find the highest invoice number
-          const invoiceNumbers = invoices
-            .map(invoice => {
-              if (invoice.invoiceNumber && typeof invoice.invoiceNumber === 'string') {
-                const numPart = invoice.invoiceNumber.replace('SI', '');
-                return parseInt(numPart);
-              }
-              return 0;
-            })
-            .filter(num => !isNaN(num));
-          
-          if (invoiceNumbers.length > 0) {
-            const maxNumber = Math.max(...invoiceNumbers);
-            nextNumber = maxNumber + 1;
-          }
-        }
-        
-        setInvoiceNumber(`SI${nextNumber.toString().padStart(6, '0')}`);
-      } catch (error) {
-        console.error('Error generating invoice number:', error);
-        setInvoiceNumber('SI010004');
-      }
-    };
+  const generateNextInvoiceNumber = async (): Promise<number> => {
+    const counterRef = ref(realtimeDb, 'invoiceCounter');
     
-    generateInvoiceNumber();
-  }, []);
+    const result = await runTransaction(counterRef, (current) => {
+      if (current === null) {
+        return 10004; // First invoice starts at 10004
+      }
+      return current + 1;
+    });
+    
+    if (result.committed) {
+      return result.snapshot.val();
+    } else {
+      throw new Error('Failed to generate invoice number');
+    }
+  };
   const addItem = () => {
     const newId = (items.length + 1).toString();
     setItems([...items, { id: newId, description: '', quantity: 0, price: 0, total: 0 }]);
@@ -139,9 +119,13 @@ const InvoiceCreate = () => {
 
     setLoading(true);
     try {
+      // Generate new invoice number using transaction
+      const newInvoiceNumber = await generateNextInvoiceNumber();
+      const formattedInvoiceNumber = `SI${newInvoiceNumber.toString().padStart(6, '0')}`;
+      
       const subtotal = calculateSubtotal();
       const invoiceData = {
-        invoiceNumber,
+        invoiceNumber: formattedInvoiceNumber,
         customerId: selectedCustomer,
         customerName: mockCustomers.find(c => c.id === selectedCustomer)?.name,
         orderNumber,
@@ -200,10 +184,10 @@ const InvoiceCreate = () => {
                     <Label htmlFor="invoiceNumber">Invoice Number</Label>
                     <Input
                       id="invoiceNumber"
-                      value={invoiceNumber.replace('SI', '').replace(/(\d{2})(\d{4})/, '$1 $2')}
+                      value={invoiceNumber ? invoiceNumber.replace('SI', '').replace(/(\d{2})(\d{4})/, '$1 $2') : 'Auto-generated on submit'}
                       readOnly
                       className="bg-muted"
-                      placeholder="Auto-generated"
+                      placeholder="Auto-generated on submit"
                     />
                   </div>
                   <div>
