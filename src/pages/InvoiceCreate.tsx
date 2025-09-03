@@ -210,7 +210,7 @@ const InvoiceCreate = () => {
                     <Label htmlFor="date">Date</Label>
                     <Input
                       id="date"
-                      value={new Date().toISOString().split('T')[0]}
+                      value={new Date().toLocaleDateString('en-CA')}
                       readOnly
                       className="bg-muted"
                     />
