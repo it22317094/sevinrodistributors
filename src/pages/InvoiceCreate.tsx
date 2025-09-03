@@ -192,7 +192,7 @@ const InvoiceCreate = () => {
                     <Label htmlFor="invoiceNumber">Invoice Number</Label>
                     <Input
                       id="invoiceNumber"
-                      value={invoiceNumber}
+                      value={invoiceNumber.replace('SI', '')}
                       readOnly
                       className="bg-muted"
                     />
