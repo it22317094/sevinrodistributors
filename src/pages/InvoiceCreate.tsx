@@ -133,11 +133,22 @@ const InvoiceCreate = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedCustomer || items.some(item => !item.description || item.quantity <= 0)) {
+    // Validate required fields (invoiceNumber is auto-generated, so not included)
+    const validationErrors: string[] = [];
+    
+    if (!selectedCustomer) {
+      validationErrors.push("Customer is required");
+    }
+    
+    if (items.some(item => !item.description || item.quantity <= 0)) {
+      validationErrors.push("All items must have a description and quantity greater than 0");
+    }
+    
+    if (validationErrors.length > 0) {
       toast({
         variant: "destructive",
         title: "Validation Error",
-        description: "Please fill in all required fields",
+        description: validationErrors.join(", "),
       });
       return;
     }
