@@ -53,7 +53,42 @@ const InvoiceCreate = () => {
     { id: '3', name: 'Style Corner', address: 'Kandy' }
   ];
 
-
+  useEffect(() => {
+    // Generate next invoice number (starting from 10004)
+    const generateInvoiceNumber = async () => {
+      try {
+        const invoicesRef = ref(realtimeDb, 'invoices');
+        const snapshot = await get(invoicesRef);
+        
+        let nextNumber = 10004;
+        if (snapshot.exists()) {
+          const invoices = Object.values(snapshot.val()) as any[];
+          // Find the highest invoice number
+          const invoiceNumbers = invoices
+            .map(invoice => {
+              if (invoice.invoiceNumber && typeof invoice.invoiceNumber === 'string') {
+                const numPart = invoice.invoiceNumber.replace('SI', '');
+                return parseInt(numPart);
+              }
+              return 0;
+            })
+            .filter(num => !isNaN(num));
+          
+          if (invoiceNumbers.length > 0) {
+            const maxNumber = Math.max(...invoiceNumbers);
+            nextNumber = maxNumber + 1;
+          }
+        }
+        
+        setInvoiceNumber(`SI${nextNumber.toString().padStart(6, '0')}`);
+      } catch (error) {
+        console.error('Error generating invoice number:', error);
+        setInvoiceNumber('SI010004');
+      }
+    };
+    
+    generateInvoiceNumber();
+  }, []);
   const addItem = () => {
     const newId = (items.length + 1).toString();
     setItems([...items, { id: newId, description: '', quantity: 0, price: 0, total: 0 }]);
