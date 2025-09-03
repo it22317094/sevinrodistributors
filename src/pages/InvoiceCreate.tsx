@@ -28,6 +28,7 @@ const InvoiceCreate = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [currentInvoiceNumber, setCurrentInvoiceNumber] = useState<string>('');
   
   const [invoiceNumber, setInvoiceNumber] = useState<string>('');
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
@@ -53,6 +54,20 @@ const InvoiceCreate = () => {
     { id: '3', name: 'Style Corner', address: 'Kandy' }
   ];
 
+  // Function to get the next invoice number for display (without incrementing)
+  const getNextInvoiceNumber = async (): Promise<string> => {
+    try {
+      const counterRef = ref(realtimeDb, 'invoiceCounter');
+      const snapshot = await get(counterRef);
+      const currentValue = snapshot.val();
+      const nextNumber = currentValue === null ? 10004 : currentValue + 1;
+      return `SI${nextNumber.toString().padStart(6, '0')}`;
+    } catch (error) {
+      console.error('Error getting next invoice number:', error);
+      return 'SI010004';
+    }
+  };
+
   const generateNextInvoiceNumber = async (): Promise<number> => {
     const counterRef = ref(realtimeDb, 'invoiceCounter');
     
@@ -69,6 +84,16 @@ const InvoiceCreate = () => {
       throw new Error('Failed to generate invoice number');
     }
   };
+
+  // Load the next invoice number for display when component mounts
+  useEffect(() => {
+    const loadNextInvoiceNumber = async () => {
+      const nextNumber = await getNextInvoiceNumber();
+      setCurrentInvoiceNumber(nextNumber);
+    };
+    
+    loadNextInvoiceNumber();
+  }, []);
   const addItem = () => {
     const newId = (items.length + 1).toString();
     setItems([...items, { id: newId, description: '', quantity: 0, price: 0, total: 0 }]);
@@ -184,10 +209,10 @@ const InvoiceCreate = () => {
                     <Label htmlFor="invoiceNumber">Invoice Number</Label>
                     <Input
                       id="invoiceNumber"
-                      value={invoiceNumber ? invoiceNumber.replace('SI', '').replace(/(\d{2})(\d{4})/, '$1 $2') : 'Auto-generated on submit'}
+                      value={currentInvoiceNumber ? currentInvoiceNumber.replace('SI', '').replace(/(\d{2})(\d{4})/, '$1 $2') : 'Loading...'}
                       readOnly
                       className="bg-muted"
-                      placeholder="Auto-generated on submit"
+                      placeholder="Loading..."
                     />
                   </div>
                   <div>

@@ -2,15 +2,15 @@
   "rules": {
     "invoiceCounter": {
       ".read": "auth != null",
-      ".write": "auth != null",
-      ".validate": "newData.isNumber()"
+      ".write": "auth != null && (data.val() == null || newData.val() > data.val())",
+      ".validate": "newData.isNumber() && newData.val() >= 10004"
     },
     "invoices": {
       ".read": "auth != null",
       ".write": "auth != null",
       ".indexOn": ["invoiceNumber"],
       "$invoiceId": {
-        ".validate": "newData.hasChildren(['invoiceNumber', 'customerId', 'customerName', 'items', 'subtotal', 'total', 'date', 'status', 'createdAt', 'updatedAt'])"
+        ".validate": "newData.hasChildren(['invoiceNumber', 'customerId', 'customerName', 'items', 'subtotal', 'total', 'date', 'status', 'createdAt', 'updatedAt']) && newData.child('invoiceNumber').isString() && newData.child('invoiceNumber').val().matches(/^SI0[1-9][0-9]{4}$/)"
       }
     },
     "customers": {
