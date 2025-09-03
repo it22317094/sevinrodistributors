@@ -1,5 +1,10 @@
 {
   "rules": {
+    "invoiceCounter": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".validate": "newData.isNumber()"
+    },
     "invoices": {
       ".read": "auth != null",
       ".write": "auth != null",
