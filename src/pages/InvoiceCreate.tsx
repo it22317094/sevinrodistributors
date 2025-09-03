@@ -54,27 +54,36 @@ const InvoiceCreate = () => {
   ];
 
   useEffect(() => {
-    // Generate next invoice number (starting from 1000)
+    // Generate next invoice number (starting from 10003)
     const generateInvoiceNumber = async () => {
       try {
         const invoicesRef = ref(realtimeDb, 'invoices');
-        const lastInvoiceQuery = query(invoicesRef, orderByChild('invoiceNumber'), limitToLast(1));
-        const snapshot = await get(lastInvoiceQuery);
+        const snapshot = await get(invoicesRef);
         
         let nextNumber = 10003;
         if (snapshot.exists()) {
           const invoices = Object.values(snapshot.val()) as any[];
-          const lastInvoice = invoices[0];
-          if (lastInvoice?.invoiceNumber) {
-            const lastNumber = parseInt(lastInvoice.invoiceNumber.replace('SI', ''));
-            nextNumber = lastNumber + 1;
+          // Find the highest invoice number
+          const invoiceNumbers = invoices
+            .map(invoice => {
+              if (invoice.invoiceNumber && typeof invoice.invoiceNumber === 'string') {
+                const numPart = invoice.invoiceNumber.replace('SI', '');
+                return parseInt(numPart);
+              }
+              return 0;
+            })
+            .filter(num => !isNaN(num));
+          
+          if (invoiceNumbers.length > 0) {
+            const maxNumber = Math.max(...invoiceNumbers);
+            nextNumber = maxNumber + 1;
           }
         }
         
         setInvoiceNumber(`SI${nextNumber.toString().padStart(6, '0')}`);
       } catch (error) {
         console.error('Error generating invoice number:', error);
-        setInvoiceNumber(`SI${(10003 + Math.floor(Math.random() * 1000)).toString()}`);
+        setInvoiceNumber('SI010003');
       }
     };
     

@@ -3,6 +3,7 @@
     "invoices": {
       ".read": "auth != null",
       ".write": "auth != null",
+      ".indexOn": ["invoiceNumber"],
       "$invoiceId": {
         ".validate": "newData.hasChildren(['invoiceNumber', 'customerId', 'customerName', 'items', 'subtotal', 'total', 'date', 'status', 'createdAt', 'updatedAt'])"
       }
