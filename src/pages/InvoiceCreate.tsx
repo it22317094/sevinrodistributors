@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ref, push, get, runTransaction } from "firebase/database";
+import { ref, push, get, runTransaction, set } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 
@@ -28,9 +28,8 @@ const InvoiceCreate = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [currentInvoiceNumber, setCurrentInvoiceNumber] = useState<string>('');
+  const [currentInvoiceNumber, setCurrentInvoiceNumber] = useState<number | null>(null);
   
-  const [invoiceNumber, setInvoiceNumber] = useState<string>('');
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [orderNumber, setOrderNumber] = useState<string>('');
   const [items, setItems] = useState<InvoiceItem[]>([
@@ -55,16 +54,16 @@ const InvoiceCreate = () => {
   ];
 
   // Function to get the next invoice number for display (without incrementing)
-  const getNextInvoiceNumber = async (): Promise<string> => {
+  const getNextInvoiceNumber = async (): Promise<number> => {
     try {
       const counterRef = ref(realtimeDb, 'invoiceCounter');
       const snapshot = await get(counterRef);
       const currentValue = snapshot.val();
       const nextNumber = currentValue === null ? 10004 : currentValue + 1;
-      return `SI${nextNumber.toString().padStart(6, '0')}`;
+      return nextNumber;
     } catch (error) {
       console.error('Error getting next invoice number:', error);
-      return 'SI010004';
+      return 10004;
     }
   };
 
@@ -157,11 +156,10 @@ const InvoiceCreate = () => {
     try {
       // Generate new invoice number using transaction
       const newInvoiceNumber = await generateNextInvoiceNumber();
-      const formattedInvoiceNumber = `SI${newInvoiceNumber.toString().padStart(6, '0')}`;
       
       const subtotal = calculateSubtotal();
       const invoiceData = {
-        invoiceNumber: formattedInvoiceNumber,
+        number: newInvoiceNumber,
         customerId: selectedCustomer,
         customerName: mockCustomers.find(c => c.id === selectedCustomer)?.name,
         orderNumber,
@@ -174,8 +172,9 @@ const InvoiceCreate = () => {
         updatedAt: new Date().toISOString()
       };
 
-      const invoicesRef = ref(realtimeDb, 'invoices');
-      await push(invoicesRef, invoiceData);
+      // Save invoice under the numeric invoice number as key
+      const invoiceRef = ref(realtimeDb, `invoices/${newInvoiceNumber}`);
+      await set(invoiceRef, invoiceData);
       
       toast({
         title: "Success",
@@ -220,7 +219,7 @@ const InvoiceCreate = () => {
                     <Label htmlFor="invoiceNumber">Invoice Number</Label>
                     <Input
                       id="invoiceNumber"
-                      value={currentInvoiceNumber ? currentInvoiceNumber.replace('SI', '').replace(/(\d{2})(\d{4})/, '$1 $2') : 'Loading...'}
+                      value={currentInvoiceNumber ? currentInvoiceNumber.toString() : 'Loading...'}
                       readOnly
                       className="bg-muted"
                       placeholder="Loading..."

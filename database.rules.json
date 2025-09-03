@@ -8,9 +8,9 @@
     "invoices": {
       ".read": "auth != null",
       ".write": "auth != null",
-      ".indexOn": ["invoiceNumber"],
-      "$invoiceId": {
-        ".validate": "newData.hasChildren(['invoiceNumber', 'customerId', 'customerName', 'items', 'subtotal', 'total', 'date', 'status', 'createdAt', 'updatedAt']) && newData.child('invoiceNumber').isString() && newData.child('invoiceNumber').val().matches(/^SI0[1-9][0-9]{4}$/)"
+      ".indexOn": ["number"],
+      "$invoiceNumber": {
+        ".validate": "newData.hasChildren(['number', 'customerId', 'customerName', 'items', 'subtotal', 'total', 'date', 'status', 'createdAt', 'updatedAt']) && newData.child('number').isNumber() && newData.child('number').val() >= 10004 && $invoiceNumber == newData.child('number').val()"
       }
     },
     "customers": {
