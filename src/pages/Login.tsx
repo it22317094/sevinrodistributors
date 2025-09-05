@@ -107,9 +107,9 @@ export default function Login() {
       <div className="w-full max-w-md space-y-6">
         <div className="flex justify-center mb-8">
           <img 
-            src="/lovable-uploads/d3e71f67-5eb2-4568-acc2-f04fe120fa6b.png" 
+            src="/lovable-uploads/a05baf11-2e8a-4bb8-8d90-585b41b96bd5.png" 
             alt="Sevinro Distributors" 
-            className="h-16 w-auto"
+            className="h-20 w-auto max-w-xs sm:h-24 sm:max-w-sm md:h-28 md:max-w-md object-contain"
           />
         </div>
 
