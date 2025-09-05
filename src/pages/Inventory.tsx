@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Package, AlertTriangle, Layers, Eye, Trash2 } from "lucide-react";
+import { Plus, Search, Package, AlertTriangle, Layers, Eye, Trash2, ArrowUpDown } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
 import { ref, push, set, onValue, query, orderByChild } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
@@ -371,57 +372,80 @@ export default function Inventory() {
           </CardContent>
         </Card>
 
-        {/* Inventory List */}
+        {/* Inventory Table */}
         <Card>
           <CardHeader>
             <CardTitle>Inventory Items</CardTitle>
             <CardDescription>Manage your fabric inventory and stock levels</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {filteredInventory.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col lg:flex-row lg:items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-lg">{item.item}</h3>
-                      <Badge variant="outline">{item.category}</Badge>
-                      {(item.quantity || 0) <= (item.minStock || 0) && (
-                        <Badge variant="destructive">Low Stock</Badge>
-                      )}
-                    </div>
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      <p>Inventory No: {item.inventoryNo}</p>
-                      <p>Description: {item.description}</p>
-                      <p>Unit Price: ${item.unitPrice}</p>
-                      <p>Minimum stock: {item.minStock || 0} {item.unit || 'units'}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-4 mt-4 lg:mt-0">
-                    <div className="text-center">
-                      <div className={`text-lg font-semibold ${(item.quantity || 0) <= (item.minStock || 0) ? "text-destructive" : "text-primary"}`}>
-                        {item.quantity || 0}
-                      </div>
-                      <div className="text-xs text-muted-foreground">{item.unit || 'units'}</div>
-                    </div>
-                     <div className="flex gap-2">
-                       <Button variant="outline" size="sm" onClick={() => openAdjustModal(item)}>
-                         Adjust
-                       </Button>
-                       <Button variant="destructive" size="sm" onClick={() => openRemoveConfirm(item)}>
-                         <Trash2 className="h-4 w-4 mr-2" />
-                         Remove Stock
-                       </Button>
-                       <Button variant="outline" size="sm" onClick={() => handleViewHistory(item)}>
-                         <Eye className="h-4 w-4 mr-2" />
-                         View Story
-                       </Button>
-                     </div>
-                  </div>
-                </div>
-              ))}
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[120px]">Inventory No</TableHead>
+                    <TableHead>Item</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Unit Price</TableHead>
+                    <TableHead className="text-right w-[100px]">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setSortOrder(sortOrder === "low-high" ? "high-low" : "low-high")}
+                        className="h-auto p-0 hover:bg-transparent"
+                      >
+                        Stock <ArrowUpDown className="ml-1 h-3 w-3" />
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-right w-[200px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredInventory.length > 0 ? (
+                    filteredInventory.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.inventoryNo}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{item.item}</span>
+                            <Badge variant="outline" className="text-xs">{item.category}</Badge>
+                            {(item.quantity || 0) <= (item.minStock || 0) && (
+                              <Badge variant="destructive" className="text-xs">Low Stock</Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-[200px] truncate">{item.description}</TableCell>
+                        <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          <span className={`font-semibold ${(item.quantity || 0) <= (item.minStock || 0) ? "text-destructive" : "text-primary"}`}>
+                            {item.quantity || 0}
+                          </span>
+                          <span className="text-xs text-muted-foreground ml-1">{item.unit || 'units'}</span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex gap-1 justify-end">
+                            <Button variant="outline" size="sm" onClick={() => openAdjustModal(item)}>
+                              Adjust
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => openRemoveConfirm(item)}>
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => handleViewHistory(item)}>
+                              <Eye className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        No inventory items found. Add your first item to get started.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </div>
           </CardContent>
         </Card>

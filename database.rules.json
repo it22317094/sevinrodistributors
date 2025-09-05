@@ -43,7 +43,10 @@
     },
     "inventoryLogs": {
       ".read": "auth != null",
-      ".write": "auth != null"
+      ".write": "auth != null",
+      "$logId": {
+        ".validate": "newData.hasChildren(['inventoryId', 'action', 'quantity', 'timestamp'])"
+      }
     }
   }
 }
