@@ -58,8 +58,8 @@ export default function Invoices() {
   // Filter and sort invoices
   useEffect(() => {
     let filtered = invoices.filter(invoice => {
-      const matchesSearch = invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = (invoice.invoiceNumber?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                           (invoice.customerName?.toLowerCase() || '').includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
