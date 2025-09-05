@@ -33,6 +33,20 @@
       "$supplierId": {
         ".validate": "newData.hasChildren(['name', 'address', 'phone'])"
       }
+    },
+    "inventory": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$itemId": {
+        ".validate": "newData.hasChildren(['inventoryNo', 'item', 'description', 'unitPrice', 'category'])"
+      }
+    },
+    "inventoryLogs": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$logId": {
+        ".validate": "newData.hasChildren(['inventoryId', 'action', 'quantity', 'timestamp'])"
+      }
     }
   }
 }
