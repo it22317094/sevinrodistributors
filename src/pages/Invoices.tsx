@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, FileText, DollarSign, Calendar } from "lucide-react";
-import { ref, get, query, orderByChild } from "firebase/database";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus, Search, FileText, DollarSign, Calendar, ChevronDown } from "lucide-react";
+import { ref, get, update } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
@@ -23,7 +24,11 @@ export default function Invoices() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("newest");
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -38,8 +43,6 @@ export default function Invoices() {
             ...value
           }));
           
-          // Sort by creation date, most recent first
-          invoicesList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
           setInvoices(invoicesList);
         }
       } catch (error) {
@@ -51,6 +54,25 @@ export default function Invoices() {
 
     fetchInvoices();
   }, []);
+
+  // Filter and sort invoices
+  useEffect(() => {
+    let filtered = invoices.filter(invoice => {
+      const matchesSearch = invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === "all" || invoice.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+
+    // Sort invoices
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+
+    setFilteredInvoices(filtered);
+  }, [invoices, searchTerm, statusFilter, sortOrder]);
 
   const getTotalAmount = () => {
     return invoices.reduce((sum, invoice) => sum + (invoice.total || 0), 0);
@@ -69,6 +91,33 @@ export default function Invoices() {
     ).length;
   };
 
+
+  const handleMarkPaid = async (invoiceId: string, invoice: Invoice) => {
+    try {
+      // Update invoice status in Firebase
+      const invoiceRef = ref(realtimeDb, `invoices/${invoiceId}`);
+      await update(invoiceRef, { status: 'paid' });
+
+      // Update local state
+      setInvoices(prevInvoices => 
+        prevInvoices.map(inv => 
+          inv.id === invoiceId ? { ...inv, status: 'paid' } : inv
+        )
+      );
+
+      toast({
+        title: "Invoice marked as paid",
+        description: `Invoice ${invoice.invoiceNumber} has been marked as paid.`,
+      });
+    } catch (error) {
+      console.error('Error updating invoice:', error);
+      toast({
+        title: "Error updating invoice",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,10 +184,51 @@ export default function Invoices() {
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search invoices..." className="pl-10" />
+                <Input 
+                  placeholder="Search invoices..." 
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-              <Button variant="outline">Filter by Status</Button>
-              <Button variant="outline">Sort by Date</Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="bg-background">
+                    Filter by Status
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-background border shadow-lg z-50">
+                  <DropdownMenuItem onClick={() => setStatusFilter("all")} className="hover:bg-accent">
+                    All Statuses
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter("pending")} className="hover:bg-accent">
+                    Pending
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter("paid")} className="hover:bg-accent">
+                    Paid
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStatusFilter("overdue")} className="hover:bg-accent">
+                    Overdue
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="bg-background">
+                    Sort by Date
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-background border shadow-lg z-50">
+                  <DropdownMenuItem onClick={() => setSortOrder("newest")} className="hover:bg-accent">
+                    Newest First
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortOrder("oldest")} className="hover:bg-accent">
+                    Oldest First
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </CardContent>
         </Card>
@@ -154,9 +244,11 @@ export default function Invoices() {
               <div className="text-center py-8">
                 <p className="text-muted-foreground">Loading invoices...</p>
               </div>
-            ) : invoices.length === 0 ? (
+            ) : filteredInvoices.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No invoices found. Create your first invoice!</p>
+                <p className="text-muted-foreground">
+                  {invoices.length === 0 ? "No invoices found. Create your first invoice!" : "No invoices match your current filters."}
+                </p>
                 <Button className="mt-4" onClick={() => navigate('/dashboard')}>
                   <Plus className="h-4 w-4 mr-2" />
                   Create Invoice
@@ -164,7 +256,7 @@ export default function Invoices() {
               </div>
             ) : (
               <div className="space-y-4">
-                {invoices.map((invoice) => (
+                {filteredInvoices.map((invoice) => (
                   <div
                     key={invoice.id}
                     className="flex flex-col lg:flex-row lg:items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
@@ -195,7 +287,9 @@ export default function Invoices() {
                       </div>
                       <div className="flex gap-2">
                         {invoice.status !== "paid" && (
-                          <Button size="sm">Mark Paid</Button>
+                          <Button size="sm" onClick={() => handleMarkPaid(invoice.id, invoice)}>
+                            Mark Paid
+                          </Button>
                         )}
                       </div>
                     </div>
