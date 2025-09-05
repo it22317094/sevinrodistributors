@@ -169,13 +169,19 @@ export default function Inventory() {
       // Log the adjustment
       const logsRef = ref(realtimeDb, 'inventoryLogs');
       const newLogRef = push(logsRef);
-      await set(newLogRef, {
+      const logData: any = {
         inventoryId: selectedItem.id,
         action: `Stock adjusted to ${newQuantity}`,
         quantity: newQuantity,
         timestamp: Date.now(),
-        notes: adjustNotes || undefined
-      });
+      };
+      
+      // Only add notes if they exist
+      if (adjustNotes && adjustNotes.trim()) {
+        logData.notes = adjustNotes.trim();
+      }
+      
+      await set(newLogRef, logData);
 
       setShowAdjustModal(false);
       setAdjustQuantity("");
