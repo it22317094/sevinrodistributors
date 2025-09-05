@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Package, AlertTriangle, Layers, Eye } from "lucide-react";
+import { Plus, Search, Package, AlertTriangle, Layers, Eye, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { ref, push, set, onValue, query, orderByChild } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
@@ -46,6 +47,7 @@ export default function Inventory() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showAdjustModal, setShowAdjustModal] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [selectedItemHistory, setSelectedItemHistory] = useState<InventoryLog[]>([]);
   const [selectedItemName, setSelectedItemName] = useState("");
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
@@ -197,6 +199,51 @@ export default function Inventory() {
     setSelectedItem(item);
     setAdjustQuantity((item.quantity || 0).toString());
     setShowAdjustModal(true);
+  };
+
+  const openRemoveConfirm = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setShowRemoveConfirm(true);
+  };
+
+  const handleRemoveStock = async () => {
+    if (!isAuthenticated || !selectedItem) return;
+    
+    try {
+      // Update inventory item to zero stock
+      const itemRef = ref(realtimeDb, `inventory/${selectedItem.id}`);
+      await set(itemRef, {
+        ...selectedItem,
+        quantity: 0,
+        updatedAt: Date.now()
+      });
+
+      // Log the removal
+      const logsRef = ref(realtimeDb, 'inventoryLogs');
+      const newLogRef = push(logsRef);
+      await set(newLogRef, {
+        inventoryId: selectedItem.id,
+        action: "Stock removed (set to 0)",
+        quantity: 0,
+        timestamp: Date.now(),
+        notes: "Stock completely removed"
+      });
+
+      setShowRemoveConfirm(false);
+      setSelectedItem(null);
+      
+      toast({
+        title: "Success",
+        description: "Stock removed successfully",
+      });
+    } catch (error) {
+      console.error("Error removing stock:", error);
+      toast({
+        title: "Error",
+        description: "Failed to remove stock",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleViewHistory = async (item: InventoryItem) => {
@@ -359,15 +406,19 @@ export default function Inventory() {
                       </div>
                       <div className="text-xs text-muted-foreground">{item.unit || 'units'}</div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => openAdjustModal(item)}>
-                        Adjust
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleViewHistory(item)}>
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Story
-                      </Button>
-                    </div>
+                     <div className="flex gap-2">
+                       <Button variant="outline" size="sm" onClick={() => openAdjustModal(item)}>
+                         Adjust
+                       </Button>
+                       <Button variant="destructive" size="sm" onClick={() => openRemoveConfirm(item)}>
+                         <Trash2 className="h-4 w-4 mr-2" />
+                         Remove Stock
+                       </Button>
+                       <Button variant="outline" size="sm" onClick={() => handleViewHistory(item)}>
+                         <Eye className="h-4 w-4 mr-2" />
+                         View Story
+                       </Button>
+                     </div>
                   </div>
                 </div>
               ))}
@@ -498,6 +549,24 @@ export default function Inventory() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Remove Stock Confirmation */}
+        <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove Stock</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove all stock for "{selectedItem?.item}"? This will set the quantity to 0 and cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleRemoveStock} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Remove Stock
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* View History Modal */}
         <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
