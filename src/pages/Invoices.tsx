@@ -4,10 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Plus, Search, FileText, DollarSign, Calendar, Mail } from "lucide-react";
+import { Plus, Search, FileText, DollarSign, Calendar } from "lucide-react";
 import { ref, get, query, orderByChild } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
@@ -27,12 +24,6 @@ export default function Invoices() {
   const { toast } = useToast();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [emailModal, setEmailModal] = useState({ open: false, invoiceId: "" });
-  const [emailForm, setEmailForm] = useState({
-    recipient: "",
-    subject: "",
-    message: ""
-  });
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -78,35 +69,6 @@ export default function Invoices() {
     ).length;
   };
 
-  const handleSendEmail = async () => {
-    try {
-      // Simulate email sending
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast({
-        title: "Email sent successfully!",
-        description: "Invoice has been sent to the recipient.",
-      });
-      
-      setEmailModal({ open: false, invoiceId: "" });
-      setEmailForm({ recipient: "", subject: "", message: "" });
-    } catch (error) {
-      toast({
-        title: "Error sending email",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const openEmailModal = (invoiceId: string, invoice: Invoice) => {
-    setEmailForm({
-      recipient: "",
-      subject: `Invoice ${invoice.invoiceNumber} - ${invoice.customerName}`,
-      message: `Dear ${invoice.customerName},\n\nPlease find attached your invoice ${invoice.invoiceNumber} for the amount of Rs. ${invoice.total?.toLocaleString()}.\n\nThank you for your business.\n\nBest regards,`
-    });
-    setEmailModal({ open: true, invoiceId });
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -232,58 +194,6 @@ export default function Invoices() {
                         <div className="text-xs text-muted-foreground">Amount</div>
                       </div>
                       <div className="flex gap-2">
-                        <Dialog open={emailModal.open && emailModal.invoiceId === invoice.id} onOpenChange={(open) => !open && setEmailModal({ open: false, invoiceId: "" })}>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" onClick={() => openEmailModal(invoice.id, invoice)}>
-                              <Mail className="h-4 w-4 mr-2" />
-                              Send
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[425px]">
-                            <DialogHeader>
-                              <DialogTitle>Send Invoice via Email</DialogTitle>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                              <div className="grid gap-2">
-                                <Label htmlFor="recipient">Recipient Email</Label>
-                                <Input
-                                  id="recipient"
-                                  type="email"
-                                  placeholder="customer@example.com"
-                                  value={emailForm.recipient}
-                                  onChange={(e) => setEmailForm({ ...emailForm, recipient: e.target.value })}
-                                />
-                              </div>
-                              <div className="grid gap-2">
-                                <Label htmlFor="subject">Subject</Label>
-                                <Input
-                                  id="subject"
-                                  value={emailForm.subject}
-                                  onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
-                                />
-                              </div>
-                              <div className="grid gap-2">
-                                <Label htmlFor="message">Message</Label>
-                                <Textarea
-                                  id="message"
-                                  placeholder="Enter your message..."
-                                  value={emailForm.message}
-                                  onChange={(e) => setEmailForm({ ...emailForm, message: e.target.value })}
-                                  rows={4}
-                                />
-                              </div>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                              <Button variant="outline" onClick={() => setEmailModal({ open: false, invoiceId: "" })}>
-                                Cancel
-                              </Button>
-                              <Button onClick={handleSendEmail} disabled={!emailForm.recipient || !emailForm.subject}>
-                                <Mail className="h-4 w-4 mr-2" />
-                                Send Email
-                              </Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
                         {invoice.status !== "paid" && (
                           <Button size="sm">Mark Paid</Button>
                         )}
