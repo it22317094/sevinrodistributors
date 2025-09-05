@@ -45,8 +45,12 @@ export default function Inventory() {
   const [sortOrder, setSortOrder] = useState<"low-high" | "high-low">("low-high");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [selectedItemHistory, setSelectedItemHistory] = useState<InventoryLog[]>([]);
   const [selectedItemName, setSelectedItemName] = useState("");
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [adjustQuantity, setAdjustQuantity] = useState("");
+  const [adjustNotes, setAdjustNotes] = useState("");
   
   const [formData, setFormData] = useState({
     inventoryNo: "",
@@ -135,6 +139,64 @@ export default function Inventory() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleAdjustStock = async () => {
+    if (!isAuthenticated || !selectedItem) return;
+    
+    try {
+      const newQuantity = parseInt(adjustQuantity);
+      if (isNaN(newQuantity) || newQuantity < 0) {
+        toast({
+          title: "Error",
+          description: "Please enter a valid quantity",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update inventory item
+      const itemRef = ref(realtimeDb, `inventory/${selectedItem.id}`);
+      await set(itemRef, {
+        ...selectedItem,
+        quantity: newQuantity,
+        updatedAt: Date.now()
+      });
+
+      // Log the adjustment
+      const logsRef = ref(realtimeDb, 'inventoryLogs');
+      const newLogRef = push(logsRef);
+      await set(newLogRef, {
+        inventoryId: selectedItem.id,
+        action: `Stock adjusted to ${newQuantity}`,
+        quantity: newQuantity,
+        timestamp: Date.now(),
+        notes: adjustNotes || undefined
+      });
+
+      setShowAdjustModal(false);
+      setAdjustQuantity("");
+      setAdjustNotes("");
+      setSelectedItem(null);
+      
+      toast({
+        title: "Success",
+        description: "Stock quantity updated successfully",
+      });
+    } catch (error) {
+      console.error("Error adjusting stock:", error);
+      toast({
+        title: "Error",
+        description: "Failed to adjust stock quantity",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openAdjustModal = (item: InventoryItem) => {
+    setSelectedItem(item);
+    setAdjustQuantity((item.quantity || 0).toString());
+    setShowAdjustModal(true);
   };
 
   const handleViewHistory = async (item: InventoryItem) => {
@@ -298,6 +360,9 @@ export default function Inventory() {
                       <div className="text-xs text-muted-foreground">{item.unit || 'units'}</div>
                     </div>
                     <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => openAdjustModal(item)}>
+                        Adjust
+                      </Button>
                       <Button variant="outline" size="sm" onClick={() => handleViewHistory(item)}>
                         <Eye className="h-4 w-4 mr-2" />
                         View Story
@@ -377,6 +442,57 @@ export default function Inventory() {
                   disabled={!formData.inventoryNo || !formData.item || !formData.description || !formData.unitPrice || !formData.category}
                 >
                   Save
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Adjust Stock Modal */}
+        <Dialog open={showAdjustModal} onOpenChange={setShowAdjustModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Adjust Stock - {selectedItem?.item}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="currentStock">Current Stock</Label>
+                <Input
+                  id="currentStock"
+                  value={selectedItem?.quantity || 0}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
+              <div>
+                <Label htmlFor="newQuantity">New Quantity</Label>
+                <Input
+                  id="newQuantity"
+                  type="number"
+                  min="0"
+                  value={adjustQuantity}
+                  onChange={(e) => setAdjustQuantity(e.target.value)}
+                  placeholder="Enter new quantity"
+                />
+              </div>
+              <div>
+                <Label htmlFor="notes">Notes (Optional)</Label>
+                <Input
+                  id="notes"
+                  value={adjustNotes}
+                  onChange={(e) => setAdjustNotes(e.target.value)}
+                  placeholder="Reason for adjustment"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setShowAdjustModal(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleAdjustStock}
+                  disabled={!adjustQuantity || adjustQuantity === (selectedItem?.quantity || 0).toString()}
+                >
+                  Update Stock
                 </Button>
               </div>
             </div>
