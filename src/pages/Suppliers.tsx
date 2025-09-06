@@ -45,7 +45,7 @@ export default function Suppliers() {
         // Find all unpaid invoices for this supplier
         const supplierInvoices = invoices.filter(invoice => 
           invoice.supplierId === supplier.id && 
-          (invoice.status === 'Unpaid' || invoice.status === 'Partially Paid')
+          (invoice.status === 'Pending' || invoice.status === 'Unpaid' || invoice.status === 'Partially Paid')
         );
 
         // Get the latest unpaid invoice (by due date, then by invoice date)
@@ -171,7 +171,7 @@ export default function Suppliers() {
           const invoicesList = Object.entries(data).map(([key, value]: [string, any]) => ({
             id: key,
             ...value
-          })).filter(invoice => invoice.status === 'Unpaid' || invoice.status === 'Partially Paid');
+          })).filter(invoice => invoice.status === 'Pending' || invoice.status === 'Unpaid' || invoice.status === 'Partially Paid');
           
           console.log('Invoices updated:', invoicesList);
           setInvoices(invoicesList);
@@ -358,40 +358,48 @@ export default function Suppliers() {
                           </div>
                           
                           <div className="space-y-2 text-sm">
-                            <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">Invoice #:</span>
-                              <span>{invoice?.invoiceNumber || '—'}</span>
-                            </div>
-                            
-                            {invoice?.dueDate && (
-                              <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium">Due Date:</span>
-                                <span className={overdue ? "text-destructive font-medium" : ""}>
-                                  {format(new Date(invoice.dueDate), "MMM dd, yyyy")}
-                                </span>
-                              </div>
-                            )}
-                            
-                            {invoice?.amount && (
-                              <div className="flex items-center gap-2">
-                                <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium">Amount:</span>
-                                <span className="font-semibold text-primary">
-                                  ${(invoice.balance || invoice.amount || 0).toLocaleString()}
-                                </span>
-                              </div>
-                            )}
-                            
-                            {invoice?.description && (
-                              <div className="mt-2">
-                                <span className="font-medium">Description:</span>
-                                <p className="text-muted-foreground mt-1">{invoice.description}</p>
-                              </div>
-                            )}
-                            
-                            {!invoice && (
+                            {invoice ? (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  <FileText className="h-4 w-4 text-muted-foreground" />
+                                  <span className="font-medium">Invoice #:</span>
+                                  <span>{invoice.invoiceNo || '—'}</span>
+                                </div>
+                                
+                                {invoice.dueDate && (
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium">Due Date:</span>
+                                    <span className={overdue ? "text-destructive font-medium" : ""}>
+                                      {format(new Date(invoice.dueDate), "MMM dd, yyyy")}
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                <div className="flex items-center gap-2">
+                                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                  <span className="font-medium">Amount:</span>
+                                  <span className="font-semibold text-primary">
+                                    ${(invoice.balance || invoice.amount || 0).toLocaleString()}
+                                  </span>
+                                </div>
+                                
+                                {invoice.description && (
+                                  <div className="mt-2">
+                                    <span className="font-medium">Description:</span>
+                                    <p className="text-muted-foreground mt-1">{invoice.description}</p>
+                                  </div>
+                                )}
+                                
+                                {invoice.createdAt && (
+                                  <div className="flex items-center gap-2">
+                                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                                    <span className="font-medium">Invoice Date:</span>
+                                    <span>{format(new Date(invoice.createdAt), "MMM dd, yyyy")}</span>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
                               <div className="text-muted-foreground">
                                 <span>No unpaid invoices</span>
                               </div>
@@ -399,8 +407,8 @@ export default function Suppliers() {
                           </div>
                         </div>
                         
-                        {invoice && (
-                          <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2">
+                          {invoice ? (
                             <Button 
                               size="sm"
                               onClick={(e) => {
@@ -411,8 +419,21 @@ export default function Suppliers() {
                             >
                               Mark as Paid
                             </Button>
-                          </div>
-                        )}
+                          ) : (
+                            <Button 
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedSupplier(supplier);
+                                setShowAddModal(true);
+                              }}
+                              className="whitespace-nowrap"
+                            >
+                              Create Invoice
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
