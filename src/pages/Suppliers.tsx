@@ -8,7 +8,7 @@ import { AddSupplierModal } from "@/components/AddSupplierModal";
 import SupplierOrdersModal from "@/components/SupplierOrdersModal";
 import EditSupplierModal from "@/components/EditSupplierModal";
 import PendingBillsModal from "@/components/PendingBillsModal";
-import { ref, onValue, orderByChild, query, update, serverTimestamp } from "firebase/database";
+import { ref, onValue, orderByChild, query, update, serverTimestamp, push } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { useNavigate } from "react-router-dom";
 import { format, isAfter } from "date-fns";
@@ -234,6 +234,97 @@ export default function Suppliers() {
     }
   };
 
+  const addSampleData = async () => {
+    try {
+      // Get first supplier ID for sample data
+      const firstSupplierId = suppliers.length > 0 ? suppliers[0].id : '-OZSLZjZrV4iZGkbUKuR';
+      const secondSupplierId = suppliers.length > 1 ? suppliers[1].id : '-OZStS9_Tnbff21yI6z3';
+
+      // Add sample bills
+      const billsRef = ref(realtimeDb, 'bills');
+      
+      const sampleBills = [
+        {
+          billNumber: 'BILL-001',
+          supplierId: firstSupplierId,
+          supplierName: suppliers.find(s => s.id === firstSupplierId)?.name || 'JK GARMNET',
+          amount: 2500,
+          balance: 2500,
+          status: 'Unpaid',
+          dueDate: '2025-09-15',
+          invoiceDate: '2025-09-01',
+          description: 'Cotton fabric supply - September batch',
+          createdAt: new Date().toISOString()
+        },
+        {
+          billNumber: 'BILL-002',
+          supplierId: secondSupplierId,
+          supplierName: suppliers.find(s => s.id === secondSupplierId)?.name || 'JK STYLE',
+          amount: 1800,
+          balance: 900,
+          status: 'Partially Paid',
+          dueDate: '2025-09-20',
+          invoiceDate: '2025-09-05',
+          description: 'Silk fabric and accessories',
+          createdAt: new Date().toISOString()
+        }
+      ];
+
+      // Add sample invoices
+      const invoicesRef = ref(realtimeDb, 'invoices');
+      
+      const sampleInvoices = [
+        {
+          invoiceNumber: 'INV-001',
+          supplierId: firstSupplierId,
+          supplierName: suppliers.find(s => s.id === firstSupplierId)?.name || 'JK GARMNET',
+          amount: 3200,
+          balance: 3200,
+          status: 'Unpaid',
+          dueDate: '2025-09-25',
+          invoiceDate: '2025-09-10',
+          description: 'Premium fabric collection - Q3 order',
+          createdAt: new Date().toISOString()
+        },
+        {
+          invoiceNumber: 'INV-002',
+          supplierId: secondSupplierId,
+          supplierName: suppliers.find(s => s.id === secondSupplierId)?.name || 'JK STYLE',
+          amount: 1500,
+          balance: 1500,
+          status: 'Unpaid',
+          dueDate: '2025-09-12', // Overdue
+          invoiceDate: '2025-08-28',
+          description: 'Designer fabric samples and prototypes',
+          createdAt: new Date().toISOString()
+        }
+      ];
+
+      // Add bills to Firebase
+      for (const bill of sampleBills) {
+        await push(billsRef, bill);
+      }
+
+      // Add invoices to Firebase
+      for (const invoice of sampleInvoices) {
+        await push(invoicesRef, invoice);
+      }
+
+      toast({
+        title: "Success",
+        description: "Sample bills and invoices added successfully",
+      });
+
+    } catch (error) {
+      console.error('Error adding sample data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add sample data",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCardClick = (bill: any) => {
     const supplierBills = combinedBills.filter(b => b.supplierId === bill.supplierId);
     if (supplierBills.length === 1) {
@@ -266,6 +357,9 @@ export default function Suppliers() {
           <Button className="mt-4 sm:mt-0" onClick={() => setShowAddModal(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Supplier
+          </Button>
+          <Button variant="outline" className="mt-4 sm:mt-0 ml-2" onClick={addSampleData}>
+            Add Sample Bills
           </Button>
         </div>
 
