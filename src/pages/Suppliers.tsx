@@ -37,7 +37,7 @@ export default function Suppliers() {
 
   useEffect(() => {
     // Combine suppliers and bills data
-    if (suppliers.length > 0 && bills.length > 0) {
+    if (suppliers.length >= 0 && bills.length >= 0) {
       const combined = bills.map(bill => {
         const supplier = suppliers.find(s => s.id === bill.supplierId);
         return {
@@ -69,6 +69,8 @@ export default function Suppliers() {
       });
 
       setCombinedBills(combined);
+    } else {
+      setCombinedBills([]);
     }
   }, [suppliers, bills]);
 
