@@ -176,10 +176,12 @@ export default function Suppliers() {
     return isAfter(new Date(), new Date(dueDate));
   };
 
+  
   const totalSuppliers = suppliers.length;
   const totalActiveOrders = 0; // Will be calculated from actual orders data
   const totalProcurement = combinedBills.reduce((sum, bill) => sum + (bill.amount || 0), 0);
   const pendingBills = combinedBills.length;
+  
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
