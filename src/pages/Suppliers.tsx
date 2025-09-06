@@ -40,7 +40,12 @@ export default function Suppliers() {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchSuppliers();
+    const unsubscribe = fetchSuppliers();
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   const fetchSuppliers = () => {
@@ -48,16 +53,20 @@ export default function Suppliers() {
     const suppliersQuery = query(suppliersRef, orderByChild('createdAt'));
     
     const unsubscribe = onValue(suppliersQuery, (snapshot) => {
+      console.log('Firebase data received:', snapshot.exists());
       if (snapshot.exists()) {
         const data = snapshot.val();
+        console.log('Raw data:', data);
         const suppliersList = Object.entries(data).map(([key, value]: [string, any]) => ({
           id: key,
           ...value
         }));
         // Sort by createdAt descending (most recent first)
         suppliersList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        console.log('Processed suppliers:', suppliersList);
         setSuppliers(suppliersList);
       } else {
+        console.log('No suppliers data found');
         setSuppliers([]);
       }
     }, (error) => {
@@ -216,7 +225,10 @@ export default function Suppliers() {
         <AddSupplierModal 
           open={showAddModal} 
           onOpenChange={setShowAddModal}
-          onSupplierAdded={() => {}}
+          onSupplierAdded={() => {
+            console.log('Supplier added callback triggered');
+            // Real-time listener should automatically update, but we can force a refresh if needed
+          }}
         />
         
         <SupplierOrdersModal
