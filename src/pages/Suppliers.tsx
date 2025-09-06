@@ -79,18 +79,29 @@ export default function Suppliers() {
     const suppliersQuery = query(suppliersRef, orderByChild('createdAt'));
     
     const unsubscribe = onValue(suppliersQuery, (snapshot) => {
+      console.log('=== FIREBASE SUPPLIERS DATA ===');
+      console.log('Snapshot exists:', snapshot.exists());
+      
       if (snapshot.exists()) {
         const data = snapshot.val();
+        console.log('Raw Firebase data:', data);
+        console.log('Number of suppliers in Firebase:', Object.keys(data).length);
+        
         const suppliersList = Object.entries(data).map(([key, value]: [string, any]) => ({
           id: key,
           ...value
         }));
+        
+        console.log('Processed suppliers list:', suppliersList);
+        console.log('Suppliers names:', suppliersList.map(s => s.name));
+        
         setSuppliers(suppliersList);
       } else {
+        console.log('No suppliers found in Firebase');
         setSuppliers([]);
       }
     }, (error) => {
-      console.error('Error fetching suppliers:', error);
+      console.error('Error fetching suppliers from Firebase:', error);
       toast({
         title: "Error",
         description: "Failed to fetch suppliers",
