@@ -43,16 +43,28 @@ export default function Suppliers() {
   const [showOrdersModal, setShowOrdersModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showBillsModal, setShowBillsModal] = useState(false);
-  
   const { getDocuments: getSuppliers } = useFirestore('suppliers');
   const { getDocuments: getOrders } = useFirestore('orders');
   const { getDocuments: getBills } = useFirestore('bills');
   const { toast } = useToast();
 
   useEffect(() => {
-    // Using sample data for now - fetchData() can be called to load from Firebase
+    // Using sample data for now - uncomment fetchData() to load from Firebase
     // fetchData();
   }, []);
+
+  const fetchSuppliers = async () => {
+    try {
+      const suppliersData = await getSuppliers();
+      setSuppliers(suppliersData);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch suppliers",
+        variant: "destructive",
+      });
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -215,6 +227,7 @@ export default function Suppliers() {
         <AddSupplierModal 
           open={showAddModal} 
           onOpenChange={setShowAddModal}
+          onSupplierAdded={fetchSuppliers}
         />
         
         <SupplierOrdersModal

@@ -7,90 +7,129 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ref, push } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AddSupplierModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSupplierAdded: () => void;
 }
 
 interface SupplierFormData {
-  name: string;
+  supplierName: string;
   address: string;
-  phone: string;
+  phoneNumber: string;
+  contactNumber: string;
 }
 
-export function AddSupplierModal({ open, onOpenChange }: AddSupplierModalProps) {
+export function AddSupplierModal({ open, onOpenChange, onSupplierAdded }: AddSupplierModalProps) {
   const [formData, setFormData] = useState<SupplierFormData>({
-    name: "",
+    supplierName: "",
     address: "",
-    phone: "",
+    phoneNumber: "",
+    contactNumber: "",
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const handleInputChange = (field: keyof SupplierFormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const validateForm = () => {
-    if (!formData.name.trim()) {
+    if (!formData.supplierName.trim()) {
       toast({
         title: "Validation Error",
-        description: "Supplier name is required.",
+        description: "Supplier name is required",
         variant: "destructive",
       });
       return false;
     }
+
     if (!formData.address.trim()) {
       toast({
-        title: "Validation Error", 
-        description: "Address is required.",
+        title: "Validation Error",
+        description: "Address is required",
         variant: "destructive",
       });
       return false;
     }
-    if (!formData.phone.trim()) {
+
+    if (!formData.phoneNumber.trim()) {
       toast({
         title: "Validation Error",
-        description: "Phone number is required.",
+        description: "Phone number is required",
         variant: "destructive",
       });
       return false;
     }
-    const phoneRegex = /^[+]?[(]?[\d\s\-\(\)]{10,}$/;
-    if (!phoneRegex.test(formData.phone)) {
+
+    if (!formData.contactNumber.trim()) {
       toast({
         title: "Validation Error",
-        description: "Please enter a valid phone number.",
+        description: "Contact number is required",
         variant: "destructive",
       });
       return false;
     }
+
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!user) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to add a supplier",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validateForm()) {
+      return;
+    }
 
     setLoading(true);
     try {
       const suppliersRef = ref(realtimeDb, 'suppliers');
-      await push(suppliersRef, {
-        ...formData,
-        createdAt: new Date().toISOString(),
+      const newSupplierRef = push(suppliersRef);
+      const supplierId = newSupplierRef.key;
+
+      const supplierData = {
+        supplierId: supplierId,
+        name: formData.supplierName,
+        address: formData.address,
+        phoneNumber: formData.phoneNumber,
+        contactNumber: formData.contactNumber,
         status: "Active",
-      });
+        createdAt: new Date().toISOString()
+      };
+
+      await push(suppliersRef, supplierData);
 
       toast({
         title: "Success",
-        description: "Supplier added successfully!",
+        description: "Supplier added successfully",
       });
 
-      // Reset form and close modal
-      setFormData({ name: "", address: "", phone: "" });
-      onOpenChange(false);
+      // Reset form
+      setFormData({
+        supplierName: "",
+        address: "",
+        phoneNumber: "",
+        contactNumber: "",
+      });
+
+      onSupplierAdded(); // Refresh supplier list
+      onOpenChange(false); // Close modal
     } catch (error) {
       console.error("Error adding supplier:", error);
       toast({
@@ -112,53 +151,65 @@ export function AddSupplierModal({ open, onOpenChange }: AddSupplierModalProps) 
             Enter the supplier information below. All fields are required.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="name">Supplier Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="Enter supplier name"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="address">Address</Label>
-              <Textarea
-                id="address"
-                value={formData.address}
-                onChange={(e) => handleInputChange("address", e.target.value)}
-                placeholder="Enter supplier address"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
-                placeholder="Enter phone number"
-                required
-              />
-            </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="supplierName">Supplier Name *</Label>
+            <Input
+              id="supplierName"
+              name="supplierName"
+              value={formData.supplierName}
+              onChange={handleInputChange}
+              placeholder="Enter supplier name"
+              required
+            />
           </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
+
+          <div className="space-y-2">
+            <Label htmlFor="address">Address *</Label>
+            <Textarea
+              id="address"
+              name="address"
+              value={formData.address}
+              onChange={handleInputChange}
+              placeholder="Enter supplier address"
+              rows={3}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phoneNumber">Phone Number *</Label>
+            <Input
+              id="phoneNumber"
+              name="phoneNumber"
+              value={formData.phoneNumber}
+              onChange={handleInputChange}
+              placeholder="Enter phone number"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="contactNumber">Contact Number *</Label>
+            <Input
+              id="contactNumber"
+              name="contactNumber"
+              value={formData.contactNumber}
+              onChange={handleInputChange}
+              placeholder="Enter contact number"
+              required
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
               {loading ? "Adding..." : "Submit"}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

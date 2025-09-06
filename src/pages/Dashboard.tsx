@@ -250,7 +250,8 @@ export default function Dashboard() {
         {/* Add Supplier Modal */}
         <AddSupplierModal 
           open={showSupplierModal} 
-          onOpenChange={setShowSupplierModal} 
+          onOpenChange={setShowSupplierModal}
+          onSupplierAdded={() => {}} // Empty function since we're not refreshing on dashboard
         />
       </div>
     </div>
