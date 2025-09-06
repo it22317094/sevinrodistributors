@@ -4,8 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { ref, push } from "firebase/database";
+import { ref, push, serverTimestamp } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -17,17 +23,21 @@ interface AddSupplierModalProps {
 
 interface SupplierFormData {
   supplierName: string;
-  address: string;
-  phoneNumber: string;
-  contactNumber: string;
+  dueDate: Date | undefined;
+  amount: string;
+  description: string;
+  invoiceNo: string;
+  status: string;
 }
 
 export function AddSupplierModal({ open, onOpenChange, onSupplierAdded }: AddSupplierModalProps) {
   const [formData, setFormData] = useState<SupplierFormData>({
     supplierName: "",
-    address: "",
-    phoneNumber: "",
-    contactNumber: "",
+    dueDate: undefined,
+    amount: "",
+    description: "",
+    invoiceNo: "",
+    status: "",
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -51,28 +61,46 @@ export function AddSupplierModal({ open, onOpenChange, onSupplierAdded }: AddSup
       return false;
     }
 
-    if (!formData.address.trim()) {
+    if (!formData.dueDate) {
       toast({
         title: "Validation Error",
-        description: "Address is required",
+        description: "Due date is required",
         variant: "destructive",
       });
       return false;
     }
 
-    if (!formData.phoneNumber.trim()) {
+    if (!formData.amount.trim() || isNaN(Number(formData.amount))) {
       toast({
         title: "Validation Error",
-        description: "Phone number is required",
+        description: "Valid amount is required",
         variant: "destructive",
       });
       return false;
     }
 
-    if (!formData.contactNumber.trim()) {
+    if (!formData.description.trim()) {
       toast({
         title: "Validation Error",
-        description: "Contact number is required",
+        description: "Description is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!formData.invoiceNo.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Invoice number is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (!formData.status) {
+      toast({
+        title: "Validation Error",
+        description: "Status is required",
         variant: "destructive",
       });
       return false;
@@ -99,48 +127,67 @@ export function AddSupplierModal({ open, onOpenChange, onSupplierAdded }: AddSup
 
     setLoading(true);
     try {
-      const supplierData = {
-        supplierId: null, // Will be set by Firebase
-        name: formData.supplierName,
-        address: formData.address,
-        phoneNumber: formData.phoneNumber,
-        contactNumber: formData.contactNumber,
-        status: "Active",
-        createdAt: new Date().toISOString()
-      };
-      
-      console.log('Adding supplier:', supplierData);
-      
+      // Create supplier
       const suppliersRef = ref(realtimeDb, 'suppliers');
       const newSupplierRef = push(suppliersRef);
       const supplierId = newSupplierRef.key;
       
-      // Update supplier data with the generated ID
-      supplierData.supplierId = supplierId;
+      const supplierData = {
+        supplierId: supplierId,
+        name: formData.supplierName,
+        status: "Active",
+        createdAt: new Date().toISOString()
+      };
 
       await push(suppliersRef, supplierData);
-      console.log('Supplier added successfully');
+      
+      // Create invoice
+      const invoicesRef = ref(realtimeDb, 'invoices');
+      const newInvoiceRef = push(invoicesRef);
+      const invoiceId = newInvoiceRef.key;
+      
+      const amount = Number(formData.amount);
+      const paid = formData.status === 'Paid' ? amount : 0;
+      const balance = amount - paid;
+      
+      const invoiceData = {
+        invoiceId: invoiceId,
+        invoiceNo: formData.invoiceNo,
+        supplierId: supplierId,
+        supplierName: formData.supplierName,
+        dueDate: format(formData.dueDate!, 'yyyy-MM-dd'),
+        amount: amount,
+        paid: paid,
+        balance: balance,
+        description: formData.description,
+        status: formData.status,
+        createdAt: serverTimestamp()
+      };
+
+      await push(invoicesRef, invoiceData);
 
       toast({
         title: "Success",
-        description: "Supplier added successfully",
+        description: "Supplier and invoice added successfully",
       });
 
       // Reset form
       setFormData({
         supplierName: "",
-        address: "",
-        phoneNumber: "",
-        contactNumber: "",
+        dueDate: undefined,
+        amount: "",
+        description: "",
+        invoiceNo: "",
+        status: "",
       });
 
       onSupplierAdded(); // Refresh supplier list
       onOpenChange(false); // Close modal
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error adding supplier:", error);
       toast({
         title: "Error",
-        description: "Failed to add supplier. Please try again.",
+        description: error.message || "Failed to add supplier. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -172,40 +219,82 @@ export function AddSupplierModal({ open, onOpenChange, onSupplierAdded }: AddSup
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="address">Address *</Label>
-            <Textarea
-              id="address"
-              name="address"
-              value={formData.address}
+            <Label>Due Date *</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.dueDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.dueDate ? format(formData.dueDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.dueDate}
+                  onSelect={(date) => setFormData(prev => ({ ...prev, dueDate: date }))}
+                  initialFocus
+                  className={cn("p-3 pointer-events-auto")}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount *</Label>
+            <Input
+              id="amount"
+              name="amount"
+              type="number"
+              step="0.01"
+              value={formData.amount}
               onChange={handleInputChange}
-              placeholder="Enter supplier address"
+              placeholder="Enter amount"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description *</Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              placeholder="Enter description"
               rows={3}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phoneNumber">Phone Number *</Label>
+            <Label htmlFor="invoiceNo">Invoice No *</Label>
             <Input
-              id="phoneNumber"
-              name="phoneNumber"
-              value={formData.phoneNumber}
+              id="invoiceNo"
+              name="invoiceNo"
+              value={formData.invoiceNo}
               onChange={handleInputChange}
-              placeholder="Enter phone number"
+              placeholder="Enter invoice number"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contactNumber">Contact Number *</Label>
-            <Input
-              id="contactNumber"
-              name="contactNumber"
-              value={formData.contactNumber}
-              onChange={handleInputChange}
-              placeholder="Enter contact number"
-              required
-            />
+            <Label htmlFor="status">Status *</Label>
+            <Select value={formData.status} onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Paid">Paid</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
