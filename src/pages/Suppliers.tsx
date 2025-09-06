@@ -3,22 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, FileText, Package, TrendingUp } from "lucide-react";
-import { useFirestore } from "@/hooks/useFirestore";
 import { useToast } from "@/hooks/use-toast";
 import { AddSupplierModal } from "@/components/AddSupplierModal";
 import SupplierOrdersModal from "@/components/SupplierOrdersModal";
 import EditSupplierModal from "@/components/EditSupplierModal";
 import PendingBillsModal from "@/components/PendingBillsModal";
+import { ref, onValue, orderByChild, query } from "firebase/database";
+import { realtimeDb } from "@/lib/firebase";
 
 export default function Suppliers() {
-  // Sample data for display
-  const sampleSuppliers = [
-    { id: '1', name: "Premium Textiles Ltd", contact: "John Smith", phone: "+1 234-567-8901", address: "123 Textile Ave, NY 10001" },
-    { id: '2', name: "Global Fabric Co", contact: "Sarah Johnson", phone: "+1 234-567-8902", address: "456 Fabric St, CA 90210" },
-    { id: '3', name: "Quality Materials Inc", contact: "Mike Wilson", phone: "+1 234-567-8903", address: "789 Material Blvd, TX 75001" },
-    { id: '4', name: "Elite Supplies Ltd", contact: "Emma Davis", phone: "+1 234-567-8904", address: "321 Supply Rd, FL 33101" },
-  ];
-
+  // Sample data for orders and bills (keeping for now)
   const sampleOrders = [
     { id: '1', supplierId: '1', orderNumber: 'ORD-001', orderDate: '2024-01-15', deliveryDate: '2024-02-01', itemDescription: 'Cotton Fabric - Premium Grade', quantity: 500, totalAmount: 12500, status: 'Active' },
     { id: '2', supplierId: '1', orderNumber: 'ORD-002', orderDate: '2024-01-20', deliveryDate: '2024-02-05', itemDescription: 'Silk Blend Material', quantity: 200, totalAmount: 8900, status: 'Completed' },
@@ -35,7 +29,7 @@ export default function Suppliers() {
     { id: '4', supplierId: '1', supplierName: 'Premium Textiles Ltd', billNumber: 'BILL-004', amount: 8900, dueDate: '2024-01-30', invoiceDate: '2024-01-20', description: 'Silk Blend Material Payment', status: 'Paid' },
   ];
 
-  const [suppliers, setSuppliers] = useState<any[]>(sampleSuppliers);
+  const [suppliers, setSuppliers] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>(sampleOrders);
   const [bills, setBills] = useState<any[]>(sampleBills);
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
@@ -43,47 +37,41 @@ export default function Suppliers() {
   const [showOrdersModal, setShowOrdersModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showBillsModal, setShowBillsModal] = useState(false);
-  const { getDocuments: getSuppliers } = useFirestore('suppliers');
-  const { getDocuments: getOrders } = useFirestore('orders');
-  const { getDocuments: getBills } = useFirestore('bills');
   const { toast } = useToast();
 
   useEffect(() => {
-    // Using sample data for now - uncomment fetchData() to load from Firebase
-    // fetchData();
+    fetchSuppliers();
   }, []);
 
-  const fetchSuppliers = async () => {
-    try {
-      const suppliersData = await getSuppliers();
-      setSuppliers(suppliersData);
-    } catch (error) {
+  const fetchSuppliers = () => {
+    const suppliersRef = ref(realtimeDb, 'suppliers');
+    const suppliersQuery = query(suppliersRef, orderByChild('createdAt'));
+    
+    const unsubscribe = onValue(suppliersQuery, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const suppliersList = Object.entries(data).map(([key, value]: [string, any]) => ({
+          id: key,
+          ...value
+        }));
+        // Sort by createdAt descending (most recent first)
+        suppliersList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setSuppliers(suppliersList);
+      } else {
+        setSuppliers([]);
+      }
+    }, (error) => {
+      console.error('Error fetching suppliers:', error);
       toast({
         title: "Error",
         description: "Failed to fetch suppliers",
         variant: "destructive",
       });
-    }
+    });
+
+    return unsubscribe;
   };
 
-  const fetchData = async () => {
-    try {
-      const [suppliersData, ordersData, billsData] = await Promise.all([
-        getSuppliers(),
-        getOrders(),
-        getBills()
-      ]);
-      setSuppliers(suppliersData);
-      setOrders(ordersData);
-      setBills(billsData);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch data",
-        variant: "destructive",
-      });
-    }
-  };
 
   const getSupplierStats = (supplierId: string) => {
     const supplierOrders = orders.filter(order => order.supplierId === supplierId);
@@ -179,8 +167,9 @@ export default function Suppliers() {
                           <Badge variant="default">Active</Badge>
                         </div>
                         <div className="text-sm text-muted-foreground space-y-1">
-                          <p>Contact: {supplier.contact}</p>
-                          <p>Phone: {supplier.phone}</p>
+                          <p>Contact: {supplier.contactNumber}</p>
+                          <p>Phone: {supplier.phoneNumber}</p>
+                          <p>Address: {supplier.address}</p>
                         </div>
                       </div>
                       <div className="flex flex-col sm:flex-row gap-4 mt-4 sm:mt-0">
@@ -227,7 +216,7 @@ export default function Suppliers() {
         <AddSupplierModal 
           open={showAddModal} 
           onOpenChange={setShowAddModal}
-          onSupplierAdded={fetchSuppliers}
+          onSupplierAdded={() => {}}
         />
         
         <SupplierOrdersModal
@@ -241,7 +230,7 @@ export default function Suppliers() {
           open={showEditModal}
           onOpenChange={setShowEditModal}
           supplier={selectedSupplier}
-          onSupplierUpdated={fetchData}
+          onSupplierUpdated={() => {}}
         />
         
         <PendingBillsModal
