@@ -125,11 +125,8 @@ export default function Suppliers() {
       }
     }, (error) => {
       console.error('Error fetching bills:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch bills",
-        variant: "destructive",
-      });
+      // Don't show toast for permission errors, just set empty bills
+      setBills([]);
     });
 
     return unsubscribe;
