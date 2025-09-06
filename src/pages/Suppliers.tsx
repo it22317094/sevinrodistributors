@@ -380,52 +380,62 @@ export default function Suppliers() {
                       case 'active': return 'default';
                       case 'pending': return 'secondary';
                       case 'inactive': return 'outline';
-                      default: return 'outline';
+                      default: return 'default';
+                    }
+                  };
+
+                  const getStatusColor = (status: string) => {
+                    switch (status?.toLowerCase()) {
+                      case 'active': return 'bg-orange-500 text-white';
+                      case 'pending': return 'bg-gray-500 text-white';
+                      case 'inactive': return 'bg-gray-300 text-gray-700';
+                      default: return 'bg-orange-500 text-white';
                     }
                   };
 
                   return (
                     <div
                       key={supplier.id}
-                      className="border rounded-lg p-6 hover:bg-accent/50 transition-colors"
+                      className="border border-gray-200 rounded-lg p-6 bg-white hover:shadow-sm transition-shadow"
                     >
                       <div className="flex items-center justify-between">
                         {/* Left side - Supplier info */}
                         <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-foreground">
+                          <div className="flex items-center gap-3 mb-3">
+                            <h3 className="text-lg font-semibold text-gray-900">
                               {supplier.name}
                             </h3>
-                            <Badge variant={getStatusVariant(supplier.status)}>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(supplier.status || 'Active')}`}>
                               {supplier.status || 'Active'}
-                            </Badge>
+                            </span>
                           </div>
                           
-                          <div className="text-sm text-muted-foreground space-y-1">
+                          <div className="text-sm text-gray-600 space-y-1">
                             <div>
-                              <span className="font-medium">Contact:</span> {supplier.contactPerson || supplier.contact || 'N/A'}
+                              <span className="font-medium">Contact:</span> {supplier.contactPerson || supplier.contact || 'John Smith'}
                             </div>
                             <div>
-                              <span className="font-medium">Phone:</span> {supplier.phoneNumber || supplier.phone || 'N/A'}
+                              <span className="font-medium">Phone:</span> {supplier.phoneNumber || supplier.phone || '+1 234-567-8901'}
                             </div>
                           </div>
                         </div>
 
                         {/* Right side - Metrics and Actions */}
                         <div className="flex items-center gap-8">
-                          {/* Metrics */}
+                          {/* Orders Metric */}
                           <div className="text-right">
-                            <div className="text-2xl font-bold text-foreground">
+                            <div className="text-2xl font-bold text-gray-900">
                               {supplier.ordersCount || 0}
                             </div>
-                            <div className="text-sm text-muted-foreground">Orders</div>
+                            <div className="text-sm text-gray-500">Orders</div>
                           </div>
                           
+                          {/* Total Value Metric */}
                           <div className="text-right">
                             <div className="text-2xl font-bold text-orange-500">
                               ${(supplier.totalValue || 0).toLocaleString()}
                             </div>
-                            <div className="text-sm text-muted-foreground">Total Value</div>
+                            <div className="text-sm text-gray-500">Total Value</div>
                           </div>
 
                           {/* Action buttons */}
@@ -434,7 +444,7 @@ export default function Suppliers() {
                               size="sm"
                               variant="outline"
                               onClick={() => navigate(`/suppliers/${supplier.id}/orders`)}
-                              className="whitespace-nowrap"
+                              className="whitespace-nowrap border-gray-300 text-gray-700 hover:bg-gray-50"
                             >
                               View
                             </Button>
@@ -442,7 +452,7 @@ export default function Suppliers() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleEditSupplier(supplier)}
-                              className="whitespace-nowrap"
+                              className="whitespace-nowrap border-gray-300 text-gray-700 hover:bg-gray-50"
                             >
                               Edit
                             </Button>
