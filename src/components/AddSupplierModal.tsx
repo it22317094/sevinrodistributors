@@ -11,7 +11,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { ref, push, serverTimestamp } from "firebase/database";
+import { ref, push, serverTimestamp, query, orderByChild, equalTo, get } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -51,7 +51,7 @@ export function AddSupplierModal({ open, onOpenChange, onSupplierAdded }: AddSup
     }));
   };
 
-  const validateForm = () => {
+  const validateForm = async () => {
     if (!formData.supplierName.trim()) {
       toast({
         title: "Validation Error",
@@ -59,6 +59,25 @@ export function AddSupplierModal({ open, onOpenChange, onSupplierAdded }: AddSup
         variant: "destructive",
       });
       return false;
+    }
+
+    // Check for duplicate supplier names
+    const nameLower = formData.supplierName.trim().toLowerCase();
+    const suppliersRef = ref(realtimeDb, 'suppliers');
+    const duplicateQuery = query(suppliersRef, orderByChild('nameLower'), equalTo(nameLower));
+    
+    try {
+      const snapshot = await get(duplicateQuery);
+      if (snapshot.exists()) {
+        toast({
+          title: "Validation Error",
+          description: "Supplier name already exists.",
+          variant: "destructive",
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking for duplicates:', error);
     }
 
     if (!formData.dueDate) {
@@ -121,7 +140,7 @@ export function AddSupplierModal({ open, onOpenChange, onSupplierAdded }: AddSup
       return;
     }
 
-    if (!validateForm()) {
+    if (!(await validateForm())) {
       return;
     }
 
@@ -135,8 +154,10 @@ export function AddSupplierModal({ open, onOpenChange, onSupplierAdded }: AddSup
       const supplierData = {
         supplierId: supplierId,
         name: formData.supplierName,
+        nameLower: formData.supplierName.trim().toLowerCase(),
         status: "Active",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       await push(suppliersRef, supplierData);

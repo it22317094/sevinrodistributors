@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileText, Package, TrendingUp, Calendar, DollarSign, Eye, Edit } from "lucide-react";
+import { Plus, FileText, Package, TrendingUp, Calendar, DollarSign, Eye, Edit, Trash2, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AddSupplierModal } from "@/components/AddSupplierModal";
 import { SupplierOrdersDrawer } from "@/components/SupplierOrdersDrawer";
@@ -11,7 +11,7 @@ import { SupplierEditModal } from "@/components/SupplierEditModal";
 import SupplierOrdersModal from "@/components/SupplierOrdersModal";
 import EditSupplierModal from "@/components/EditSupplierModal";
 import PendingBillsModal from "@/components/PendingBillsModal";
-import { ref, onValue, orderByChild, query, update, serverTimestamp, push } from "firebase/database";
+import { ref, onValue, orderByChild, query, update, serverTimestamp, push, remove, get, equalTo } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { useNavigate } from "react-router-dom";
 import { format, isAfter } from "date-fns";
@@ -335,6 +335,111 @@ export default function Suppliers() {
   const handlePendingBillsClick = () => {
     navigate('/billing?status=unpaid');
   };
+
+  const deleteSupplier = async (supplierId: string, supplierName: string) => {
+    if (!confirm(`Are you sure you want to delete "${supplierName}" and all related invoices?`)) {
+      return;
+    }
+
+    try {
+      // Delete all invoices for this supplier
+      const invoicesRef = ref(realtimeDb, 'invoices');
+      const invoicesQuery = query(invoicesRef, orderByChild('supplierId'), equalTo(supplierId));
+      const invoicesSnapshot = await get(invoicesQuery);
+      
+      if (invoicesSnapshot.exists()) {
+        const deletePromises = Object.keys(invoicesSnapshot.val()).map(invoiceId => 
+          remove(ref(realtimeDb, `invoices/${invoiceId}`))
+        );
+        await Promise.all(deletePromises);
+      }
+
+      // Delete the supplier
+      await remove(ref(realtimeDb, `suppliers/${supplierId}`));
+
+      toast({
+        title: "Success",
+        description: `Supplier "${supplierName}" and all related invoices deleted successfully`,
+      });
+    } catch (error: any) {
+      console.error('Error deleting supplier:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete supplier",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deduplicateSuppliers = async () => {
+    if (!confirm('This will remove duplicate suppliers and merge their invoices. Continue?')) {
+      return;
+    }
+
+    try {
+      const suppliersRef = ref(realtimeDb, 'suppliers');
+      const snapshot = await get(suppliersRef);
+      
+      if (!snapshot.exists()) return;
+
+      const suppliers = snapshot.val();
+      const suppliersByNameLower: Record<string, any[]> = {};
+
+      // Group suppliers by nameLower
+      Object.entries(suppliers).forEach(([id, supplier]: [string, any]) => {
+        const nameLower = supplier.nameLower || supplier.name?.toLowerCase() || '';
+        if (!suppliersByNameLower[nameLower]) {
+          suppliersByNameLower[nameLower] = [];
+        }
+        suppliersByNameLower[nameLower].push({ id, ...supplier });
+      });
+
+      // Process duplicates
+      for (const [nameLower, duplicates] of Object.entries(suppliersByNameLower)) {
+        if (duplicates.length > 1) {
+          // Keep the most recently updated
+          const keeper = duplicates.sort((a, b) => 
+            new Date(b.updatedAt || b.createdAt || 0).getTime() - 
+            new Date(a.updatedAt || a.createdAt || 0).getTime()
+          )[0];
+
+          const toDelete = duplicates.filter(s => s.id !== keeper.id);
+
+          for (const duplicate of toDelete) {
+            // Reassign invoices to keeper
+            const invoicesRef = ref(realtimeDb, 'invoices');
+            const invoicesQuery = query(invoicesRef, orderByChild('supplierId'), equalTo(duplicate.id));
+            const invoicesSnapshot = await get(invoicesQuery);
+            
+            if (invoicesSnapshot.exists()) {
+              const updatePromises = Object.entries(invoicesSnapshot.val()).map(([invoiceId, invoice]: [string, any]) => 
+                update(ref(realtimeDb, `invoices/${invoiceId}`), {
+                  supplierId: keeper.id,
+                  supplierName: keeper.name
+                })
+              );
+              await Promise.all(updatePromises);
+            }
+
+            // Delete duplicate supplier
+            await remove(ref(realtimeDb, `suppliers/${duplicate.id}`));
+          }
+        }
+      }
+
+      toast({
+        title: "Success",
+        description: "Duplicate suppliers have been merged successfully",
+      });
+    } catch (error: any) {
+      console.error('Error deduplicating suppliers:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to deduplicate suppliers",
+        variant: "destructive",
+      });
+    }
+  };
   
   return (
     <div className="min-h-screen bg-background">
@@ -345,10 +450,16 @@ export default function Suppliers() {
             <h1 className="text-3xl font-bold text-primary mb-2">Supplier Management</h1>
             <p className="text-muted-foreground">Manage your fabric suppliers and procurement</p>
           </div>
-          <Button className="mt-4 sm:mt-0" onClick={() => setShowAddModal(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Supplier
-          </Button>
+          <div className="flex gap-2 mt-4 sm:mt-0">
+            <Button variant="outline" onClick={deduplicateSuppliers}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Deduplicate
+            </Button>
+            <Button onClick={() => setShowAddModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Supplier
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -513,6 +624,14 @@ export default function Suppliers() {
                               className="whitespace-nowrap border-gray-300 text-gray-700 hover:bg-gray-50"
                             >
                               Edit
+                            </Button>
+                            <Button 
+                              size="sm"
+                              variant="outline"
+                              onClick={() => deleteSupplier(supplier.id, supplier.name)}
+                              className="whitespace-nowrap border-red-300 text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>

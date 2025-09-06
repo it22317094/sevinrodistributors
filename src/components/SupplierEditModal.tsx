@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ref, onValue, query, orderByChild, equalTo, update, serverTimestamp } from "firebase/database";
+import { ref, onValue, query, orderByChild, equalTo, update, serverTimestamp, get } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { format } from "date-fns";
 
@@ -101,11 +101,34 @@ export function SupplierEditModal({ open, onOpenChange, supplier, onSupplierUpda
     
     if (!supplier?.id) return;
 
+    // Check for duplicate supplier names (excluding current supplier)
+    const nameLower = formData.name.trim().toLowerCase();
+    const suppliersRef = ref(realtimeDb, 'suppliers');
+    const duplicateQuery = query(suppliersRef, orderByChild('nameLower'), equalTo(nameLower));
+    
+    try {
+      const snapshot = await get(duplicateQuery);
+      if (snapshot.exists()) {
+        const duplicates = Object.entries(snapshot.val()).filter(([key]) => key !== supplier.id);
+        if (duplicates.length > 0) {
+          toast({
+            title: "Validation Error",
+            description: "Supplier name already exists.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error checking for duplicates:', error);
+    }
+
     setLoading(true);
     try {
       const supplierRef = ref(realtimeDb, `suppliers/${supplier.id}`);
       await update(supplierRef, {
         ...formData,
+        nameLower: formData.name.trim().toLowerCase(),
         updatedAt: serverTimestamp()
       });
 
