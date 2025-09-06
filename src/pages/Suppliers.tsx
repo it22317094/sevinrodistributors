@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, FileText, Package, TrendingUp, Calendar, DollarSign, Eye, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AddSupplierModal } from "@/components/AddSupplierModal";
@@ -63,13 +64,13 @@ export default function Suppliers() {
           invoice.status === 'Pending' || invoice.status === 'Unpaid' || invoice.status === 'Partially Paid'
         );
 
+        // Get the latest invoice (most recent by created date)
         let latestInvoice = null;
-        if (unpaidInvoices.length > 0) {
-          latestInvoice = unpaidInvoices.sort((a, b) => {
-            if (a.dueDate && b.dueDate) {
-              return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-            }
-            return 0;
+        if (supplierInvoices.length > 0) {
+          latestInvoice = supplierInvoices.sort((a, b) => {
+            const aDate = new Date(a.createdAt || 0).getTime();
+            const bDate = new Date(b.createdAt || 0).getTime();
+            return bDate - aDate; // Most recent first
           })[0];
         }
 
@@ -78,7 +79,8 @@ export default function Suppliers() {
           ordersCount,
           totalValue,
           latestInvoice,
-          hasUnpaidInvoices: unpaidInvoices.length > 0
+          hasUnpaidInvoices: unpaidInvoices.length > 0,
+          pendingInvoicesCount: supplierInvoices.filter(inv => inv.status === 'Pending').length
         };
       });
 
@@ -282,10 +284,43 @@ export default function Suppliers() {
   };
 
   
+  const updateInvoiceStatus = async (invoiceId: string, newStatus: string, amount: number) => {
+    try {
+      const invoiceRef = ref(realtimeDb, `invoices/${invoiceId}`);
+      const updateData: any = {
+        status: newStatus,
+        updatedAt: serverTimestamp()
+      };
+
+      // Set balance based on status
+      if (newStatus === 'Pending') {
+        updateData.balance = amount;
+        updateData.paid = 0;
+      } else if (newStatus === 'Paid') {
+        updateData.balance = 0;
+        updateData.paid = amount;
+      }
+
+      await update(invoiceRef, updateData);
+
+      toast({
+        title: "Success",
+        description: `Invoice marked as ${newStatus}. KPIs updated.`,
+      });
+    } catch (error: any) {
+      console.error('Error updating invoice status:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update invoice status",
+        variant: "destructive",
+      });
+    }
+  };
+
   const totalSuppliers = suppliers.length;
   const activeOrders = orders.filter(order => !["Completed", "Cancelled"].includes(order.status)).length;
   const totalProcurement = orders.reduce((sum, order) => sum + (order.amount || 0), 0);
-  const pendingBills = combinedBills.filter(supplier => supplier.hasUnpaidInvoices).length;
+  const pendingBills = invoices.filter(invoice => invoice.status === 'Pending').length;
 
   const handleViewOrders = (supplier: any) => {
     setSelectedSupplier(supplier);
@@ -437,6 +472,29 @@ export default function Suppliers() {
                             </div>
                             <div className="text-sm text-gray-500">Total Value</div>
                           </div>
+
+                          {/* Latest Invoice Status */}
+                          {supplier.latestInvoice && (
+                            <div className="text-right">
+                              <div className="text-sm text-gray-500 mb-1">Latest Invoice</div>
+                              <Select 
+                                value={supplier.latestInvoice.status || 'Pending'} 
+                                onValueChange={(newStatus) => updateInvoiceStatus(
+                                  supplier.latestInvoice.id, 
+                                  newStatus, 
+                                  supplier.latestInvoice.amount
+                                )}
+                              >
+                                <SelectTrigger className="w-[100px] h-8 text-xs bg-white border-gray-300">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white border border-gray-200 shadow-lg z-50">
+                                  <SelectItem value="Pending" className="text-xs hover:bg-gray-100">Pending</SelectItem>
+                                  <SelectItem value="Paid" className="text-xs hover:bg-gray-100">Paid</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
 
                           {/* Action buttons */}
                           <div className="flex gap-2">
