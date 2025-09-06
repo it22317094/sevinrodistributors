@@ -16,6 +16,7 @@ import { format, isAfter } from "date-fns";
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [bills, setBills] = useState<any[]>([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [combinedBills, setCombinedBills] = useState<any[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -28,17 +29,19 @@ export default function Suppliers() {
   useEffect(() => {
     const unsubscribeSuppliers = fetchSuppliers();
     const unsubscribeBills = fetchBills();
+    const unsubscribeInvoices = fetchInvoices();
     
     return () => {
       if (unsubscribeSuppliers) unsubscribeSuppliers();
       if (unsubscribeBills) unsubscribeBills();
+      if (unsubscribeInvoices) unsubscribeInvoices();
     };
   }, []);
 
   useEffect(() => {
-    // Combine suppliers and bills data
-    if (suppliers.length >= 0 && bills.length >= 0) {
-      const combined = bills.map(bill => {
+    // Combine suppliers, bills, and invoices data
+    if (suppliers.length >= 0 && bills.length >= 0 && invoices.length >= 0) {
+      const combinedBillsList = bills.map(bill => {
         const supplier = suppliers.find(s => s.id === bill.supplierId);
         return {
           ...bill,
@@ -47,8 +50,20 @@ export default function Suppliers() {
         };
       });
 
+      const combinedInvoicesList = invoices.map(invoice => {
+        const supplier = suppliers.find(s => s.id === invoice.supplierId);
+        return {
+          ...invoice,
+          supplierName: supplier?.name || invoice.supplierName || 'Unknown Supplier',
+          supplierData: supplier
+        };
+      });
+
+      // Combine bills and invoices
+      const allPendingItems = [...combinedBillsList, ...combinedInvoicesList];
+
       // Sort by nearest due date first (overdue at top), then newest invoice date
-      combined.sort((a, b) => {
+      allPendingItems.sort((a, b) => {
         const aOverdue = a.dueDate && isAfter(new Date(), new Date(a.dueDate));
         const bOverdue = b.dueDate && isAfter(new Date(), new Date(b.dueDate));
         
@@ -68,11 +83,11 @@ export default function Suppliers() {
         return 0;
       });
 
-      setCombinedBills(combined);
+      setCombinedBills(allPendingItems);
     } else {
       setCombinedBills([]);
     }
-  }, [suppliers, bills]);
+  }, [suppliers, bills, invoices]);
 
   const fetchSuppliers = () => {
     console.log('Fetching suppliers...');
@@ -138,6 +153,39 @@ export default function Suppliers() {
     }
   };
 
+  const fetchInvoices = () => {
+    try {
+      const invoicesRef = ref(realtimeDb, 'invoices');
+      const invoicesQuery = query(invoicesRef, orderByChild('status'));
+      
+      const unsubscribe = onValue(invoicesQuery, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const invoicesList = Object.entries(data).map(([key, value]: [string, any]) => ({
+            id: key,
+            ...value
+          })).filter(invoice => invoice.status === 'Unpaid' || invoice.status === 'Partially Paid');
+          
+          console.log('Invoices updated:', invoicesList);
+          setInvoices(invoicesList);
+        } else {
+          console.log('Invoices updated: []');
+          setInvoices([]);
+        }
+      }, (error) => {
+        console.warn("Invoices fetch error:", error.message);
+        // Set empty invoices array so suppliers can still render
+        setInvoices([]);
+      });
+
+      return unsubscribe;
+    } catch (error: any) {
+      console.warn("Invoices fetch error:", error.message);
+      setInvoices([]);
+      return () => {}; // Return empty unsubscribe function
+    }
+  };
+
   const markBillAsPaid = async (billId: string, amount: number) => {
     try {
       const billRef = ref(realtimeDb, `bills/${billId}`);
@@ -157,6 +205,30 @@ export default function Suppliers() {
       toast({
         title: "Error",
         description: "Failed to mark bill as paid",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const markInvoiceAsPaid = async (invoiceId: string, amount: number) => {
+    try {
+      const invoiceRef = ref(realtimeDb, `invoices/${invoiceId}`);
+      await update(invoiceRef, {
+        status: 'Paid',
+        paid: amount,
+        balance: 0,
+        updatedAt: serverTimestamp()
+      });
+
+      toast({
+        title: "Success",
+        description: "Invoice marked as paid successfully",
+      });
+    } catch (error) {
+      console.error('Error marking invoice as paid:', error);
+      toast({
+        title: "Error",
+        description: "Failed to mark invoice as paid",
         variant: "destructive",
       });
     }
@@ -268,7 +340,10 @@ export default function Suppliers() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <h3 className="font-semibold text-lg">
-                              Bill #{bill.billNumber || bill.id || '—'}
+                              {bill.invoiceNumber ? 
+                                `Invoice #${bill.invoiceNumber}` : 
+                                `Bill #${bill.billNumber || bill.id || '—'}`
+                              }
                             </h3>
                             {overdue && (
                               <Badge variant="destructive">Overdue</Badge>
@@ -321,7 +396,12 @@ export default function Suppliers() {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              markBillAsPaid(bill.id, bill.amount || 0);
+                              // Check if this is an invoice (has invoiceNumber) or bill (has billNumber)
+                              if (bill.invoiceNumber) {
+                                markInvoiceAsPaid(bill.id, bill.amount || 0);
+                              } else {
+                                markBillAsPaid(bill.id, bill.amount || 0);
+                              }
                             }}
                             className="whitespace-nowrap"
                           >
