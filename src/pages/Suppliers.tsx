@@ -258,8 +258,11 @@ export default function Suppliers() {
   
   const totalSuppliers = suppliers.length;
   const totalActiveOrders = 0; // Will be calculated from actual orders data
-  const totalProcurement = combinedBills.reduce((sum, bill) => sum + (bill.amount || 0), 0);
-  const pendingBills = combinedBills.length;
+  const totalProcurement = combinedBills.reduce((sum, supplier) => {
+    const invoiceAmount = supplier.latestInvoice?.amount || 0;
+    return sum + invoiceAmount;
+  }, 0);
+  const pendingBills = combinedBills.filter(supplier => supplier.hasUnpaidInvoices).length;
   
   return (
     <div className="min-h-screen bg-background">
