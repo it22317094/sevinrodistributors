@@ -65,7 +65,6 @@ export default function EditSupplierModal({ open, onOpenChange, supplier, onSupp
 
     setLoading(true);
     try {
-      const supplierRef = ref(realtimeDb, `suppliers/${supplier.id}`);
       const updateData = {
         supplierId: supplier.id,
         name: formData.name,
@@ -76,7 +75,12 @@ export default function EditSupplierModal({ open, onOpenChange, supplier, onSupp
         updatedAt: new Date().toISOString()
       };
 
+      console.log('Updating supplier:', supplier.id, updateData);
+      
+      const supplierRef = ref(realtimeDb, `suppliers/${supplier.id}`);
       await update(supplierRef, updateData);
+      
+      console.log('Supplier updated successfully');
       
       toast({
         title: "Success",
@@ -85,7 +89,7 @@ export default function EditSupplierModal({ open, onOpenChange, supplier, onSupp
       onSupplierUpdated();
       onOpenChange(false);
     } catch (error) {
-      console.error("Error updating supplier:", error);
+      console.error('Error updating supplier:', error);
       toast({
         title: "Error",
         description: "Failed to update supplier",

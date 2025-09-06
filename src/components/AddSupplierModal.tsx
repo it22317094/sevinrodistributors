@@ -99,14 +99,8 @@ export function AddSupplierModal({ open, onOpenChange, onSupplierAdded }: AddSup
 
     setLoading(true);
     try {
-      console.log('Starting supplier submission...');
-      const suppliersRef = ref(realtimeDb, 'suppliers');
-      const newSupplierRef = push(suppliersRef);
-      const supplierId = newSupplierRef.key;
-      console.log('Generated supplier ID:', supplierId);
-
       const supplierData = {
-        supplierId: supplierId,
+        supplierId: null, // Will be set by Firebase
         name: formData.supplierName,
         address: formData.address,
         phoneNumber: formData.phoneNumber,
@@ -114,10 +108,18 @@ export function AddSupplierModal({ open, onOpenChange, onSupplierAdded }: AddSup
         status: "Active",
         createdAt: new Date().toISOString()
       };
-      console.log('Supplier data to save:', supplierData);
+      
+      console.log('Adding supplier:', supplierData);
+      
+      const suppliersRef = ref(realtimeDb, 'suppliers');
+      const newSupplierRef = push(suppliersRef);
+      const supplierId = newSupplierRef.key;
+      
+      // Update supplier data with the generated ID
+      supplierData.supplierId = supplierId;
 
       await push(suppliersRef, supplierData);
-      console.log('Supplier saved successfully to Firebase');
+      console.log('Supplier added successfully');
 
       toast({
         title: "Success",

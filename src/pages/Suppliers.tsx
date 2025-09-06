@@ -75,29 +75,24 @@ export default function Suppliers() {
   }, [suppliers, bills]);
 
   const fetchSuppliers = () => {
+    console.log('Fetching suppliers...');
     const suppliersRef = ref(realtimeDb, 'suppliers');
     const suppliersQuery = query(suppliersRef, orderByChild('createdAt'));
     
     const unsubscribe = onValue(suppliersQuery, (snapshot) => {
-      console.log('=== FIREBASE SUPPLIERS DATA ===');
-      console.log('Snapshot exists:', snapshot.exists());
+      console.log('Raw snapshot JSON:', JSON.stringify(snapshot.val(), null, 2));
       
       if (snapshot.exists()) {
         const data = snapshot.val();
-        console.log('Raw Firebase data:', data);
-        console.log('Number of suppliers in Firebase:', Object.keys(data).length);
-        
         const suppliersList = Object.entries(data).map(([key, value]: [string, any]) => ({
           id: key,
           ...value
         }));
         
-        console.log('Processed suppliers list:', suppliersList);
-        console.log('Suppliers names:', suppliersList.map(s => s.name));
-        
+        console.log('Suppliers updated:', suppliersList);
         setSuppliers(suppliersList);
       } else {
-        console.log('No suppliers found in Firebase');
+        console.log('Suppliers updated: []');
         setSuppliers([]);
       }
     }, (error) => {
