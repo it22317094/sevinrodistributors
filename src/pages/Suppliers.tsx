@@ -109,25 +109,34 @@ export default function Suppliers() {
   };
 
   const fetchBills = () => {
-    const billsRef = ref(realtimeDb, 'bills');
-    const billsQuery = query(billsRef, orderByChild('status'));
-    
-    const unsubscribe = onValue(billsQuery, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const billsList = Object.entries(data).map(([key, value]: [string, any]) => ({
-          id: key,
-          ...value
-        })).filter(bill => bill.status === 'Unpaid' || bill.status === 'Partially Paid');
-        setBills(billsList);
-      } else {
+    try {
+      const billsRef = ref(realtimeDb, 'bills');
+      const billsQuery = query(billsRef, orderByChild('status'));
+      
+      const unsubscribe = onValue(billsQuery, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const billsList = Object.entries(data).map(([key, value]: [string, any]) => ({
+            id: key,
+            ...value
+          })).filter(bill => bill.status === 'Unpaid' || bill.status === 'Partially Paid');
+          setBills(billsList);
+        } else {
+          setBills([]);
+        }
+      }, (error) => {
+        console.warn("Bills fetch error:", error.message);
+        // Set empty bills array so suppliers can still render
         setBills([]);
-      }
-    }, (error) => {
-      console.error('Error fetching bills:', error);
-      // Don't show toast for permission errors, just set empty bills
+      });
+
+      return unsubscribe;
+    } catch (error: any) {
+      console.warn("Bills fetch error:", error.message);
       setBills([]);
-    });
+      return () => {}; // Return empty unsubscribe function
+    }
+  };
 
     return unsubscribe;
   };
