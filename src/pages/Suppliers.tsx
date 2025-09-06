@@ -90,6 +90,7 @@ export default function Suppliers() {
         }));
         
         console.log('Suppliers updated:', suppliersList);
+        console.log('Total suppliers:', suppliersList.length);
         setSuppliers(suppliersList);
       } else {
         console.log('Suppliers updated: []');
