@@ -138,9 +138,6 @@ export default function Suppliers() {
     }
   };
 
-    return unsubscribe;
-  };
-
   const markBillAsPaid = async (billId: string, amount: number) => {
     try {
       const billRef = ref(realtimeDb, `bills/${billId}`);
