@@ -11,9 +11,33 @@ import EditSupplierModal from "@/components/EditSupplierModal";
 import PendingBillsModal from "@/components/PendingBillsModal";
 
 export default function Suppliers() {
-  const [suppliers, setSuppliers] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [bills, setBills] = useState<any[]>([]);
+  // Sample data for display
+  const sampleSuppliers = [
+    { id: '1', name: "Premium Textiles Ltd", contact: "John Smith", phone: "+1 234-567-8901", address: "123 Textile Ave, NY 10001" },
+    { id: '2', name: "Global Fabric Co", contact: "Sarah Johnson", phone: "+1 234-567-8902", address: "456 Fabric St, CA 90210" },
+    { id: '3', name: "Quality Materials Inc", contact: "Mike Wilson", phone: "+1 234-567-8903", address: "789 Material Blvd, TX 75001" },
+    { id: '4', name: "Elite Supplies Ltd", contact: "Emma Davis", phone: "+1 234-567-8904", address: "321 Supply Rd, FL 33101" },
+  ];
+
+  const sampleOrders = [
+    { id: '1', supplierId: '1', orderNumber: 'ORD-001', orderDate: '2024-01-15', deliveryDate: '2024-02-01', itemDescription: 'Cotton Fabric - Premium Grade', quantity: 500, totalAmount: 12500, status: 'Active' },
+    { id: '2', supplierId: '1', orderNumber: 'ORD-002', orderDate: '2024-01-20', deliveryDate: '2024-02-05', itemDescription: 'Silk Blend Material', quantity: 200, totalAmount: 8900, status: 'Completed' },
+    { id: '3', supplierId: '2', orderNumber: 'ORD-003', orderDate: '2024-01-18', deliveryDate: '2024-02-03', itemDescription: 'Polyester Fabric Rolls', quantity: 300, totalAmount: 6750, status: 'Active' },
+    { id: '4', supplierId: '2', orderNumber: 'ORD-004', orderDate: '2024-01-22', deliveryDate: '2024-02-08', itemDescription: 'Denim Material - Heavy Weight', quantity: 150, totalAmount: 4500, status: 'Active' },
+    { id: '5', supplierId: '3', orderNumber: 'ORD-005', orderDate: '2024-01-25', deliveryDate: '2024-02-10', itemDescription: 'Linen Fabric - Natural', quantity: 400, totalAmount: 9200, status: 'Completed' },
+    { id: '6', supplierId: '4', orderNumber: 'ORD-006', orderDate: '2024-01-28', deliveryDate: '2024-02-12', itemDescription: 'Wool Blend Fabric', quantity: 250, totalAmount: 7800, status: 'Active' },
+  ];
+
+  const sampleBills = [
+    { id: '1', supplierId: '1', supplierName: 'Premium Textiles Ltd', billNumber: 'BILL-001', amount: 12500, dueDate: '2024-02-15', invoiceDate: '2024-01-15', description: 'Cotton Fabric Order Payment', status: 'Pending' },
+    { id: '2', supplierId: '2', supplierName: 'Global Fabric Co', billNumber: 'BILL-002', amount: 6750, dueDate: '2024-02-10', invoiceDate: '2024-01-18', description: 'Polyester Fabric Payment', status: 'Pending' },
+    { id: '3', supplierId: '4', supplierName: 'Elite Supplies Ltd', billNumber: 'BILL-003', amount: 7800, dueDate: '2024-02-05', invoiceDate: '2024-01-28', description: 'Wool Blend Fabric Payment', status: 'Pending' },
+    { id: '4', supplierId: '1', supplierName: 'Premium Textiles Ltd', billNumber: 'BILL-004', amount: 8900, dueDate: '2024-01-30', invoiceDate: '2024-01-20', description: 'Silk Blend Material Payment', status: 'Paid' },
+  ];
+
+  const [suppliers, setSuppliers] = useState<any[]>(sampleSuppliers);
+  const [orders, setOrders] = useState<any[]>(sampleOrders);
+  const [bills, setBills] = useState<any[]>(sampleBills);
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showOrdersModal, setShowOrdersModal] = useState(false);
@@ -26,7 +50,8 @@ export default function Suppliers() {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchData();
+    // Using sample data for now - fetchData() can be called to load from Firebase
+    // fetchData();
   }, []);
 
   const fetchData = async () => {
@@ -196,6 +221,7 @@ export default function Suppliers() {
           open={showOrdersModal}
           onOpenChange={setShowOrdersModal}
           supplier={selectedSupplier}
+          orders={orders}
         />
         
         <EditSupplierModal
@@ -208,6 +234,7 @@ export default function Suppliers() {
         <PendingBillsModal
           open={showBillsModal}
           onOpenChange={setShowBillsModal}
+          bills={bills}
         />
       </div>
     </div>

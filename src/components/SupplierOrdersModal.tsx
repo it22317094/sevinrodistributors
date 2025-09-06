@@ -11,21 +11,25 @@ interface SupplierOrdersModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   supplier: any;
+  orders?: any[];
 }
 
-export default function SupplierOrdersModal({ open, onOpenChange, supplier }: SupplierOrdersModalProps) {
+export default function SupplierOrdersModal({ open, onOpenChange, supplier, orders: supplierOrdersProp }: SupplierOrdersModalProps) {
   const [orders, setOrders] = useState<any[]>([]);
   const { getDocuments, updateDocument } = useFirestore('orders');
   const { toast } = useToast();
 
   useEffect(() => {
-    if (open && supplier) {
-      fetchOrders();
+    if (open && supplier && supplierOrdersProp) {
+      const supplierOrders = supplierOrdersProp.filter((order: any) => order.supplierId === supplier.id);
+      setOrders(supplierOrders);
     }
-  }, [open, supplier]);
+  }, [open, supplier, supplierOrdersProp]);
 
   const fetchOrders = async () => {
     try {
+      // Using sample data passed from parent component
+      // In real implementation, this would fetch from Firebase
       const ordersData = await getDocuments();
       const supplierOrders = ordersData.filter((order: any) => order.supplierId === supplier.id);
       setOrders(supplierOrders);

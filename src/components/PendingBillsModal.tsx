@@ -10,18 +10,20 @@ import { FileText, Calendar, DollarSign, AlertCircle } from "lucide-react";
 interface PendingBillsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  bills?: any[];
 }
 
-export default function PendingBillsModal({ open, onOpenChange }: PendingBillsModalProps) {
+export default function PendingBillsModal({ open, onOpenChange, bills: billsProp }: PendingBillsModalProps) {
   const [bills, setBills] = useState<any[]>([]);
   const { getDocuments, updateDocument } = useFirestore('bills');
   const { toast } = useToast();
 
   useEffect(() => {
-    if (open) {
-      fetchPendingBills();
+    if (open && billsProp) {
+      const pendingBills = billsProp.filter((bill: any) => bill.status === 'Pending');
+      setBills(pendingBills);
     }
-  }, [open]);
+  }, [open, billsProp]);
 
   const fetchPendingBills = async () => {
     try {
