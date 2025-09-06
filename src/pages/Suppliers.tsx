@@ -46,25 +46,28 @@ export default function Suppliers() {
   }, []);
 
   useEffect(() => {
-    // Join suppliers with their latest unpaid invoices
+    // Join suppliers with their invoice metrics
     if (suppliers.length >= 0 && invoices.length >= 0) {
-      const suppliersWithInvoices = suppliers.map(supplier => {
-        // Find all unpaid invoices for this supplier
+      const suppliersWithMetrics = suppliers.map(supplier => {
+        // Find all invoices for this supplier
         const supplierInvoices = invoices.filter(invoice => 
-          invoice.supplierId === supplier.id && 
-          (invoice.status === 'Pending' || invoice.status === 'Unpaid' || invoice.status === 'Partially Paid')
+          invoice.supplierId === supplier.id
         );
 
-        // Get the latest unpaid invoice (by due date, then by invoice date)
+        // Calculate metrics
+        const ordersCount = supplierInvoices.length;
+        const totalValue = supplierInvoices.reduce((sum, invoice) => sum + (invoice.amount || 0), 0);
+
+        // Find latest unpaid invoice for sorting purposes
+        const unpaidInvoices = supplierInvoices.filter(invoice => 
+          invoice.status === 'Pending' || invoice.status === 'Unpaid' || invoice.status === 'Partially Paid'
+        );
+
         let latestInvoice = null;
-        if (supplierInvoices.length > 0) {
-          latestInvoice = supplierInvoices.sort((a, b) => {
+        if (unpaidInvoices.length > 0) {
+          latestInvoice = unpaidInvoices.sort((a, b) => {
             if (a.dueDate && b.dueDate) {
-              const dateCompare = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-              if (dateCompare !== 0) return dateCompare;
-            }
-            if (a.invoiceDate && b.invoiceDate) {
-              return new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime();
+              return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
             }
             return 0;
           })[0];
@@ -72,32 +75,19 @@ export default function Suppliers() {
 
         return {
           ...supplier,
+          ordersCount,
+          totalValue,
           latestInvoice,
-          hasUnpaidInvoices: supplierInvoices.length > 0
+          hasUnpaidInvoices: unpaidInvoices.length > 0
         };
       });
 
-      // Sort suppliers by nearest due date first (those with invoices first)
-      suppliersWithInvoices.sort((a, b) => {
-        // Suppliers with unpaid invoices come first
-        if (a.hasUnpaidInvoices && !b.hasUnpaidInvoices) return -1;
-        if (!a.hasUnpaidInvoices && b.hasUnpaidInvoices) return 1;
-
-        // If both have invoices, sort by due date
-        if (a.latestInvoice?.dueDate && b.latestInvoice?.dueDate) {
-          const aOverdue = isAfter(new Date(), new Date(a.latestInvoice.dueDate));
-          const bOverdue = isAfter(new Date(), new Date(b.latestInvoice.dueDate));
-          
-          if (aOverdue && !bOverdue) return -1;
-          if (!aOverdue && bOverdue) return 1;
-          
-          return new Date(a.latestInvoice.dueDate).getTime() - new Date(b.latestInvoice.dueDate).getTime();
-        }
-
-        return 0;
+      // Sort suppliers by name
+      suppliersWithMetrics.sort((a, b) => {
+        return (a.name || '').localeCompare(b.name || '');
       });
 
-      setCombinedBills(suppliersWithInvoices);
+      setCombinedBills(suppliersWithMetrics);
     } else {
       setCombinedBills([]);
     }
@@ -170,7 +160,7 @@ export default function Suppliers() {
   const fetchInvoices = () => {
     try {
       const invoicesRef = ref(realtimeDb, 'invoices');
-      const invoicesQuery = query(invoicesRef, orderByChild('status'));
+      const invoicesQuery = query(invoicesRef, orderByChild('supplierId'));
       
       const unsubscribe = onValue(invoicesQuery, (snapshot) => {
         if (snapshot.exists()) {
@@ -178,9 +168,9 @@ export default function Suppliers() {
           const invoicesList = Object.entries(data).map(([key, value]: [string, any]) => ({
             id: key,
             ...value
-          })).filter(invoice => invoice.status === 'Pending' || invoice.status === 'Unpaid' || invoice.status === 'Partially Paid');
+          }));
           
-          console.log('Invoices updated:', invoicesList);
+          console.log('All invoices updated:', invoicesList);
           setInvoices(invoicesList);
         } else {
           console.log('Invoices updated: []');
@@ -373,7 +363,7 @@ export default function Suppliers() {
         <Card>
           <CardHeader>
             <CardTitle>Suppliers</CardTitle>
-            <CardDescription>Suppliers with their latest unpaid invoices</CardDescription>
+            <CardDescription>A list of all your fabric suppliers</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -385,128 +375,78 @@ export default function Suppliers() {
                 </div>
               ) : (
                 combinedBills.map((supplier) => {
-                  const invoice = supplier.latestInvoice;
-                  const overdue = invoice?.dueDate && isAfter(new Date(), new Date(invoice.dueDate));
+                  const getStatusVariant = (status: string) => {
+                    switch (status?.toLowerCase()) {
+                      case 'active': return 'default';
+                      case 'pending': return 'secondary';
+                      case 'inactive': return 'outline';
+                      default: return 'outline';
+                    }
+                  };
+
                   return (
                     <div
                       key={supplier.id}
-                      className="border rounded-lg p-6 hover:bg-accent/50 transition-colors cursor-pointer"
-                      onClick={() => handleCardClick(supplier)}
-                     >
-                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      className="border rounded-lg p-6 hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        {/* Left side - Supplier info */}
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-lg">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-semibold text-foreground">
                               {supplier.name}
                             </h3>
-                            {overdue && (
-                              <Badge variant="destructive">Overdue</Badge>
-                            )}
+                            <Badge variant={getStatusVariant(supplier.status)}>
+                              {supplier.status || 'Active'}
+                            </Badge>
                           </div>
                           
-                          <div className="space-y-2 text-sm">
-                            {invoice ? (
-                              <>
-                                <div className="flex items-center gap-2">
-                                  <FileText className="h-4 w-4 text-muted-foreground" />
-                                  <span className="font-medium">Invoice #:</span>
-                                  <span>{invoice.invoiceNo || '—'}</span>
-                                </div>
-                                
-                                {invoice.dueDate && (
-                                  <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                                    <span className="font-medium">Due Date:</span>
-                                    <span className={overdue ? "text-destructive font-medium" : ""}>
-                                      {format(new Date(invoice.dueDate), "MMM dd, yyyy")}
-                                    </span>
-                                  </div>
-                                )}
-                                
-                                <div className="flex items-center gap-2">
-                                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                                  <span className="font-medium">Amount:</span>
-                                  <span className="font-semibold text-primary">
-                                    ${(invoice.balance || invoice.amount || 0).toLocaleString()}
-                                  </span>
-                                </div>
-                                
-                                {invoice.description && (
-                                  <div className="mt-2">
-                                    <span className="font-medium">Description:</span>
-                                    <p className="text-muted-foreground mt-1">{invoice.description}</p>
-                                  </div>
-                                )}
-                                
-                                {invoice.createdAt && (
-                                  <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                                    <span className="font-medium">Invoice Date:</span>
-                                    <span>{format(new Date(invoice.createdAt), "MMM dd, yyyy")}</span>
-                                  </div>
-                                )}
-                              </>
-                            ) : (
-                              <div className="text-muted-foreground">
-                                <span>No unpaid invoices</span>
-                              </div>
-                            )}
+                          <div className="text-sm text-muted-foreground space-y-1">
+                            <div>
+                              <span className="font-medium">Contact:</span> {supplier.contactPerson || supplier.contact || 'N/A'}
+                            </div>
+                            <div>
+                              <span className="font-medium">Phone:</span> {supplier.phoneNumber || supplier.phone || 'N/A'}
+                            </div>
                           </div>
                         </div>
-                        
-                        <div className="flex flex-col gap-2">
+
+                        {/* Right side - Metrics and Actions */}
+                        <div className="flex items-center gap-8">
+                          {/* Metrics */}
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-foreground">
+                              {supplier.ordersCount || 0}
+                            </div>
+                            <div className="text-sm text-muted-foreground">Orders</div>
+                          </div>
+                          
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-orange-500">
+                              ${(supplier.totalValue || 0).toLocaleString()}
+                            </div>
+                            <div className="text-sm text-muted-foreground">Total Value</div>
+                          </div>
+
+                          {/* Action buttons */}
                           <div className="flex gap-2">
                             <Button 
                               size="sm"
                               variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewOrders(supplier);
-                              }}
+                              onClick={() => navigate(`/suppliers/${supplier.id}/orders`)}
                               className="whitespace-nowrap"
                             >
-                              <Eye className="h-4 w-4 mr-1" />
                               View
                             </Button>
                             <Button 
                               size="sm"
                               variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditSupplier(supplier);
-                              }}
+                              onClick={() => handleEditSupplier(supplier)}
                               className="whitespace-nowrap"
                             >
-                              <Edit className="h-4 w-4 mr-1" />
                               Edit
                             </Button>
                           </div>
-                          
-                          {invoice ? (
-                            <Button 
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                markInvoiceAsPaid(invoice.id, invoice.amount || 0);
-                              }}
-                              className="whitespace-nowrap"
-                            >
-                              Mark as Paid
-                            </Button>
-                          ) : (
-                            <Button 
-                              size="sm"
-                              variant="secondary"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedSupplier(supplier);
-                                setShowAddModal(true);
-                              }}
-                              className="whitespace-nowrap"
-                            >
-                              Create Invoice
-                            </Button>
-                          )}
                         </div>
                       </div>
                     </div>
