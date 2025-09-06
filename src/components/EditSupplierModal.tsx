@@ -4,8 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useFirestore } from "@/hooks/useFirestore";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
+import { ref, update } from "firebase/database";
+import { realtimeDb } from "@/lib/firebase";
+import { format } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface EditSupplierModalProps {
   open: boolean;
@@ -17,21 +23,22 @@ interface EditSupplierModalProps {
 export default function EditSupplierModal({ open, onOpenChange, supplier, onSupplierUpdated }: EditSupplierModalProps) {
   const [formData, setFormData] = useState({
     name: '',
-    address: '',
-    phone: '',
-    contact: '',
+    dueDate: null as Date | null,
+    amountPaid: '',
+    description: '',
+    invoiceDate: null as Date | null,
   });
   const [loading, setLoading] = useState(false);
-  const { updateDocument } = useFirestore('suppliers');
   const { toast } = useToast();
 
   useEffect(() => {
     if (supplier) {
       setFormData({
         name: supplier.name || '',
-        address: supplier.address || '',
-        phone: supplier.phone || '',
-        contact: supplier.contact || '',
+        dueDate: supplier.dueDate ? new Date(supplier.dueDate) : null,
+        amountPaid: supplier.amountPaid?.toString() || '',
+        description: supplier.description || '',
+        invoiceDate: supplier.invoiceDate ? new Date(supplier.invoiceDate) : null,
       });
     }
   }, [supplier]);
@@ -47,10 +54,10 @@ export default function EditSupplierModal({ open, onOpenChange, supplier, onSupp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.address || !formData.phone) {
+    if (!formData.name || !formData.amountPaid || !formData.invoiceDate) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields",
+        description: "Please fill in all required fields (Name, Amount Paid, Invoice Date)",
         variant: "destructive",
       });
       return;
@@ -58,7 +65,19 @@ export default function EditSupplierModal({ open, onOpenChange, supplier, onSupp
 
     setLoading(true);
     try {
-      await updateDocument(supplier.id, formData);
+      const supplierRef = ref(realtimeDb, `suppliers/${supplier.id}`);
+      const updateData = {
+        supplierId: supplier.id,
+        name: formData.name,
+        dueDate: formData.dueDate ? format(formData.dueDate, 'yyyy-MM-dd') : null,
+        amountPaid: parseFloat(formData.amountPaid),
+        description: formData.description,
+        invoiceDate: formData.invoiceDate ? format(formData.invoiceDate, 'yyyy-MM-dd') : null,
+        updatedAt: new Date().toISOString()
+      };
+
+      await update(supplierRef, updateData);
+      
       toast({
         title: "Success",
         description: "Supplier updated successfully",
@@ -66,6 +85,7 @@ export default function EditSupplierModal({ open, onOpenChange, supplier, onSupp
       onSupplierUpdated();
       onOpenChange(false);
     } catch (error) {
+      console.error("Error updating supplier:", error);
       toast({
         title: "Error",
         description: "Failed to update supplier",
@@ -97,46 +117,93 @@ export default function EditSupplierModal({ open, onOpenChange, supplier, onSupp
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="contact">Contact Person</Label>
-            <Input
-              id="contact"
-              name="contact"
-              value={formData.contact}
-              onChange={handleInputChange}
-              placeholder="Enter contact person"
-            />
+            <Label htmlFor="dueDate">Due Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.dueDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.dueDate ? format(formData.dueDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.dueDate || undefined}
+                  onSelect={(date) => setFormData(prev => ({ ...prev, dueDate: date || null }))}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number *</Label>
+            <Label htmlFor="amountPaid">Amount Paid *</Label>
             <Input
-              id="phone"
-              name="phone"
-              value={formData.phone}
+              id="amountPaid"
+              name="amountPaid"
+              type="number"
+              step="0.01"
+              value={formData.amountPaid}
               onChange={handleInputChange}
-              placeholder="Enter phone number"
+              placeholder="0.00"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="address">Address *</Label>
+            <Label htmlFor="description">Description</Label>
             <Textarea
-              id="address"
-              name="address"
-              value={formData.address}
+              id="description"
+              name="description"
+              value={formData.description}
               onChange={handleInputChange}
-              placeholder="Enter supplier address"
+              placeholder="Notes about supplier or payment"
               rows={3}
-              required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="invoiceDate">Invoice Date *</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !formData.invoiceDate && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {formData.invoiceDate ? format(formData.invoiceDate, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={formData.invoiceDate || undefined}
+                  onSelect={(date) => setFormData(prev => ({ ...prev, invoiceDate: date || null }))}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button 
+              type="submit" 
+              disabled={loading || !formData.name || !formData.amountPaid || !formData.invoiceDate}
+            >
               {loading ? "Updating..." : "Update Supplier"}
             </Button>
           </div>
