@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, FileText, Package, TrendingUp, Calendar, DollarSign } from "lucide-react";
+import { Plus, FileText, Package, TrendingUp, Calendar, DollarSign, Eye, Edit } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AddSupplierModal } from "@/components/AddSupplierModal";
+import { SupplierOrdersDrawer } from "@/components/SupplierOrdersDrawer";
+import { SupplierEditModal } from "@/components/SupplierEditModal";
 import SupplierOrdersModal from "@/components/SupplierOrdersModal";
 import EditSupplierModal from "@/components/EditSupplierModal";
 import PendingBillsModal from "@/components/PendingBillsModal";
@@ -17,11 +19,14 @@ export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [bills, setBills] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [combinedBills, setCombinedBills] = useState<any[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState<any>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showOrdersModal, setShowOrdersModal] = useState(false);
+  const [showOrdersDrawer, setShowOrdersDrawer] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showNewEditModal, setShowNewEditModal] = useState(false);
   const [showBillsModal, setShowBillsModal] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -30,11 +35,13 @@ export default function Suppliers() {
     const unsubscribeSuppliers = fetchSuppliers();
     const unsubscribeBills = fetchBills();
     const unsubscribeInvoices = fetchInvoices();
+    const unsubscribeOrders = fetchOrders();
     
     return () => {
       if (unsubscribeSuppliers) unsubscribeSuppliers();
       if (unsubscribeBills) unsubscribeBills();
       if (unsubscribeInvoices) unsubscribeInvoices();
+      if (unsubscribeOrders) unsubscribeOrders();
     };
   }, []);
 
@@ -217,6 +224,35 @@ export default function Suppliers() {
     }
   };
 
+  const fetchOrders = () => {
+    try {
+      const ordersRef = ref(realtimeDb, 'purchaseOrders');
+      const ordersQuery = query(ordersRef, orderByChild('status'));
+      
+      const unsubscribe = onValue(ordersQuery, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          const ordersList = Object.entries(data).map(([key, value]: [string, any]) => ({
+            id: key,
+            ...value
+          }));
+          setOrders(ordersList);
+        } else {
+          setOrders([]);
+        }
+      }, (error) => {
+        console.warn("Orders fetch error:", error.message);
+        setOrders([]);
+      });
+
+      return unsubscribe;
+    } catch (error: any) {
+      console.warn("Orders fetch error:", error.message);
+      setOrders([]);
+      return () => {};
+    }
+  };
+
   const markInvoiceAsPaid = async (invoiceId: string, amount: number) => {
     try {
       const invoiceRef = ref(realtimeDb, `invoices/${invoiceId}`);
@@ -257,12 +293,23 @@ export default function Suppliers() {
 
   
   const totalSuppliers = suppliers.length;
-  const totalActiveOrders = 0; // Will be calculated from actual orders data
-  const totalProcurement = combinedBills.reduce((sum, supplier) => {
-    const invoiceAmount = supplier.latestInvoice?.amount || 0;
-    return sum + invoiceAmount;
-  }, 0);
+  const activeOrders = orders.filter(order => !["Completed", "Cancelled"].includes(order.status)).length;
+  const totalProcurement = orders.reduce((sum, order) => sum + (order.amount || 0), 0);
   const pendingBills = combinedBills.filter(supplier => supplier.hasUnpaidInvoices).length;
+
+  const handleViewOrders = (supplier: any) => {
+    setSelectedSupplier(supplier);
+    setShowOrdersDrawer(true);
+  };
+
+  const handleEditSupplier = (supplier: any) => {
+    setSelectedSupplier(supplier);
+    setShowNewEditModal(true);
+  };
+
+  const handlePendingBillsClick = () => {
+    navigate('/billing?status=unpaid');
+  };
   
   return (
     <div className="min-h-screen bg-background">
@@ -297,7 +344,7 @@ export default function Suppliers() {
               <FileText className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalActiveOrders}</div>
+              <div className="text-2xl font-bold">{activeOrders}</div>
               <p className="text-xs text-muted-foreground">+12 from last week</p>
             </CardContent>
           </Card>
@@ -311,7 +358,7 @@ export default function Suppliers() {
               <p className="text-xs text-muted-foreground">+8.2% from last month</p>
             </CardContent>
           </Card>
-          <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => setShowBillsModal(true)}>
+          <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={handlePendingBillsClick}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Pending Bills</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
@@ -408,6 +455,33 @@ export default function Suppliers() {
                         </div>
                         
                         <div className="flex flex-col gap-2">
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewOrders(supplier);
+                              }}
+                              className="whitespace-nowrap"
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                            <Button 
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditSupplier(supplier);
+                              }}
+                              className="whitespace-nowrap"
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          </div>
+                          
                           {invoice ? (
                             <Button 
                               size="sm"
@@ -422,7 +496,7 @@ export default function Suppliers() {
                           ) : (
                             <Button 
                               size="sm"
-                              variant="outline"
+                              variant="secondary"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedSupplier(supplier);

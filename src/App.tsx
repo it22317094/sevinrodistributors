@@ -14,6 +14,7 @@ import Invoices from "./pages/Invoices";
 import InvoiceCreate from "./pages/InvoiceCreate";
 import Delivery from "./pages/Delivery";
 import Reports from "./pages/Reports";
+import Billing from "./pages/Billing";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -99,6 +100,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <Reports />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/billing"
+          element={
+            <ProtectedRoute>
+              <Billing />
             </ProtectedRoute>
           }
         />
