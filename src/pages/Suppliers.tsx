@@ -39,55 +39,62 @@ export default function Suppliers() {
   }, []);
 
   useEffect(() => {
-    // Combine suppliers, bills, and invoices data
-    if (suppliers.length >= 0 && bills.length >= 0 && invoices.length >= 0) {
-      const combinedBillsList = bills.map(bill => {
-        const supplier = suppliers.find(s => s.id === bill.supplierId);
+    // Join suppliers with their latest unpaid invoices
+    if (suppliers.length >= 0 && invoices.length >= 0) {
+      const suppliersWithInvoices = suppliers.map(supplier => {
+        // Find all unpaid invoices for this supplier
+        const supplierInvoices = invoices.filter(invoice => 
+          invoice.supplierId === supplier.id && 
+          (invoice.status === 'Unpaid' || invoice.status === 'Partially Paid')
+        );
+
+        // Get the latest unpaid invoice (by due date, then by invoice date)
+        let latestInvoice = null;
+        if (supplierInvoices.length > 0) {
+          latestInvoice = supplierInvoices.sort((a, b) => {
+            if (a.dueDate && b.dueDate) {
+              const dateCompare = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+              if (dateCompare !== 0) return dateCompare;
+            }
+            if (a.invoiceDate && b.invoiceDate) {
+              return new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime();
+            }
+            return 0;
+          })[0];
+        }
+
         return {
-          ...bill,
-          supplierName: supplier?.name || bill.supplierName || 'Unknown Supplier',
-          supplierData: supplier
+          ...supplier,
+          latestInvoice,
+          hasUnpaidInvoices: supplierInvoices.length > 0
         };
       });
 
-      const combinedInvoicesList = invoices.map(invoice => {
-        const supplier = suppliers.find(s => s.id === invoice.supplierId);
-        return {
-          ...invoice,
-          supplierName: supplier?.name || invoice.supplierName || 'Unknown Supplier',
-          supplierData: supplier
-        };
-      });
+      // Sort suppliers by nearest due date first (those with invoices first)
+      suppliersWithInvoices.sort((a, b) => {
+        // Suppliers with unpaid invoices come first
+        if (a.hasUnpaidInvoices && !b.hasUnpaidInvoices) return -1;
+        if (!a.hasUnpaidInvoices && b.hasUnpaidInvoices) return 1;
 
-      // Combine bills and invoices
-      const allPendingItems = [...combinedBillsList, ...combinedInvoicesList];
+        // If both have invoices, sort by due date
+        if (a.latestInvoice?.dueDate && b.latestInvoice?.dueDate) {
+          const aOverdue = isAfter(new Date(), new Date(a.latestInvoice.dueDate));
+          const bOverdue = isAfter(new Date(), new Date(b.latestInvoice.dueDate));
+          
+          if (aOverdue && !bOverdue) return -1;
+          if (!aOverdue && bOverdue) return 1;
+          
+          return new Date(a.latestInvoice.dueDate).getTime() - new Date(b.latestInvoice.dueDate).getTime();
+        }
 
-      // Sort by nearest due date first (overdue at top), then newest invoice date
-      allPendingItems.sort((a, b) => {
-        const aOverdue = a.dueDate && isAfter(new Date(), new Date(a.dueDate));
-        const bOverdue = b.dueDate && isAfter(new Date(), new Date(b.dueDate));
-        
-        if (aOverdue && !bOverdue) return -1;
-        if (!aOverdue && bOverdue) return 1;
-        
-        if (a.dueDate && b.dueDate) {
-          const dateCompare = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-          if (dateCompare !== 0) return dateCompare;
-        }
-        
-        // Then sort by newest invoice date
-        if (a.invoiceDate && b.invoiceDate) {
-          return new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime();
-        }
-        
         return 0;
       });
 
-      setCombinedBills(allPendingItems);
+      setCombinedBills(suppliersWithInvoices);
     } else {
       setCombinedBills([]);
     }
-  }, [suppliers, bills, invoices]);
+  }, [suppliers, invoices]);
 
   const fetchSuppliers = () => {
     console.log('Fetching suppliers...');
@@ -234,103 +241,12 @@ export default function Suppliers() {
     }
   };
 
-  const addSampleData = async () => {
-    try {
-      // Get first supplier ID for sample data
-      const firstSupplierId = suppliers.length > 0 ? suppliers[0].id : '-OZSLZjZrV4iZGkbUKuR';
-      const secondSupplierId = suppliers.length > 1 ? suppliers[1].id : '-OZStS9_Tnbff21yI6z3';
-
-      // Add sample bills
-      const billsRef = ref(realtimeDb, 'bills');
-      
-      const sampleBills = [
-        {
-          billNumber: 'BILL-001',
-          supplierId: firstSupplierId,
-          supplierName: suppliers.find(s => s.id === firstSupplierId)?.name || 'JK GARMNET',
-          amount: 2500,
-          balance: 2500,
-          status: 'Unpaid',
-          dueDate: '2025-09-15',
-          invoiceDate: '2025-09-01',
-          description: 'Cotton fabric supply - September batch',
-          createdAt: new Date().toISOString()
-        },
-        {
-          billNumber: 'BILL-002',
-          supplierId: secondSupplierId,
-          supplierName: suppliers.find(s => s.id === secondSupplierId)?.name || 'JK STYLE',
-          amount: 1800,
-          balance: 900,
-          status: 'Partially Paid',
-          dueDate: '2025-09-20',
-          invoiceDate: '2025-09-05',
-          description: 'Silk fabric and accessories',
-          createdAt: new Date().toISOString()
-        }
-      ];
-
-      // Add sample invoices
-      const invoicesRef = ref(realtimeDb, 'invoices');
-      
-      const sampleInvoices = [
-        {
-          invoiceNumber: 'INV-001',
-          supplierId: firstSupplierId,
-          supplierName: suppliers.find(s => s.id === firstSupplierId)?.name || 'JK GARMNET',
-          amount: 3200,
-          balance: 3200,
-          status: 'Unpaid',
-          dueDate: '2025-09-25',
-          invoiceDate: '2025-09-10',
-          description: 'Premium fabric collection - Q3 order',
-          createdAt: new Date().toISOString()
-        },
-        {
-          invoiceNumber: 'INV-002',
-          supplierId: secondSupplierId,
-          supplierName: suppliers.find(s => s.id === secondSupplierId)?.name || 'JK STYLE',
-          amount: 1500,
-          balance: 1500,
-          status: 'Unpaid',
-          dueDate: '2025-09-12', // Overdue
-          invoiceDate: '2025-08-28',
-          description: 'Designer fabric samples and prototypes',
-          createdAt: new Date().toISOString()
-        }
-      ];
-
-      // Add bills to Firebase
-      for (const bill of sampleBills) {
-        await push(billsRef, bill);
-      }
-
-      // Add invoices to Firebase
-      for (const invoice of sampleInvoices) {
-        await push(invoicesRef, invoice);
-      }
-
-      toast({
-        title: "Success",
-        description: "Sample bills and invoices added successfully",
-      });
-
-    } catch (error) {
-      console.error('Error adding sample data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add sample data",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleCardClick = (bill: any) => {
-    const supplierBills = combinedBills.filter(b => b.supplierId === bill.supplierId);
-    if (supplierBills.length === 1) {
-      navigate(`/billing/${bill.id}`);
-    } else {
-      navigate(`/billing?supplierId=${bill.supplierId}`);
+  const handleCardClick = (supplier: any) => {
+    const supplierInvoices = invoices.filter(inv => inv.supplierId === supplier.id);
+    if (supplierInvoices.length === 1) {
+      navigate(`/billing/${supplierInvoices[0].id}`);
+    } else if (supplierInvoices.length > 1) {
+      navigate(`/billing?supplierId=${supplier.id}`);
     }
   };
 
@@ -357,9 +273,6 @@ export default function Suppliers() {
           <Button className="mt-4 sm:mt-0" onClick={() => setShowAddModal(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Supplier
-          </Button>
-          <Button variant="outline" className="mt-4 sm:mt-0 ml-2" onClick={addSampleData}>
-            Add Sample Bills
           </Button>
         </div>
 
@@ -407,37 +320,34 @@ export default function Suppliers() {
           </Card>
         </div>
 
-        {/* Bills List */}
         <Card>
           <CardHeader>
-            <CardTitle>Pending Bills</CardTitle>
-            <CardDescription>Bills requiring payment from suppliers</CardDescription>
+            <CardTitle>Suppliers</CardTitle>
+            <CardDescription>Suppliers with their latest unpaid invoices</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {combinedBills.length === 0 ? (
                 <div className="text-center py-12">
-                  <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground text-lg font-medium">No pending bills found</p>
-                  <p className="text-muted-foreground text-sm">All bills are up to date!</p>
+                  <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground text-lg font-medium">No suppliers found</p>
+                  <p className="text-muted-foreground text-sm">Add suppliers to get started!</p>
                 </div>
               ) : (
-                combinedBills.map((bill) => {
-                  const overdue = isOverdue(bill.dueDate, bill.balance || bill.amount);
+                combinedBills.map((supplier) => {
+                  const invoice = supplier.latestInvoice;
+                  const overdue = invoice?.dueDate && isAfter(new Date(), new Date(invoice.dueDate));
                   return (
                     <div
-                      key={bill.id}
+                      key={supplier.id}
                       className="border rounded-lg p-6 hover:bg-accent/50 transition-colors cursor-pointer"
-                      onClick={() => handleCardClick(bill)}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      onClick={() => handleCardClick(supplier)}
+                     >
+                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <h3 className="font-semibold text-lg">
-                              {bill.invoiceNumber ? 
-                                `Invoice #${bill.invoiceNumber}` : 
-                                `Bill #${bill.billNumber || bill.id || '—'}`
-                              }
+                              {supplier.name}
                             </h3>
                             {overdue && (
                               <Badge variant="destructive">Overdue</Badge>
@@ -446,62 +356,60 @@ export default function Suppliers() {
                           
                           <div className="space-y-2 text-sm">
                             <div className="flex items-center gap-2">
-                              <Package className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">Supplier:</span>
-                              <span>{bill.supplierName}</span>
+                              <FileText className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">Invoice #:</span>
+                              <span>{invoice?.invoiceNumber || '—'}</span>
                             </div>
                             
-                            {bill.dueDate && (
+                            {invoice?.dueDate && (
                               <div className="flex items-center gap-2">
                                 <Calendar className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium">Due:</span>
+                                <span className="font-medium">Due Date:</span>
                                 <span className={overdue ? "text-destructive font-medium" : ""}>
-                                  {format(new Date(bill.dueDate), "MMM dd, yyyy")}
+                                  {format(new Date(invoice.dueDate), "MMM dd, yyyy")}
                                 </span>
                               </div>
                             )}
                             
-                            <div className="flex items-center gap-2">
-                              <DollarSign className="h-4 w-4 text-muted-foreground" />
-                              <span className="font-medium">Amount:</span>
-                              <span className="font-semibold text-primary">
-                                ${(bill.balance || bill.amount || 0).toLocaleString()}
-                              </span>
-                            </div>
-                            
-                            {bill.description && (
-                              <div className="mt-2">
-                                <span className="font-medium">Description:</span>
-                                <p className="text-muted-foreground mt-1">{bill.description}</p>
+                            {invoice?.amount && (
+                              <div className="flex items-center gap-2">
+                                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium">Amount:</span>
+                                <span className="font-semibold text-primary">
+                                  ${(invoice.balance || invoice.amount || 0).toLocaleString()}
+                                </span>
                               </div>
                             )}
                             
-                            {bill.invoiceDate && (
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <Calendar className="h-4 w-4" />
-                                <span>Invoice Date: {format(new Date(bill.invoiceDate), "MMM dd, yyyy")}</span>
+                            {invoice?.description && (
+                              <div className="mt-2">
+                                <span className="font-medium">Description:</span>
+                                <p className="text-muted-foreground mt-1">{invoice.description}</p>
+                              </div>
+                            )}
+                            
+                            {!invoice && (
+                              <div className="text-muted-foreground">
+                                <span>No unpaid invoices</span>
                               </div>
                             )}
                           </div>
                         </div>
                         
-                        <div className="flex flex-col gap-2">
-                          <Button 
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // Check if this is an invoice (has invoiceNumber) or bill (has billNumber)
-                              if (bill.invoiceNumber) {
-                                markInvoiceAsPaid(bill.id, bill.amount || 0);
-                              } else {
-                                markBillAsPaid(bill.id, bill.amount || 0);
-                              }
-                            }}
-                            className="whitespace-nowrap"
-                          >
-                            Mark as Paid
-                          </Button>
-                        </div>
+                        {invoice && (
+                          <div className="flex flex-col gap-2">
+                            <Button 
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                markInvoiceAsPaid(invoice.id, invoice.amount || 0);
+                              }}
+                              className="whitespace-nowrap"
+                            >
+                              Mark as Paid
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
