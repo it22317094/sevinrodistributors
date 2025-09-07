@@ -3,11 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Truck, Package, MapPin, Calendar } from "lucide-react";
+import { Plus, Search, Truck, Package, MapPin, Calendar, Loader2 } from "lucide-react";
 import { ScheduleDeliveryModal } from "@/components/ScheduleDeliveryModal";
 import { DeliveryDetailsModal } from "@/components/DeliveryDetailsModal";
-import { ref, onValue } from "firebase/database";
+import { ref, onValue, query, orderByChild } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 interface Delivery {
   id: string;
@@ -21,27 +24,52 @@ interface Delivery {
 
 export default function Delivery() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [loading, setLoading] = useState(true);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const deliveriesRef = ref(realtimeDb, 'deliveries');
-    const unsubscribe = onValue(deliveriesRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const deliveriesArray = Object.entries(data).map(([key, value]: [string, any]) => ({
-          id: key,
-          ...value
-        }));
-        setDeliveries(deliveriesArray);
-      } else {
-        setDeliveries([]);
+    if (!isAuthenticated || authLoading) {
+      setLoading(false);
+      return;
+    }
+
+    const deliveriesRef = query(
+      ref(realtimeDb, 'deliveries'),
+      orderByChild('createdAt')
+    );
+    
+    const unsubscribe = onValue(
+      deliveriesRef, 
+      (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const deliveriesArray = Object.entries(data).map(([key, value]: [string, any]) => ({
+            id: key,
+            ...value
+          })).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          setDeliveries(deliveriesArray);
+        } else {
+          setDeliveries([]);
+        }
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching deliveries:', error);
+        toast({
+          title: "Error",
+          description: "Couldn't load deliveries.",
+          variant: "destructive",
+        });
+        setLoading(false);
       }
-    });
+    );
 
     return () => unsubscribe();
-  }, []);
+  }, [isAuthenticated, authLoading, toast]);
 
   const handleDeliveryScheduled = () => {
     // Deliveries will be updated automatically via the real-time listener
@@ -51,6 +79,38 @@ export default function Delivery() {
     setSelectedDelivery(delivery);
     setDetailsModalOpen(true);
   };
+
+  const formatDeliveryDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'dd MMM yyyy');
+    } catch {
+      return dateString;
+    }
+  };
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading deliveries...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6 text-center">
+            <p className="text-muted-foreground">Please sign in to view deliveries.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -131,8 +191,14 @@ export default function Delivery() {
             <CardDescription>Manage delivery status and good receiver notes</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {deliveries.map((delivery) => (
+            {deliveries.length === 0 ? (
+              <div className="text-center py-8">
+                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No deliveries yet</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {deliveries.map((delivery) => (
                 <div
                   key={delivery.id}
                   className="flex flex-col lg:flex-row lg:items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
@@ -153,7 +219,7 @@ export default function Delivery() {
                     </div>
                     <div className="text-sm text-muted-foreground space-y-1">
                       <p>Address: {delivery.address}</p>
-                      <p>Date: {delivery.deliveryDate}</p>
+                      <p>Date: {formatDeliveryDate(delivery.deliveryDate)}</p>
                     </div>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-4 mt-4 lg:mt-0">
@@ -174,8 +240,9 @@ export default function Delivery() {
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
