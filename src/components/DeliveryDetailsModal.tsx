@@ -1,6 +1,10 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { ref, update, serverTimestamp } from "firebase/database";
+import { realtimeDb } from "@/lib/firebase";
 
 interface Delivery {
   id: string;
@@ -18,7 +22,33 @@ interface DeliveryDetailsModalProps {
 }
 
 export function DeliveryDetailsModal({ open, onOpenChange, delivery }: DeliveryDetailsModalProps) {
+  const { toast } = useToast();
+
   if (!delivery) return null;
+
+  const handleMarkDelivered = async () => {
+    try {
+      const deliveryRef = ref(realtimeDb, `deliveries/${delivery.id}`);
+      await update(deliveryRef, {
+        status: "Delivered",
+        deliveredAt: serverTimestamp()
+      });
+
+      toast({
+        title: "Success",
+        description: "Marked as delivered.",
+      });
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error marking delivery as delivered:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Couldn't update delivery status.",
+      });
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -52,10 +82,21 @@ export function DeliveryDetailsModal({ open, onOpenChange, delivery }: DeliveryD
           </div>
           
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Items Delivered</Label>
+            <Label className="text-sm font-medium">Items</Label>
             <div className="text-sm text-muted-foreground">{delivery.itemsDelivered}</div>
           </div>
         </div>
+        
+        {delivery.status !== "Delivered" && (
+          <DialogFooter>
+            <Button 
+              onClick={handleMarkDelivered}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Mark Delivered
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

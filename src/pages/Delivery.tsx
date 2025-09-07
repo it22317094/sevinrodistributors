@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Plus, Search, Truck, Package, MapPin, Calendar, Loader2 } from "lucide-react";
 import { ScheduleDeliveryModal } from "@/components/ScheduleDeliveryModal";
 import { DeliveryDetailsModal } from "@/components/DeliveryDetailsModal";
-import { ref, onValue, query, orderByChild } from "firebase/database";
+import { ref, onValue, query, orderByChild, update } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { serverTimestamp } from "firebase/database";
 
 interface Delivery {
   id: string;
@@ -77,9 +78,7 @@ export default function Delivery() {
   useEffect(() => {
     let filtered = [...deliveries];
     
-    if (activeFilter === 'transit') {
-      filtered = deliveries.filter(d => d.status === 'In Transit');
-    } else if (activeFilter === 'today') {
+    if (activeFilter === 'today') {
       const today = format(new Date(), 'yyyy-MM-dd');
       filtered = deliveries.filter(d => d.deliveryDate === today);
     } else if (activeFilter === 'completed') {
@@ -116,9 +115,30 @@ export default function Delivery() {
 
   // Calculate stats
   const totalDeliveries = deliveries.length;
-  const inTransitCount = deliveries.filter(d => d.status === 'In Transit').length;
   const todayCount = deliveries.filter(d => d.deliveryDate === format(new Date(), 'yyyy-MM-dd')).length;
   const completedCount = deliveries.filter(d => d.status === 'Delivered').length;
+
+  const handleMarkDelivered = async (deliveryId: string) => {
+    try {
+      const deliveryRef = ref(realtimeDb, `deliveries/${deliveryId}`);
+      await update(deliveryRef, {
+        status: "Delivered",
+        deliveredAt: serverTimestamp()
+      });
+
+      toast({
+        title: "Success",
+        description: "Marked as delivered.",
+      });
+    } catch (error) {
+      console.error("Error marking delivery as delivered:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Couldn't update delivery status.",
+      });
+    }
+  };
 
   if (authLoading || loading) {
     return (
@@ -159,7 +179,7 @@ export default function Delivery() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card 
             className={`cursor-pointer transition-all duration-200 ${activeFilter === null ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}
             onClick={() => handleStatCardClick('all')}
@@ -171,19 +191,6 @@ export default function Delivery() {
             <CardContent>
               <div className="text-2xl font-bold">{totalDeliveries}</div>
               <p className="text-xs text-muted-foreground">All records</p>
-            </CardContent>
-          </Card>
-          <Card 
-            className={`cursor-pointer transition-all duration-200 ${activeFilter === 'transit' ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}
-            onClick={() => handleStatCardClick('transit')}
-          >
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">In Transit</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{inTransitCount}</div>
-              <p className="text-xs text-muted-foreground">Currently en route</p>
             </CardContent>
           </Card>
           <Card 
@@ -235,8 +242,7 @@ export default function Delivery() {
               Deliveries 
               {activeFilter && (
                 <span className="text-sm font-normal text-muted-foreground ml-2">
-                  - {activeFilter === 'transit' ? 'In Transit' : 
-                     activeFilter === 'today' ? "Today's Deliveries" : 
+                  - {activeFilter === 'today' ? "Today's Deliveries" : 
                      activeFilter === 'completed' ? 'Completed' : 'All'}
                 </span>
               )}
@@ -295,11 +301,14 @@ export default function Delivery() {
                       <Button variant="outline" size="sm" onClick={() => handleShowDetails(delivery)}>
                         Details
                       </Button>
-                      {delivery.status === "Delivered" && (
-                        <Button size="sm">Good Receipt</Button>
-                      )}
-                      {delivery.status === "In Transit" && (
-                        <Button size="sm">Update Status</Button>
+                      {delivery.status !== "Delivered" && (
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleMarkDelivered(delivery.id)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          Mark Delivered
+                        </Button>
                       )}
                     </div>
                   </div>
