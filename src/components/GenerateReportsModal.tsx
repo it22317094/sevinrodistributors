@@ -43,14 +43,17 @@ export default function GenerateReportsModal({
 
   const saveReportMetadata = async (type: string, filename: string) => {
     try {
+      console.log('Attempting to save report metadata to Firebase...', { type, filename });
       const reportsRef = ref(realtimeDb, 'reports');
-      await push(reportsRef, {
+      const result = await push(reportsRef, {
         type,
         filename,
         createdAt: new Date().toISOString()
       });
+      console.log('Report metadata saved successfully:', result.key);
     } catch (error) {
       console.error('Error saving report metadata:', error);
+      // Don't throw the error - just log it, as the PDF generation itself was successful
     }
   };
 
@@ -237,26 +240,33 @@ export default function GenerateReportsModal({
     setGenerating(true);
 
     try {
+      console.log('Starting report generation...', { selectedReports, salesCount: sales.length, inventoryCount: inventory.length });
+      
       const now = new Date();
       const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       
       for (const reportId of selectedReports) {
+        console.log('Generating report:', reportId);
         switch (reportId) {
           case 'monthly-sales':
             generateMonthlySalesReport();
+            console.log('Monthly sales report generated, saving metadata...');
             await saveReportMetadata('monthly-sales', `MonthlySales_${monthYear}.pdf`);
             break;
           case 'inventory':
             generateInventoryReport();
+            console.log('Inventory report generated, saving metadata...');
             await saveReportMetadata('inventory', `Inventory_${monthYear}.pdf`);
             break;
           case 'invoice':
             generateInvoiceReport();
+            console.log('Invoice report generated, saving metadata...');
             await saveReportMetadata('invoice', `InvoiceReport_${monthYear}.pdf`);
             break;
         }
       }
 
+      console.log('All reports generated successfully');
       toast({
         title: "Reports generated successfully",
         description: `${selectedReports.length} report(s) have been downloaded.`,
@@ -265,9 +275,10 @@ export default function GenerateReportsModal({
       onClose();
       setSelectedReports([]);
     } catch (error) {
+      console.error('Error generating reports:', error);
       toast({
         title: "Error generating reports",
-        description: "Please try again later.",
+        description: error instanceof Error ? error.message : "Please try again later.",
         variant: "destructive",
       });
     } finally {
