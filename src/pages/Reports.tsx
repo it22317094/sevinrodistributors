@@ -10,24 +10,24 @@ import {
   DollarSign, 
   FileText, 
   Download,
-  Calendar,
-  Users,
-  Package,
+  Eye,
   AlertCircle
 } from "lucide-react";
 import { useFirebaseReports } from '@/hooks/useFirebaseReports';
 import GenerateReportsModal from '@/components/GenerateReportsModal';
+import ReportViewModal from '@/components/ReportViewModal';
 import { useToast } from '@/hooks/use-toast';
 
 const reportData = [
-  { title: "Monthly Sales Report", description: "Comprehensive sales analysis for the current month", lastGenerated: "Available", type: "Financial" },
-  { title: "Invoice Report", description: "Outstanding invoices and payment status", lastGenerated: "Available", type: "Financial" },
-  { title: "Inventory Report", description: "Current stock levels and low inventory alerts", lastGenerated: "Available", type: "Inventory" },
-  { title: "Supplier Performance", description: "Supplier delivery times and quality metrics", lastGenerated: "Available", type: "Supplier" },
+  { id: 'monthly-sales', title: "Monthly Sales Report", description: "Comprehensive sales analysis for the current month", type: "Financial" },
+  { id: 'invoice', title: "Invoice Report", description: "Outstanding invoices and payment status", type: "Financial" },
+  { id: 'inventory', title: "Inventory Report", description: "Current stock levels and low inventory alerts", type: "Inventory" },
 ];
 
 export default function Reports() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedReportType, setSelectedReportType] = useState<'monthly-sales' | 'inventory' | 'invoice'>('monthly-sales');
   const { 
     sales, 
     inventory, 
@@ -70,25 +70,29 @@ export default function Reports() {
       label: "Total Sales (MTD)", 
       value: formatCurrency(kpis.totalSalesMTD), 
       change: formatPercentage(kpis.salesChange), 
-      trend: kpis.salesChange >= 0 ? "up" : "down" 
+      trend: kpis.salesChange >= 0 ? "up" : "down",
+      description: "Sum of invoice totals this month"
     },
     { 
       label: "Outstanding Amount", 
       value: formatCurrency(kpis.outstandingAmount), 
       change: "Live data", 
-      trend: "up" 
+      trend: "up",
+      description: "Sum of unpaid and partial invoices"
     },
     { 
       label: "Inventory Value", 
       value: formatCurrency(kpis.inventoryValue), 
       change: "Live data", 
-      trend: "up" 
+      trend: "up",
+      description: "Total inventory quantity × cost price"
     },
     { 
       label: "Active Customers", 
       value: kpis.activeCustomers.toString(), 
       change: "Live data", 
-      trend: "up" 
+      trend: "up",
+      description: "Count of customers where isActive = true"
     },
   ];
   if (loading) {
@@ -199,6 +203,7 @@ export default function Reports() {
                 <p className={`text-xs ${stat.trend === "up" ? "text-green-600" : "text-red-600"}`}>
                   {stat.change}
                 </p>
+                <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
               </CardContent>
             </Card>
           ))}
@@ -320,20 +325,26 @@ export default function Reports() {
                       <Badge variant="outline">{report.type}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-1">{report.description}</p>
-                    <p className="text-xs text-muted-foreground">Status: {report.lastGenerated}</p>
+                    <p className="text-xs text-muted-foreground">Status: Available</p>
                   </div>
                   <div className="flex gap-2 mt-4 sm:mt-0">
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => setShowGenerateModal(true)}
+                      onClick={() => {
+                        setSelectedReportType(report.id as any);
+                        setShowViewModal(true);
+                      }}
                     >
-                      <BarChart3 className="h-4 w-4 mr-2" />
+                      <Eye className="h-4 w-4 mr-2" />
                       View
                     </Button>
                     <Button 
                       size="sm"
-                      onClick={() => setShowGenerateModal(true)}
+                      onClick={() => {
+                        // Generate single report logic would go here
+                        setShowGenerateModal(true);
+                      }}
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Generate
@@ -348,6 +359,15 @@ export default function Reports() {
         <GenerateReportsModal 
           open={showGenerateModal}
           onClose={() => setShowGenerateModal(false)}
+          sales={sales}
+          inventory={inventory}
+          customers={customers}
+        />
+
+        <ReportViewModal
+          open={showViewModal}
+          onClose={() => setShowViewModal(false)}
+          reportType={selectedReportType}
           sales={sales}
           inventory={inventory}
           customers={customers}

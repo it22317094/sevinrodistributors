@@ -5,6 +5,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { ref, push } from 'firebase/database';
+import { realtimeDb } from '@/lib/firebase';
 import { Sale, InventoryItem, Customer } from '@/hooks/useFirebaseReports';
 import { generateInvoicePDF } from '@/components/InvoiceTemplate';
 
@@ -26,7 +28,6 @@ const reportOptions: ReportOption[] = [
   { id: 'monthly-sales', title: 'Monthly Sales Report', description: 'Comprehensive sales analysis for the current month' },
   { id: 'inventory', title: 'Inventory Report', description: 'Current stock levels and low inventory alerts' },
   { id: 'invoice', title: 'Invoice Report', description: 'Outstanding invoices and payment status' },
-  { id: 'supplier', title: 'Supplier Performance', description: 'Supplier delivery times and quality metrics' },
 ];
 
 export default function GenerateReportsModal({ 
@@ -39,6 +40,19 @@ export default function GenerateReportsModal({
   const [selectedReports, setSelectedReports] = useState<string[]>([]);
   const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
+
+  const saveReportMetadata = async (type: string, filename: string) => {
+    try {
+      const reportsRef = ref(realtimeDb, 'reports');
+      await push(reportsRef, {
+        type,
+        filename,
+        createdAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error saving report metadata:', error);
+    }
+  };
 
   const handleReportToggle = (reportId: string) => {
     setSelectedReports(prev => 
@@ -98,7 +112,8 @@ export default function GenerateReportsModal({
       styles: { fontSize: 8 }
     });
 
-    doc.save(`Monthly_Sales_Report_${currentMonth.replace(' ', '_')}.pdf`);
+    const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    doc.save(`MonthlySales_${monthYear}.pdf`);
   };
 
   const generateInventoryReport = () => {
@@ -157,7 +172,8 @@ export default function GenerateReportsModal({
       });
     }
 
-    doc.save('Inventory_Report.pdf');
+    const monthYear = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+    doc.save(`Inventory_${monthYear}.pdf`);
   };
 
   const generateInvoiceReport = () => {
@@ -203,24 +219,10 @@ export default function GenerateReportsModal({
       styles: { fontSize: 8 }
     });
 
-    doc.save('Invoice_Report.pdf');
+    const monthYear = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+    doc.save(`InvoiceReport_${monthYear}.pdf`);
   };
 
-  const generateSupplierReport = () => {
-    const doc = new jsPDF();
-    
-    doc.setFontSize(20);
-    doc.text('Supplier Performance Report', 20, 30);
-    doc.setFontSize(12);
-    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 45);
-
-    doc.setFontSize(14);
-    doc.text('No Supplier Data Available', 20, 80);
-    doc.setFontSize(10);
-    doc.text('Supplier performance metrics will be available once supplier data is added to the system.', 20, 100);
-
-    doc.save('Supplier_Performance_Report.pdf');
-  };
 
   const handleGenerate = async () => {
     if (selectedReports.length === 0) {
@@ -235,19 +237,22 @@ export default function GenerateReportsModal({
     setGenerating(true);
 
     try {
+      const now = new Date();
+      const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      
       for (const reportId of selectedReports) {
         switch (reportId) {
           case 'monthly-sales':
             generateMonthlySalesReport();
+            await saveReportMetadata('monthly-sales', `MonthlySales_${monthYear}.pdf`);
             break;
           case 'inventory':
             generateInventoryReport();
+            await saveReportMetadata('inventory', `Inventory_${monthYear}.pdf`);
             break;
           case 'invoice':
             generateInvoiceReport();
-            break;
-          case 'supplier':
-            generateSupplierReport();
+            await saveReportMetadata('invoice', `InvoiceReport_${monthYear}.pdf`);
             break;
         }
       }

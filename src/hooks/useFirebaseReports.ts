@@ -55,7 +55,7 @@ export const useFirebaseReports = () => {
     setLoading(true);
     setError(null);
 
-    const salesRef = ref(realtimeDb, 'sales');
+    const salesRef = ref(realtimeDb, 'invoices');
     const inventoryRef = ref(realtimeDb, 'inventory');
     const customersRef = ref(realtimeDb, 'customers');
     const counterRef = ref(realtimeDb, 'invoiceCounter');
@@ -150,13 +150,13 @@ export const useFirebaseReports = () => {
     const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
     const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
-    // Current month sales
+    // Current month invoices
     const currentMonthSales = sales.filter(sale => {
       const saleDate = new Date(sale.date);
       return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
     });
 
-    // Previous month sales
+    // Previous month invoices
     const previousMonthSales = sales.filter(sale => {
       const saleDate = new Date(sale.date);
       return saleDate.getMonth() === previousMonth && saleDate.getFullYear() === previousYear;
