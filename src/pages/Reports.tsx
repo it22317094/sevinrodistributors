@@ -327,29 +327,19 @@ export default function Reports() {
                     <p className="text-sm text-muted-foreground mb-1">{report.description}</p>
                     <p className="text-xs text-muted-foreground">Status: Available</p>
                   </div>
-                  <div className="flex gap-2 mt-4 sm:mt-0">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        setSelectedReportType(report.id as any);
-                        setShowViewModal(true);
-                      }}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View
-                    </Button>
-                    <Button 
-                      size="sm"
-                      onClick={() => {
-                        // Generate single report logic would go here
-                        setShowGenerateModal(true);
-                      }}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Generate
-                    </Button>
-                  </div>
+                   <div className="flex gap-2 mt-4 sm:mt-0">
+                     <Button 
+                       variant="outline" 
+                       size="sm"
+                       onClick={() => {
+                         setSelectedReportType(report.id as any);
+                         setShowViewModal(true);
+                       }}
+                     >
+                       <Eye className="h-4 w-4 mr-2" />
+                       View
+                     </Button>
+                   </div>
                 </div>
               ))}
             </div>
