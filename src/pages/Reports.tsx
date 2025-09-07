@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   BarChart3, 
   TrendingUp, 
@@ -9,24 +12,161 @@ import {
   Download,
   Calendar,
   Users,
-  Package
+  Package,
+  AlertCircle
 } from "lucide-react";
+import { useFirebaseReports } from '@/hooks/useFirebaseReports';
+import GenerateReportsModal from '@/components/GenerateReportsModal';
+import { useToast } from '@/hooks/use-toast';
 
 const reportData = [
-  { title: "Monthly Sales Report", description: "Comprehensive sales analysis for the current month", lastGenerated: "Today", type: "Financial" },
-  { title: "Outstanding Balances", description: "Customer outstanding amounts and aging analysis", lastGenerated: "Yesterday", type: "Financial" },
-  { title: "Inventory Report", description: "Current stock levels and low inventory alerts", lastGenerated: "2 days ago", type: "Inventory" },
-  { title: "Supplier Performance", description: "Supplier delivery times and quality metrics", lastGenerated: "1 week ago", type: "Supplier" },
-];
-
-const quickStats = [
-  { label: "Total Sales (MTD)", value: "$184,320", change: "+15.3%", trend: "up" },
-  { label: "Outstanding Amount", value: "$46,440", change: "-12%", trend: "down" },
-  { label: "Inventory Value", value: "$145,890", change: "+5.2%", trend: "up" },
-  { label: "Active Customers", value: "156", change: "+8", trend: "up" },
+  { title: "Monthly Sales Report", description: "Comprehensive sales analysis for the current month", lastGenerated: "Available", type: "Financial" },
+  { title: "Invoice Report", description: "Outstanding invoices and payment status", lastGenerated: "Available", type: "Financial" },
+  { title: "Inventory Report", description: "Current stock levels and low inventory alerts", lastGenerated: "Available", type: "Inventory" },
+  { title: "Supplier Performance", description: "Supplier delivery times and quality metrics", lastGenerated: "Available", type: "Supplier" },
 ];
 
 export default function Reports() {
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const { 
+    sales, 
+    inventory, 
+    customers, 
+    loading, 
+    error, 
+    isAuthenticated, 
+    calculateKPIs 
+  } = useFirebaseReports();
+  const { toast } = useToast();
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Alert className="max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Please sign in to view reports and analytics.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (error) {
+    toast({
+      title: "Error loading data",
+      description: error,
+      variant: "destructive",
+    });
+  }
+
+  const kpis = calculateKPIs();
+
+  const formatCurrency = (amount: number) => `Rs. ${amount.toLocaleString()}`;
+  const formatPercentage = (value: number) => `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
+
+  const quickStats = [
+    { 
+      label: "Total Sales (MTD)", 
+      value: formatCurrency(kpis.totalSalesMTD), 
+      change: formatPercentage(kpis.salesChange), 
+      trend: kpis.salesChange >= 0 ? "up" : "down" 
+    },
+    { 
+      label: "Outstanding Amount", 
+      value: formatCurrency(kpis.outstandingAmount), 
+      change: "Live data", 
+      trend: "up" 
+    },
+    { 
+      label: "Inventory Value", 
+      value: formatCurrency(kpis.inventoryValue), 
+      change: "Live data", 
+      trend: "up" 
+    },
+    { 
+      label: "Active Customers", 
+      value: kpis.activeCustomers.toString(), 
+      change: "Live data", 
+      trend: "up" 
+    },
+  ];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-primary mb-2">Reports & Analytics</h1>
+              <p className="text-muted-foreground">Business insights and financial reports</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Card key={index}>
+                <CardContent className="p-6">
+                  <Skeleton className="h-4 w-24 mb-2" />
+                  <Skeleton className="h-8 w-20 mb-2" />
+                  <Skeleton className="h-3 w-16" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardContent className="p-6">
+                <Skeleton className="h-6 w-32 mb-4" />
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <Skeleton className="h-6 w-32 mb-4" />
+                <div className="space-y-4">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton key={i} className="h-16 w-full" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (sales.length === 0 && inventory.length === 0 && customers.length === 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-primary mb-2">Reports & Analytics</h1>
+              <p className="text-muted-foreground">Business insights and financial reports</p>
+            </div>
+            <Button onClick={() => setShowGenerateModal(true)} className="mt-4 sm:mt-0">
+              <FileText className="h-4 w-4 mr-2" />
+              Generate Report
+            </Button>
+          </div>
+          
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              No data yet. Add sales, inventory, and customers to generate meaningful reports.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -36,7 +176,7 @@ export default function Reports() {
             <h1 className="text-3xl font-bold text-primary mb-2">Reports & Analytics</h1>
             <p className="text-muted-foreground">Business insights and financial reports</p>
           </div>
-          <Button className="mt-4 sm:mt-0">
+          <Button onClick={() => setShowGenerateModal(true)} className="mt-4 sm:mt-0">
             <FileText className="h-4 w-4 mr-2" />
             Generate Report
           </Button>
@@ -57,7 +197,7 @@ export default function Reports() {
               <CardContent>
                 <div className="text-2xl font-bold">{stat.value}</div>
                 <p className={`text-xs ${stat.trend === "up" ? "text-green-600" : "text-red-600"}`}>
-                  {stat.change} from last month
+                  {stat.change}
                 </p>
               </CardContent>
             </Card>
@@ -83,8 +223,8 @@ export default function Reports() {
                     <p className="text-sm text-muted-foreground">Current month earnings</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-primary">$184,320</p>
-                    <p className="text-sm text-green-600">+15.3%</p>
+                    <p className="text-lg font-bold text-primary">{formatCurrency(kpis.totalSalesMTD)}</p>
+                    <p className="text-sm text-green-600">{formatPercentage(kpis.salesChange)}</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-accent rounded-lg">
@@ -93,8 +233,8 @@ export default function Reports() {
                     <p className="text-sm text-muted-foreground">Total amount due</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-destructive">$46,440</p>
-                    <p className="text-sm text-green-600">-12%</p>
+                    <p className="text-lg font-bold text-destructive">{formatCurrency(kpis.outstandingAmount)}</p>
+                    <p className="text-sm text-muted-foreground">Live data</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-accent rounded-lg">
@@ -103,8 +243,8 @@ export default function Reports() {
                     <p className="text-sm text-muted-foreground">Current month margin</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-primary">24.5%</p>
-                    <p className="text-sm text-green-600">+2.1%</p>
+                    <p className="text-lg font-bold text-primary">{kpis.profitMargin.toFixed(1)}%</p>
+                    <p className="text-sm text-muted-foreground">Live calculation</p>
                   </div>
                 </div>
               </div>
@@ -128,8 +268,8 @@ export default function Reports() {
                     <p className="text-sm text-muted-foreground">Total customer base</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-primary">156</p>
-                    <p className="text-sm text-green-600">+8 new</p>
+                    <p className="text-lg font-bold text-primary">{kpis.activeCustomers}</p>
+                    <p className="text-sm text-muted-foreground">Live data</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-accent rounded-lg">
@@ -138,18 +278,22 @@ export default function Reports() {
                     <p className="text-sm text-muted-foreground">This month</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-primary">247</p>
-                    <p className="text-sm text-green-600">+12%</p>
+                    <p className="text-lg font-bold text-primary">{sales.filter(sale => {
+                      const saleDate = new Date(sale.date);
+                      const now = new Date();
+                      return saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear();
+                    }).length}</p>
+                    <p className="text-sm text-muted-foreground">Live data</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-accent rounded-lg">
                   <div>
-                    <p className="font-medium">Delivery Success Rate</p>
-                    <p className="text-sm text-muted-foreground">On-time deliveries</p>
+                    <p className="font-medium">Low Stock Items</p>
+                    <p className="text-sm text-muted-foreground">Items with ≤ 5 quantity</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-primary">96.5%</p>
-                    <p className="text-sm text-green-600">+1.2%</p>
+                    <p className="text-lg font-bold text-primary">{inventory.filter(item => item.quantity <= 5).length}</p>
+                    <p className="text-sm text-muted-foreground">Live data</p>
                   </div>
                 </div>
               </div>
@@ -176,14 +320,21 @@ export default function Reports() {
                       <Badge variant="outline">{report.type}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mb-1">{report.description}</p>
-                    <p className="text-xs text-muted-foreground">Last generated: {report.lastGenerated}</p>
+                    <p className="text-xs text-muted-foreground">Status: {report.lastGenerated}</p>
                   </div>
                   <div className="flex gap-2 mt-4 sm:mt-0">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowGenerateModal(true)}
+                    >
                       <BarChart3 className="h-4 w-4 mr-2" />
                       View
                     </Button>
-                    <Button size="sm">
+                    <Button 
+                      size="sm"
+                      onClick={() => setShowGenerateModal(true)}
+                    >
                       <Download className="h-4 w-4 mr-2" />
                       Generate
                     </Button>
@@ -193,6 +344,14 @@ export default function Reports() {
             </div>
           </CardContent>
         </Card>
+
+        <GenerateReportsModal 
+          open={showGenerateModal}
+          onClose={() => setShowGenerateModal(false)}
+          sales={sales}
+          inventory={inventory}
+          customers={customers}
+        />
       </div>
     </div>
   );
