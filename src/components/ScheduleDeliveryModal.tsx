@@ -23,6 +23,7 @@ export function ScheduleDeliveryModal({ open, onOpenChange, onDeliveryScheduled 
   const [companyName, setCompanyName] = useState("");
   const [address, setAddress] = useState("");
   const [deliveryDate, setDeliveryDate] = useState<Date | undefined>(undefined);
+  const [itemsDelivered, setItemsDelivered] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -57,6 +58,15 @@ export function ScheduleDeliveryModal({ open, onOpenChange, onDeliveryScheduled 
       return;
     }
 
+    if (!itemsDelivered.trim() || isNaN(parseInt(itemsDelivered))) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Valid number of items is required",
+      });
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -66,7 +76,7 @@ export function ScheduleDeliveryModal({ open, onOpenChange, onDeliveryScheduled 
         address: address.trim(),
         deliveryDate: format(deliveryDate, 'yyyy-MM-dd'),
         status: "Scheduled",
-        itemsDelivered: 0,
+        itemsDelivered: parseInt(itemsDelivered),
         createdAt: serverTimestamp()
       });
 
@@ -79,6 +89,7 @@ export function ScheduleDeliveryModal({ open, onOpenChange, onDeliveryScheduled 
       setCompanyName("");
       setAddress("");
       setDeliveryDate(undefined);
+      setItemsDelivered("");
       
       onOpenChange(false);
       onDeliveryScheduled();
@@ -148,6 +159,19 @@ export function ScheduleDeliveryModal({ open, onOpenChange, onDeliveryScheduled 
                 />
               </PopoverContent>
             </Popover>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="items">Items *</Label>
+            <Input
+              id="items"
+              type="number"
+              value={itemsDelivered}
+              onChange={(e) => setItemsDelivered(e.target.value)}
+              placeholder="Enter number of items"
+              min="1"
+              required
+            />
           </div>
           
           <div className="flex justify-end space-x-2 pt-4">

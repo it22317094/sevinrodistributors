@@ -24,6 +24,8 @@ interface Delivery {
 
 export default function Delivery() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [filteredDeliveries, setFilteredDeliveries] = useState<Delivery[]>([]);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
@@ -71,6 +73,22 @@ export default function Delivery() {
     return () => unsubscribe();
   }, [isAuthenticated, authLoading, toast]);
 
+  // Update filtered deliveries when deliveries change or filter changes
+  useEffect(() => {
+    let filtered = [...deliveries];
+    
+    if (activeFilter === 'transit') {
+      filtered = deliveries.filter(d => d.status === 'In Transit');
+    } else if (activeFilter === 'today') {
+      const today = format(new Date(), 'yyyy-MM-dd');
+      filtered = deliveries.filter(d => d.deliveryDate === today);
+    } else if (activeFilter === 'completed') {
+      filtered = deliveries.filter(d => d.status === 'Delivered');
+    }
+    
+    setFilteredDeliveries(filtered);
+  }, [deliveries, activeFilter]);
+
   const handleDeliveryScheduled = () => {
     // Deliveries will be updated automatically via the real-time listener
   };
@@ -87,6 +105,20 @@ export default function Delivery() {
       return dateString;
     }
   };
+
+  const handleStatCardClick = (filterType: string) => {
+    if (activeFilter === filterType) {
+      setActiveFilter(null); // Remove filter if clicking the same card
+    } else {
+      setActiveFilter(filterType);
+    }
+  };
+
+  // Calculate stats
+  const totalDeliveries = deliveries.length;
+  const inTransitCount = deliveries.filter(d => d.status === 'In Transit').length;
+  const todayCount = deliveries.filter(d => d.deliveryDate === format(new Date(), 'yyyy-MM-dd')).length;
+  const completedCount = deliveries.filter(d => d.status === 'Delivered').length;
 
   if (authLoading || loading) {
     return (
@@ -128,43 +160,55 @@ export default function Delivery() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card 
+            className={`cursor-pointer transition-all duration-200 ${activeFilter === null ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}
+            onClick={() => handleStatCardClick('all')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Deliveries</CardTitle>
               <Truck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">156</div>
-              <p className="text-xs text-muted-foreground">This month</p>
+              <div className="text-2xl font-bold">{totalDeliveries}</div>
+              <p className="text-xs text-muted-foreground">All records</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card 
+            className={`cursor-pointer transition-all duration-200 ${activeFilter === 'transit' ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}
+            onClick={() => handleStatCardClick('transit')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">In Transit</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">23</div>
+              <div className="text-2xl font-bold text-blue-600">{inTransitCount}</div>
               <p className="text-xs text-muted-foreground">Currently en route</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card 
+            className={`cursor-pointer transition-all duration-200 ${activeFilter === 'today' ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}
+            onClick={() => handleStatCardClick('today')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Today's Deliveries</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">8</div>
+              <div className="text-2xl font-bold">{todayCount}</div>
               <p className="text-xs text-muted-foreground">Scheduled today</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card 
+            className={`cursor-pointer transition-all duration-200 ${activeFilter === 'completed' ? 'ring-2 ring-primary' : 'hover:shadow-md'}`}
+            onClick={() => handleStatCardClick('completed')}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Completed</CardTitle>
               <MapPin className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">125</div>
+              <div className="text-2xl font-bold text-green-600">{completedCount}</div>
               <p className="text-xs text-muted-foreground">Successfully delivered</p>
             </CardContent>
           </Card>
@@ -187,18 +231,38 @@ export default function Delivery() {
         {/* Deliveries List */}
         <Card>
           <CardHeader>
-            <CardTitle>Deliveries</CardTitle>
+            <CardTitle>
+              Deliveries 
+              {activeFilter && (
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  - {activeFilter === 'transit' ? 'In Transit' : 
+                     activeFilter === 'today' ? "Today's Deliveries" : 
+                     activeFilter === 'completed' ? 'Completed' : 'All'}
+                </span>
+              )}
+            </CardTitle>
             <CardDescription>Manage delivery status and good receiver notes</CardDescription>
           </CardHeader>
           <CardContent>
-            {deliveries.length === 0 ? (
+            {filteredDeliveries.length === 0 ? (
               <div className="text-center py-8">
                 <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No deliveries yet</p>
+                <p className="text-muted-foreground">
+                  {activeFilter ? 'No deliveries match this filter' : 'No deliveries yet'}
+                </p>
+                {activeFilter && (
+                  <Button 
+                    variant="outline" 
+                    className="mt-2" 
+                    onClick={() => setActiveFilter(null)}
+                  >
+                    Clear Filter
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
-                {deliveries.map((delivery) => (
+                {filteredDeliveries.map((delivery) => (
                 <div
                   key={delivery.id}
                   className="flex flex-col lg:flex-row lg:items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
