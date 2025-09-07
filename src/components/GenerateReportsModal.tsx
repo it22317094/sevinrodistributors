@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { ref, push } from 'firebase/database';
 import { realtimeDb } from '@/lib/firebase';
 import { Sale, InventoryItem, Customer } from '@/hooks/useFirebaseReports';
@@ -90,9 +90,9 @@ export default function GenerateReportsModal({
     doc.setFontSize(14);
     doc.text('Key Performance Indicators', 20, 65);
     doc.setFontSize(10);
-    doc.text(`Total Sales: Rs. ${totalSales.toFixed(2)}`, 20, 80);
+    doc.text(`Total Sales: RS ${totalSales.toFixed(2)}`, 20, 80);
     doc.text(`Number of Orders: ${currentMonthSales.length}`, 20, 90);
-    doc.text(`Average Order Value: Rs. ${avgOrderValue.toFixed(2)}`, 20, 100);
+    doc.text(`Average Order Value: RS ${avgOrderValue.toFixed(2)}`, 20, 100);
     doc.text(`Paid Orders: ${paidCount} | Unpaid Orders: ${unpaidCount}`, 20, 110);
 
     // Sales table
@@ -103,17 +103,21 @@ export default function GenerateReportsModal({
         sale.id,
         customer?.name || 'Unknown',
         sale.items.length,
-        `Rs. ${sale.total.toFixed(2)}`,
+        `RS ${sale.total.toFixed(2)}`,
         sale.status
       ];
     });
 
-    (doc as any).autoTable({
-      head: [['Date', 'Invoice ID', 'Customer', 'Items', 'Total', 'Status']],
-      body: tableData,
-      startY: 130,
-      styles: { fontSize: 8 }
-    });
+    try {
+      autoTable(doc, {
+        head: [['Date', 'Invoice ID', 'Customer', 'Items', 'Total', 'Status']],
+        body: tableData,
+        startY: 130,
+        styles: { fontSize: 8 }
+      });
+    } catch (error) {
+      console.error('Error generating sales table:', error);
+    }
 
     const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
     doc.save(`MonthlySales_${monthYear}.pdf`);
@@ -135,7 +139,7 @@ export default function GenerateReportsModal({
     doc.text('Inventory Summary', 20, 65);
     doc.setFontSize(10);
     doc.text(`Total SKUs: ${totalSKUs}`, 20, 80);
-    doc.text(`Total Inventory Value: Rs. ${totalValue.toFixed(2)}`, 20, 90);
+    doc.text(`Total Inventory Value: RS ${totalValue.toFixed(2)}`, 20, 90);
     doc.text(`Low Stock Items: ${lowStockItems.length}`, 20, 100);
 
     // Stock levels table
@@ -143,20 +147,24 @@ export default function GenerateReportsModal({
       item.sku,
       item.name,
       item.quantity,
-      `Rs. ${item.costPrice.toFixed(2)}`,
-      `Rs. ${(item.quantity * item.costPrice).toFixed(2)}`
+      `RS ${item.costPrice.toFixed(2)}`,
+      `RS ${(item.quantity * item.costPrice).toFixed(2)}`
     ]);
 
-    (doc as any).autoTable({
-      head: [['SKU', 'Name', 'Quantity', 'Cost Price', 'Total Value']],
-      body: stockData,
-      startY: 120,
-      styles: { fontSize: 8 }
-    });
+    try {
+      autoTable(doc, {
+        head: [['SKU', 'Name', 'Quantity', 'Cost Price', 'Total Value']],
+        body: stockData,
+        startY: 120,
+        styles: { fontSize: 8 }
+      });
+    } catch (error) {
+      console.error('Error generating inventory table:', error);
+    }
 
     // Low stock alerts
     if (lowStockItems.length > 0) {
-      const finalY = (doc as any).lastAutoTable.finalY || 120;
+      const finalY = (doc as any).lastAutoTable?.finalY || 200;
       doc.setFontSize(14);
       doc.text('Low Stock Alerts', 20, finalY + 20);
       
@@ -167,12 +175,16 @@ export default function GenerateReportsModal({
         'LOW STOCK'
       ]);
 
-      (doc as any).autoTable({
-        head: [['SKU', 'Name', 'Quantity', 'Status']],
-        body: lowStockData,
-        startY: finalY + 30,
-        styles: { fontSize: 8 }
-      });
+      try {
+        autoTable(doc, {
+          head: [['SKU', 'Name', 'Quantity', 'Status']],
+          body: lowStockData,
+          startY: finalY + 30,
+          styles: { fontSize: 8 }
+        });
+      } catch (error) {
+        console.error('Error generating low stock table:', error);
+      }
     }
 
     const monthYear = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
@@ -193,7 +205,7 @@ export default function GenerateReportsModal({
     doc.setFontSize(14);
     doc.text('Outstanding Invoices Summary', 20, 65);
     doc.setFontSize(10);
-    doc.text(`Total Outstanding: Rs. ${totalOutstanding.toFixed(2)}`, 20, 80);
+    doc.text(`Total Outstanding: RS ${totalOutstanding.toFixed(2)}`, 20, 80);
     doc.text(`Number of Unpaid Invoices: ${unpaidSales.length}`, 20, 90);
 
     // Add note about individual invoice printing
@@ -210,17 +222,21 @@ export default function GenerateReportsModal({
         sale.id,
         customer?.name || 'Unknown',
         sale.date,
-        `Rs. ${sale.total.toFixed(2)}`,
+        `RS ${sale.total.toFixed(2)}`,
         sale.status
       ];
     });
 
-    (doc as any).autoTable({
-      head: [['Invoice ID', 'Customer', 'Date', 'Amount', 'Status']],
-      body: unpaidData,
-      startY: 150,
-      styles: { fontSize: 8 }
-    });
+    try {
+      autoTable(doc, {
+        head: [['Invoice ID', 'Customer', 'Date', 'Amount', 'Status']],
+        body: unpaidData,
+        startY: 150,
+        styles: { fontSize: 8 }
+      });
+    } catch (error) {
+      console.error('Error generating invoice table:', error);
+    }
 
     const monthYear = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
     doc.save(`InvoiceReport_${monthYear}.pdf`);

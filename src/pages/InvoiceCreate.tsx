@@ -338,11 +338,11 @@ const InvoiceCreate = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>Rs. {calculateSubtotal().toLocaleString()}</span>
+                    <span>RS {calculateSubtotal().toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between font-bold text-lg border-t pt-2">
                     <span>Total:</span>
-                    <span>Rs. {calculateSubtotal().toLocaleString()}</span>
+                    <span>RS {calculateSubtotal().toLocaleString()}</span>
                   </div>
                 </div>
               </CardContent>
@@ -400,7 +400,7 @@ const InvoiceCreate = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="newPrice">Price (Rs.) *</Label>
+                      <Label htmlFor="newPrice">Price (RS) *</Label>
                       <Input
                         id="newPrice"
                         type="number"
@@ -441,7 +441,7 @@ const InvoiceCreate = () => {
                               value={predefined.code}
                               className="bg-background hover:bg-accent"
                             >
-                              {predefined.code} - Rs. {predefined.price}
+                              {predefined.code} - RS {predefined.price}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -471,7 +471,7 @@ const InvoiceCreate = () => {
                     </div>
                     
                     <div className="col-span-2">
-                      <Label>Price (Rs.) *</Label>
+                      <Label>Price (RS) *</Label>
                       <Input
                         type="number"
                         min="0"
@@ -486,7 +486,7 @@ const InvoiceCreate = () => {
                     <div className="col-span-1">
                       <Label>Total</Label>
                       <div className="h-10 flex items-center text-sm font-medium">
-                        Rs. {item.total.toLocaleString()}
+                        RS {item.total.toLocaleString()}
                       </div>
                     </div>
                     

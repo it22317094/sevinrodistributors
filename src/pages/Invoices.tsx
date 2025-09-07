@@ -152,7 +152,7 @@ export default function Invoices() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Rs. {getTotalAmount().toLocaleString()}</div>
+              <div className="text-2xl font-bold">RS {getTotalAmount().toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">Total amount</p>
             </CardContent>
           </Card>
@@ -282,7 +282,7 @@ export default function Invoices() {
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4 mt-4 lg:mt-0">
                       <div className="text-center">
-                        <div className="text-lg font-semibold text-primary">Rs. {invoice.total?.toLocaleString()}</div>
+                        <div className="text-lg font-semibold text-primary">RS {invoice.total?.toLocaleString()}</div>
                         <div className="text-xs text-muted-foreground">Amount</div>
                       </div>
                       <div className="flex gap-2">

@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { Sale, Customer, InventoryItem } from '@/hooks/useFirebaseReports';
 
 export const generateInvoicePDF = (
@@ -63,7 +63,7 @@ export const generateInvoicePDF = (
       item.description || inventoryItem?.name || 'T-Shirt',
       item.qty.toString(),
       `${item.price.toFixed(2)}`,
-      `Rs.`,
+      `RS`,
       `${(item.qty * item.price).toFixed(2)}`
     ];
   });
@@ -74,42 +74,46 @@ export const generateInvoicePDF = (
     tableData.push(['', '', '', '', '', '', '']);
   }
   
-  (doc as any).autoTable({
-    head: [['No', 'Items', 'Description', 'Qty', 'Price', '', 'Total']],
-    body: tableData,
-    startY: 95,
-    styles: {
-      fontSize: 9,
-      cellPadding: 4,
-      lineColor: [0, 0, 0],
-      lineWidth: 0.1,
-    },
-    headStyles: {
-      fillColor: [255, 165, 0], // Orange header
-      textColor: [255, 255, 255],
-      fontStyle: 'bold',
-      fontSize: 10,
-    },
-    columnStyles: {
-      0: { halign: 'center', cellWidth: 20 },
-      1: { cellWidth: 25 },
-      2: { cellWidth: 45 },
-      3: { halign: 'center', cellWidth: 20 },
-      4: { halign: 'right', cellWidth: 25 },
-      5: { halign: 'left', cellWidth: 15 },
-      6: { halign: 'right', cellWidth: 30 },
-    },
-    margin: { left: 20, right: 20 },
-  });
+  try {
+    autoTable(doc, {
+      head: [['No', 'Items', 'Description', 'Qty', 'Price', '', 'Total']],
+      body: tableData,
+      startY: 95,
+      styles: {
+        fontSize: 9,
+        cellPadding: 4,
+        lineColor: [0, 0, 0],
+        lineWidth: 0.1,
+      },
+      headStyles: {
+        fillColor: [255, 165, 0], // Orange header
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 10,
+      },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 20 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 45 },
+        3: { halign: 'center', cellWidth: 20 },
+        4: { halign: 'right', cellWidth: 25 },
+        5: { halign: 'left', cellWidth: 15 },
+        6: { halign: 'right', cellWidth: 30 },
+      },
+      margin: { left: 20, right: 20 },
+    });
+  } catch (error) {
+    console.error('Error generating table:', error);
+  }
   
-  const finalY = (doc as any).lastAutoTable.finalY || 120;
+  const finalY = (doc as any).lastAutoTable?.finalY || 300;
   
   // Total section (right aligned)
   const totalY = finalY + 10;
   doc.setFont(undefined, 'bold');
   doc.setFontSize(12);
   doc.text('Total Amount', pageWidth - 80, totalY);
-  doc.text('Rs.', pageWidth - 45, totalY);
+  doc.text('RS', pageWidth - 45, totalY);
   doc.text(`${sale.total.toFixed(2)}`, pageWidth - 20, totalY, { align: 'right' });
   
   // Signature lines
