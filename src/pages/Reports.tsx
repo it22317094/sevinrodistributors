@@ -60,7 +60,7 @@ export default function Reports() {
     });
   }
 
-  const kpis = calculateKPIs();
+  const kpis = calculateKPIs;
 
   const formatCurrency = (amount: number) => `Rs. ${amount.toLocaleString()}`;
   const formatPercentage = (value: number) => `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
