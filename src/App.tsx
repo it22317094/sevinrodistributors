@@ -7,7 +7,7 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Header } from "./components/Header";
 import Dashboard from "./pages/Dashboard";
-import Suppliers from "./pages/Suppliers";
+
 import Customers from "./pages/Customers";
 import Inventory from "./pages/Inventory";
 import Invoices from "./pages/Invoices";
@@ -44,22 +44,6 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/suppliers"
-          element={
-            <ProtectedRoute>
-              <Suppliers />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/suppliers/:id/orders"
-          element={
-            <ProtectedRoute>
-              <Suppliers />
             </ProtectedRoute>
           }
         />

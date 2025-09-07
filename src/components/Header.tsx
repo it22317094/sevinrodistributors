@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 
 const navigationItems = [
   { name: "Dashboard", href: "/dashboard" },
-  { name: "Suppliers", href: "/suppliers" },
   { name: "Customers", href: "/customers" },
   { name: "Inventory", href: "/inventory" },
   { name: "Invoices", href: "/invoices" },

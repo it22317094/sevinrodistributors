@@ -1,17 +1,56 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Truck, Package, MapPin, Calendar } from "lucide-react";
+import { ScheduleDeliveryModal } from "@/components/ScheduleDeliveryModal";
+import { DeliveryDetailsModal } from "@/components/DeliveryDetailsModal";
+import { ref, onValue } from "firebase/database";
+import { realtimeDb } from "@/lib/firebase";
 
-const deliveries = [
-  { id: "DEL-001", customer: "Fashion House Ltd", address: "123 Fashion St, NYC", status: "In Transit", driver: "John Doe", date: "2024-01-15", items: 5 },
-  { id: "DEL-002", customer: "Designer Boutique", address: "456 Style Ave, LA", status: "Delivered", driver: "Jane Smith", date: "2024-01-14", items: 3 },
-  { id: "DEL-003", customer: "Retail Chain Co", address: "789 Commerce Rd, Chicago", status: "Scheduled", driver: "Mike Johnson", date: "2024-01-16", items: 8 },
-  { id: "DEL-004", customer: "Modern Tailors", address: "321 Craft Lane, Boston", status: "Preparing", driver: "Sarah Davis", date: "2024-01-15", items: 2 },
-];
+interface Delivery {
+  id: string;
+  companyName: string;
+  address: string;
+  deliveryDate: string;
+  status: string;
+  itemsDelivered: number;
+  createdAt?: number;
+}
 
 export default function Delivery() {
+  const [deliveries, setDeliveries] = useState<Delivery[]>([]);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(null);
+
+  useEffect(() => {
+    const deliveriesRef = ref(realtimeDb, 'deliveries');
+    const unsubscribe = onValue(deliveriesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const deliveriesArray = Object.entries(data).map(([key, value]: [string, any]) => ({
+          id: key,
+          ...value
+        }));
+        setDeliveries(deliveriesArray);
+      } else {
+        setDeliveries([]);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleDeliveryScheduled = () => {
+    // Deliveries will be updated automatically via the real-time listener
+  };
+
+  const handleShowDetails = (delivery: Delivery) => {
+    setSelectedDelivery(delivery);
+    setDetailsModalOpen(true);
+  };
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -19,9 +58,9 @@ export default function Delivery() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-primary mb-2">Delivery Management</h1>
-            <p className="text-muted-foreground">Track deliveries and manage good receiver notes</p>
+            <p className="text-muted-foreground">Manage delivery status and good receiver notes</p>
           </div>
-          <Button className="mt-4 sm:mt-0">
+          <Button className="mt-4 sm:mt-0" onClick={() => setScheduleModalOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Schedule Delivery
           </Button>
@@ -89,7 +128,7 @@ export default function Delivery() {
         <Card>
           <CardHeader>
             <CardTitle>Deliveries</CardTitle>
-            <CardDescription>Track delivery status and manage good receiver notes</CardDescription>
+            <CardDescription>Manage delivery status and good receiver notes</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -100,7 +139,7 @@ export default function Delivery() {
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-lg">{delivery.id}</h3>
+                      <h3 className="font-semibold text-lg">{delivery.companyName}</h3>
                       <Badge 
                         variant={
                           delivery.status === "Delivered" ? "default" : 
@@ -113,20 +152,19 @@ export default function Delivery() {
                       </Badge>
                     </div>
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <p>Customer: {delivery.customer}</p>
                       <p>Address: {delivery.address}</p>
-                      <p>Driver: {delivery.driver}</p>
-                      <p>Date: {delivery.date}</p>
+                      <p>Date: {delivery.deliveryDate}</p>
                     </div>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-4 mt-4 lg:mt-0">
                     <div className="text-center">
-                      <div className="text-lg font-semibold text-primary">{delivery.items}</div>
+                      <div className="text-lg font-semibold text-primary">{delivery.itemsDelivered}</div>
                       <div className="text-xs text-muted-foreground">Items</div>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">Track</Button>
-                      <Button variant="outline" size="sm">Details</Button>
+                      <Button variant="outline" size="sm" onClick={() => handleShowDetails(delivery)}>
+                        Details
+                      </Button>
                       {delivery.status === "Delivered" && (
                         <Button size="sm">Good Receipt</Button>
                       )}
@@ -140,6 +178,18 @@ export default function Delivery() {
             </div>
           </CardContent>
         </Card>
+
+        <ScheduleDeliveryModal
+          open={scheduleModalOpen}
+          onOpenChange={setScheduleModalOpen}
+          onDeliveryScheduled={handleDeliveryScheduled}
+        />
+
+        <DeliveryDetailsModal
+          open={detailsModalOpen}
+          onOpenChange={setDetailsModalOpen}
+          delivery={selectedDelivery}
+        />
       </div>
     </div>
   );
