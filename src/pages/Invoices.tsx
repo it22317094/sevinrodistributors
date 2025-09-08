@@ -9,6 +9,7 @@ import { Plus, Search, FileText, DollarSign, Calendar, ChevronDown } from "lucid
 import { ref, get, update } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
+import { useInvoicePDFGenerator } from "@/hooks/useInvoicePDFGenerator";
 
 interface Invoice {
   id: string;
@@ -23,6 +24,7 @@ interface Invoice {
 export default function Invoices() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { generateInvoicePDF, loading: pdfLoading } = useInvoicePDFGenerator();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -259,7 +261,8 @@ export default function Invoices() {
                 {filteredInvoices.map((invoice) => (
                   <div
                     key={invoice.id}
-                    className="flex flex-col lg:flex-row lg:items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
+                    className="flex flex-col lg:flex-row lg:items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors cursor-pointer"
+                    onClick={() => generateInvoicePDF(invoice.id)}
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -286,8 +289,25 @@ export default function Invoices() {
                         <div className="text-xs text-muted-foreground">Amount</div>
                       </div>
                       <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          disabled={pdfLoading}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            generateInvoicePDF(invoice.id);
+                          }}
+                        >
+                          {pdfLoading ? 'Generating...' : 'Generate PDF'}
+                        </Button>
                         {invoice.status !== "paid" && (
-                          <Button size="sm" onClick={() => handleMarkPaid(invoice.id, invoice)}>
+                          <Button 
+                            size="sm" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkPaid(invoice.id, invoice);
+                            }}
+                          >
                             Mark Paid
                           </Button>
                         )}

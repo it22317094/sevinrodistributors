@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Sale, InventoryItem, Customer } from '@/hooks/useFirebaseReports';
+import { useInvoicePDFGenerator } from '@/hooks/useInvoicePDFGenerator';
 
 interface ReportViewModalProps {
   open: boolean;
@@ -25,6 +26,7 @@ export default function ReportViewModal({
 }: ReportViewModalProps) {
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'unpaid' | 'partial'>('all');
   const [inventoryView, setInventoryView] = useState<'quantity' | 'value'>('quantity');
+  const { generateInvoicePDF, loading: pdfLoading } = useInvoicePDFGenerator();
 
   const formatCurrency = (amount: number) => `LKR ${amount.toLocaleString()}`;
 
@@ -97,11 +99,16 @@ export default function ReportViewModal({
                 <th className="text-left p-2">Items</th>
                 <th className="text-left p-2">Total</th>
                 <th className="text-left p-2">Status</th>
+                <th className="text-left p-2">Actions</th>
               </tr>
             </thead>
             <tbody>
               {currentMonthSales.map((sale) => (
-                <tr key={sale.id} className="border-b">
+                <tr 
+                  key={sale.id} 
+                  className="border-b hover:bg-accent cursor-pointer transition-colors"
+                  onClick={() => generateInvoicePDF(sale.id)}
+                >
                   <td className="p-2">{new Date(sale.date).toLocaleDateString()}</td>
                   <td className="p-2">{sale.id}</td>
                   <td className="p-2">{customers.find(c => c.id === sale.customerId)?.name || 'Unknown'}</td>
@@ -111,6 +118,19 @@ export default function ReportViewModal({
                     <Badge variant={sale.status === 'paid' ? 'default' : 'destructive'}>
                       {sale.status}
                     </Badge>
+                  </td>
+                  <td className="p-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      disabled={pdfLoading}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        generateInvoicePDF(sale.id);
+                      }}
+                    >
+                      {pdfLoading ? 'Generating...' : 'Generate PDF'}
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -270,6 +290,56 @@ export default function ReportViewModal({
             </Pie>
           </PieChart>
         </ResponsiveContainer>
+
+        <div className="mt-6 space-y-4">
+          <h3 className="text-lg font-semibold">Outstanding Invoices</h3>
+          <div className="max-h-60 overflow-y-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Invoice ID</th>
+                  <th className="text-left p-2">Customer</th>
+                  <th className="text-left p-2">Amount</th>
+                  <th className="text-left p-2">Status</th>
+                  <th className="text-left p-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sales
+                  .filter(sale => sale.status !== 'paid')
+                  .map((sale) => (
+                    <tr 
+                      key={sale.id} 
+                      className="border-b hover:bg-accent cursor-pointer transition-colors"
+                      onClick={() => generateInvoicePDF(sale.id)}
+                    >
+                      <td className="p-2">{sale.id}</td>
+                      <td className="p-2">{customers.find(c => c.id === sale.customerId)?.name || 'Unknown'}</td>
+                      <td className="p-2">{formatCurrency(sale.total)}</td>
+                      <td className="p-2">
+                        <Badge variant={sale.status === 'paid' ? 'default' : 'destructive'}>
+                          {sale.status}
+                        </Badge>
+                      </td>
+                      <td className="p-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          disabled={pdfLoading}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            generateInvoicePDF(sale.id);
+                          }}
+                        >
+                          {pdfLoading ? 'Generating...' : 'Generate PDF'}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     );
   };

@@ -212,8 +212,8 @@ export default function GenerateReportsModal({
     doc.setFontSize(12);
     doc.text('Individual Invoice Templates', 20, 110);
     doc.setFontSize(10);
-    doc.text('Each invoice can be printed individually using the Print button in the invoice list.', 20, 120);
-    doc.text('Invoice templates follow the SEVINRO design with proper formatting and signatures.', 20, 130);
+    doc.text('Click on any invoice row in the Invoices section to generate and download', 20, 120);
+    doc.text('individual invoice PDFs with proper SEVINRO formatting and signatures.', 20, 130);
 
     // Unpaid invoices table
     const unpaidData = unpaidSales.map(sale => {
