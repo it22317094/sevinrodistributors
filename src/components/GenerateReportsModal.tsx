@@ -90,9 +90,9 @@ export default function GenerateReportsModal({
     doc.setFontSize(14);
     doc.text('Key Performance Indicators', 20, 65);
     doc.setFontSize(10);
-    doc.text(`Total Sales: RS ${totalSales.toFixed(2)}`, 20, 80);
+    doc.text(`Total Sales: LKR ${totalSales.toFixed(2)}`, 20, 80);
     doc.text(`Number of Orders: ${currentMonthSales.length}`, 20, 90);
-    doc.text(`Average Order Value: RS ${avgOrderValue.toFixed(2)}`, 20, 100);
+    doc.text(`Average Order Value: LKR ${avgOrderValue.toFixed(2)}`, 20, 100);
     doc.text(`Paid Orders: ${paidCount} | Unpaid Orders: ${unpaidCount}`, 20, 110);
 
     // Sales table
@@ -103,7 +103,7 @@ export default function GenerateReportsModal({
         sale.id,
         customer?.name || 'Unknown',
         sale.items.length,
-        `RS ${sale.total.toFixed(2)}`,
+        `LKR ${sale.total.toFixed(2)}`,
         sale.status
       ];
     });
@@ -139,7 +139,7 @@ export default function GenerateReportsModal({
     doc.text('Inventory Summary', 20, 65);
     doc.setFontSize(10);
     doc.text(`Total SKUs: ${totalSKUs}`, 20, 80);
-    doc.text(`Total Inventory Value: RS ${totalValue.toFixed(2)}`, 20, 90);
+    doc.text(`Total Inventory Value: LKR ${totalValue.toFixed(2)}`, 20, 90);
     doc.text(`Low Stock Items: ${lowStockItems.length}`, 20, 100);
 
     // Stock levels table
@@ -147,8 +147,8 @@ export default function GenerateReportsModal({
       item.sku,
       item.name,
       item.quantity,
-      `RS ${item.costPrice.toFixed(2)}`,
-      `RS ${(item.quantity * item.costPrice).toFixed(2)}`
+      `LKR ${item.costPrice.toFixed(2)}`,
+      `LKR ${(item.quantity * item.costPrice).toFixed(2)}`
     ]);
 
     try {
@@ -205,7 +205,7 @@ export default function GenerateReportsModal({
     doc.setFontSize(14);
     doc.text('Outstanding Invoices Summary', 20, 65);
     doc.setFontSize(10);
-    doc.text(`Total Outstanding: RS ${totalOutstanding.toFixed(2)}`, 20, 80);
+    doc.text(`Total Outstanding: LKR ${totalOutstanding.toFixed(2)}`, 20, 80);
     doc.text(`Number of Unpaid Invoices: ${unpaidSales.length}`, 20, 90);
 
     // Add note about individual invoice printing
@@ -222,7 +222,7 @@ export default function GenerateReportsModal({
         sale.id,
         customer?.name || 'Unknown',
         sale.date,
-        `RS ${sale.total.toFixed(2)}`,
+        `LKR ${sale.total.toFixed(2)}`,
         sale.status
       ];
     });

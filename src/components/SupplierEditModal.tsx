@@ -312,8 +312,8 @@ export function SupplierEditModal({ open, onOpenChange, supplier, onSupplierUpda
               <CardTitle>Purchase Orders</CardTitle>
               <div className="flex gap-4 text-sm text-muted-foreground">
                 <span>Active Orders: {activeOrders.length}</span>
-                <span>Total Amount: ${totalAmount.toLocaleString()}</span>
-                <span>Total Balance: ${totalBalance.toLocaleString()}</span>
+                <span>Total Amount: LKR {totalAmount.toLocaleString()}</span>
+                <span>Total Balance: LKR {totalBalance.toLocaleString()}</span>
               </div>
             </CardHeader>
             <CardContent>
@@ -344,10 +344,10 @@ export function SupplierEditModal({ open, onOpenChange, supplier, onSupplierUpda
                         <TableRow key={order.id}>
                           <TableCell className="font-medium">{order.orderId || order.id}</TableCell>
                           <TableCell>{order.date ? format(new Date(order.date), "MMM dd, yyyy") : "—"}</TableCell>
-                          <TableCell>${(order.amount || 0).toLocaleString()}</TableCell>
+                          <TableCell>LKR {(order.amount || 0).toLocaleString()}</TableCell>
                           <TableCell>
                             <span className={order.balance > 0 ? "text-destructive font-medium" : ""}>
-                              ${(order.balance || 0).toLocaleString()}
+                              LKR {(order.balance || 0).toLocaleString()}
                             </span>
                           </TableCell>
                           <TableCell>{getStatusBadge(order.status)}</TableCell>

@@ -26,7 +26,7 @@ export default function ReportViewModal({
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'unpaid' | 'partial'>('all');
   const [inventoryView, setInventoryView] = useState<'quantity' | 'value'>('quantity');
 
-  const formatCurrency = (amount: number) => `RS ${amount.toLocaleString()}`;
+  const formatCurrency = (amount: number) => `LKR ${amount.toLocaleString()}`;
 
   const renderMonthlySalesChart = () => {
     const now = new Date();

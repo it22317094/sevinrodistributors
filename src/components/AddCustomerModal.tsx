@@ -118,7 +118,7 @@ export function AddCustomerModal({ open, onOpenChange }: AddCustomerModalProps) 
         uniqueId: formData.uniqueId,
         createdAt: new Date().toISOString(),
         status: "Active",
-        outstanding: "$0.00",
+        outstanding: "LKR 0.00",
       });
 
       toast({

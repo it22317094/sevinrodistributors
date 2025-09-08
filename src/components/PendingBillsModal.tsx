@@ -96,7 +96,7 @@ export default function PendingBillsModal({ open, onOpenChange, bills: billsProp
                         </span>
                         <span className="flex items-center gap-1">
                           <DollarSign className="h-4 w-4" />
-                          ${bill.amount}
+                          LKR {bill.amount}
                         </span>
                       </div>
                     </div>
