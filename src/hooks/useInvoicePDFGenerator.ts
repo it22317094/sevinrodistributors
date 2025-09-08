@@ -101,6 +101,9 @@ export const useInvoicePDFGenerator = () => {
 
       const usdToLkr = exchangeRateSnap.exists() ? exchangeRateSnap.val() : 1;
 
+      // Format date to DD/MM/YYYY
+      const formattedDate = new Date(date).toLocaleDateString('en-GB');
+
       // Fetch customer data
       const customerSnap = await get(ref(realtimeDb, `customers/${customerId}`));
       const customerData: CustomerData = customerSnap.exists() ? customerSnap.val() : {
@@ -108,40 +111,32 @@ export const useInvoicePDFGenerator = () => {
         toCity: "Unknown City"
       };
 
-      // Generate PDF
+      // Generate PDF with exact template design
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
 
       try {
-        // Header with logo
-        if (companyData.logoUrl) {
-          try {
-            // Try to add logo, but don't fail if it doesn't work
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            img.onload = () => {
-              doc.addImage(img, 'PNG', 20, 15, 40, 25); // max height ~40px
-            };
-            img.src = companyData.logoUrl;
-          } catch (error) {
-            // Ignore logo errors as specified
-          }
-        }
+        // Header - SEVINRO logo (top left)
+        doc.setFontSize(18);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(255, 165, 0); // Orange color for SEVINRO
+        doc.text('SEVINRO', 20, 25);
 
-        // Company details (top right)
+        // Company details (top right) - exact format from template
         doc.setFontSize(8);
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'normal');
         const rightX = pageWidth - 20;
-        doc.text(companyData.addressLine, rightX, 20, { align: 'right' });
+        doc.text(`No : ${companyData.addressLine.replace('No : ', '')}`, rightX, 20, { align: 'right' });
         doc.text(`Tel : ${companyData.phone}`, rightX, 25, { align: 'right' });
 
         // INVOICE title (centered)
         doc.setFontSize(20);
         doc.setFont(undefined, 'bold');
+        doc.setTextColor(0, 0, 0);
         doc.text('INVOICE', pageWidth / 2, 50, { align: 'center' });
 
-        // Customer info - Left side (TO:)
+        // Customer info - Left side (TO:) - exact format from template
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
         doc.text('TO :-', 20, 70);
@@ -150,18 +145,17 @@ export const useInvoicePDFGenerator = () => {
         doc.text(customerData.toName, 20, 80);
         doc.text(customerData.toCity, 20, 85);
 
-        // Invoice details - Right side
+        // Invoice details - Right side - exact format from template
         const invoiceDetailsX = pageWidth - 70;
         doc.setFont(undefined, 'normal');
         doc.setFontSize(9);
-        doc.text(`Invoice No : ${invoiceNo}`, invoiceDetailsX, 70);
+        doc.text(`Invoice No : - ${invoiceNo}`, invoiceDetailsX, 70);
         if (invoiceData.orderNo) {
-          doc.text(`Order No : ${invoiceData.orderNo}`, invoiceDetailsX, 75);
+          doc.text(`Order No : - ${invoiceData.orderNo}`, invoiceDetailsX, 75);
+          doc.text(`Date : - ${formattedDate}`, invoiceDetailsX, 80);
+        } else {
+          doc.text(`Date : - ${formattedDate}`, invoiceDetailsX, 75);
         }
-        
-        // Format date to DD/MM/YYYY
-        const formattedDate = new Date(date).toLocaleDateString('en-GB');
-        doc.text(`Date : ${formattedDate}`, invoiceDetailsX, invoiceData.orderNo ? 80 : 75);
 
         // Process items and calculate totals
         let grandTotal = 0;
@@ -186,75 +180,84 @@ export const useInvoicePDFGenerator = () => {
               item.code || item.item || '',
               item.description || '',
               item.qty.toString(),
-              `Rs. ${priceLkr.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-              `Rs. ${lineTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              `Rs. ${priceLkr.toFixed(2)}`,
+              `Rs. ${lineTotal.toFixed(2)}`
             ];
           });
 
-        // Items table
+        // Add empty rows to match template (total 15 rows as shown in image)
+        const emptyRowsNeeded = Math.max(0, 15 - processedItems.length);
+        for (let i = 0; i < emptyRowsNeeded; i++) {
+          processedItems.push(['', '', '', '', '', '']);
+        }
+
+        // Items table with exact styling from template
         try {
           autoTable(doc, {
-            head: [['No', 'Item', 'Description', 'Qty', 'Price', 'Total']],
+            head: [['No', 'Items', 'Description', 'Qty', 'Price', 'Total']],
             body: processedItems,
             startY: 95,
             styles: {
               fontSize: 9,
               cellPadding: 4,
-              lineColor: [255, 165, 0], // Warm orange borders
+              lineColor: [255, 165, 0], // Orange borders to match template
               lineWidth: 0.5,
             },
             headStyles: {
-              fillColor: [255, 255, 255], // White background
-              textColor: [0, 0, 0],
+              fillColor: [255, 165, 0], // Orange header background
+              textColor: [255, 255, 255], // White text
               fontStyle: 'bold',
               fontSize: 10,
             },
             bodyStyles: {
-              fillColor: [255, 248, 240], // Light peach fill
+              fillColor: [255, 248, 240], // Light peach fill like template
             },
             columnStyles: {
-              0: { halign: 'center', cellWidth: 20 },
-              1: { cellWidth: 35 },
-              2: { cellWidth: 45 },
-              3: { halign: 'right', cellWidth: 20 },
-              4: { halign: 'right', cellWidth: 35 },
-              5: { halign: 'right', cellWidth: 35 },
+              0: { halign: 'center', cellWidth: 20 }, // No
+              1: { cellWidth: 35 }, // Items
+              2: { cellWidth: 45 }, // Description
+              3: { halign: 'center', cellWidth: 20 }, // Qty
+              4: { halign: 'right', cellWidth: 30 }, // Price
+              5: { halign: 'right', cellWidth: 35 }, // Total
             },
-            margin: { left: 12, right: 12 },
+            margin: { left: 15, right: 15 },
           });
         } catch (error) {
           console.error('Error generating table:', error);
           // Continue without table if it fails
         }
 
-        const finalY = (doc as any).lastAutoTable?.finalY || 200;
+        const finalY = (doc as any).lastAutoTable?.finalY || 350;
 
-        // Grand total row
+        // Total Amount section (bottom right) - exact format from template
         const totalY = finalY + 10;
         doc.setFont(undefined, 'bold');
         doc.setFontSize(12);
         doc.text('Total Amount', pageWidth - 80, totalY);
-        doc.text(`Rs. ${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - 20, totalY, { align: 'right' });
+        doc.text('Rs.', pageWidth - 45, totalY);
+        doc.text(`${grandTotal.toFixed(2)}`, pageWidth - 20, totalY, { align: 'right' });
 
-        // FX note if USD was converted
+        // FX note if USD was converted (small text above signatures)
+        let fxNoteY = totalY + 30;
         if (hasConvertedUSD) {
           doc.setFont(undefined, 'normal');
           doc.setFontSize(8);
-          doc.text(`FX: 1 USD = ${usdToLkr} LKR`, pageWidth - 20, totalY + 20, { align: 'right' });
+          doc.text(`FX: 1 USD = ${usdToLkr} LKR`, pageWidth - 20, fxNoteY, { align: 'right' });
+          fxNoteY += 15;
         }
 
-        // Signature lines
-        const signatureY = totalY + 50;
+        // Signature lines - exact format from template
+        const signatureY = fxNoteY + 15;
         doc.setFont(undefined, 'normal');
         doc.setFontSize(10);
         
         // Left signature line
-        doc.line(20, signatureY, 90, signatureY);
-        doc.text('Authorized By', 55, signatureY + 10, { align: 'center' });
+        doc.line(30, signatureY, 100, signatureY);
+        doc.text('Authorized By', 65, signatureY + 10, { align: 'center' });
         
-        // Right signature line
-        doc.line(pageWidth - 90, signatureY, pageWidth - 20, signatureY);
-        doc.text('Customer Signature', pageWidth - 55, signatureY + 10, { align: 'center' });
+        // Right signature line  
+        doc.line(pageWidth - 100, signatureY, pageWidth - 30, signatureY);
+        doc.text('Customer Signature', pageWidth - 65, signatureY + 10, { align: 'center' });
 
         // Open preview with download and print options
         const pdfBlob = doc.output('blob');
@@ -284,7 +287,7 @@ export const useInvoicePDFGenerator = () => {
 
         toast({
           title: "Invoice Generated",
-          description: `Invoice ${invoiceNo} has been generated successfully.`,
+          description: `Invoice ${invoiceNo} has been generated using the SEVINRO template.`,
         });
 
       } catch (error) {
