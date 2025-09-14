@@ -10,6 +10,7 @@ import { ref, get, update } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { useInvoicePDFGenerator } from "@/hooks/useInvoicePDFGenerator";
+import CustomerInvoiceModal from "@/components/CustomerInvoiceModal";
 
 interface Invoice {
   id: string;
@@ -31,6 +32,8 @@ export default function Invoices() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
+  const [showCustomerInvoiceModal, setShowCustomerInvoiceModal] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<{id: string, name: string} | null>(null);
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -130,10 +133,16 @@ export default function Invoices() {
             <h1 className="text-3xl font-bold text-primary mb-2">Invoice Management</h1>
             <p className="text-muted-foreground">Create and manage customer invoices</p>
           </div>
-          <Button className="mt-4 sm:mt-0" onClick={() => navigate('/dashboard')}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Invoice
-          </Button>
+          <div className="flex gap-2 mt-4 sm:mt-0">
+            <Button variant="outline" onClick={() => setShowCustomerInvoiceModal(true)}>
+              <FileText className="h-4 w-4 mr-2" />
+              Customer Invoice
+            </Button>
+            <Button onClick={() => navigate('/dashboard')}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Invoice
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -319,6 +328,14 @@ export default function Invoices() {
             )}
           </CardContent>
         </Card>
+
+        {/* Customer Invoice Modal */}
+        <CustomerInvoiceModal
+          open={showCustomerInvoiceModal}
+          onOpenChange={setShowCustomerInvoiceModal}
+          customerId={selectedCustomer?.id}
+          customerName={selectedCustomer?.name}
+        />
       </div>
     </div>
   );
