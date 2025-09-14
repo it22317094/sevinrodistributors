@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ref, get } from 'firebase/database';
-import { realtimeDb } from '@/lib/firebase';
+import { realtimeDb, auth } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -41,6 +41,9 @@ export const useInvoicePDFGenerator = () => {
 
   const generateInvoicePDF = async (invoiceId: string) => {
     setLoading(true);
+    
+    console.log('Starting PDF generation for invoice:', invoiceId);
+    console.log('Current auth state:', auth.currentUser ? 'authenticated' : 'not authenticated');
     
     try {
       // Fetch all required data from Firebase Realtime Database

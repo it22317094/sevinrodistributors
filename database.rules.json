@@ -13,6 +13,22 @@
         ".validate": "newData.hasChildren(['number', 'customerId', 'customerName', 'items', 'subtotal', 'total', 'date', 'status', 'createdAt', 'updatedAt']) && newData.child('number').isNumber() && newData.child('number').val() >= 10004 && $invoiceNumber == newData.child('number').val()"
       }
     },
+    "company": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "settings": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "exchangeRates": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "orders": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
     "itemCodes": {
       ".read": "auth != null",
       ".write": "auth != null",
