@@ -119,11 +119,57 @@ export const useInvoicePDFGenerator = () => {
       const pageWidth = doc.internal.pageSize.width;
 
       try {
-        // Header - SEVINRO logo (top left)
-        doc.setFontSize(18);
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(255, 165, 0); // Orange color for SEVINRO
-        doc.text('SEVINRO', 20, 25);
+        // Header - Company logo (top left)
+        if (companyData.logoUrl) {
+          try {
+            // Load and add logo image
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            await new Promise((resolve, reject) => {
+              img.onload = () => {
+                try {
+                  // Add logo image (max width 40, height auto-scaled)
+                  const logoWidth = 40;
+                  const logoHeight = (img.height / img.width) * logoWidth;
+                  doc.addImage(img, 'JPEG', 20, 15, logoWidth, logoHeight);
+                  resolve(null);
+                } catch (error) {
+                  console.error('Error adding logo to PDF:', error);
+                  // Fallback to text
+                  doc.setFontSize(18);
+                  doc.setFont(undefined, 'bold');
+                  doc.setTextColor(255, 165, 0);
+                  doc.text('SEVINRO', 20, 25);
+                  resolve(null);
+                }
+              };
+              img.onerror = () => {
+                console.error('Failed to load logo image');
+                // Fallback to text
+                doc.setFontSize(18);
+                doc.setFont(undefined, 'bold');
+                doc.setTextColor(255, 165, 0);
+                doc.text('SEVINRO', 20, 25);
+                resolve(null);
+              };
+              img.src = companyData.logoUrl;
+            });
+          } catch (error) {
+            console.error('Error loading logo:', error);
+            // Fallback to text logo
+            doc.setFontSize(18);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(255, 165, 0);
+            doc.text('SEVINRO', 20, 25);
+          }
+        } else {
+          // Fallback to text logo if no logoUrl
+          doc.setFontSize(18);
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(255, 165, 0);
+          doc.text('SEVINRO', 20, 25);
+        }
 
         // Company details (top right) - exact format from template
         doc.setFontSize(8);
