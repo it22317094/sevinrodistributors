@@ -71,11 +71,11 @@ const InvoiceCreate = () => {
       const counterRef = ref(realtimeDb, 'invoiceCounter');
       const snapshot = await get(counterRef);
       const currentValue = snapshot.val();
-      const nextNumber = currentValue === null ? 10004 : currentValue + 1;
+      const nextNumber = currentValue === null ? 10000 : currentValue + 1;
       return nextNumber;
     } catch (error) {
       console.error('Error getting next invoice number:', error);
-      return 10004;
+      return 10000;
     }
   };
 
@@ -84,7 +84,7 @@ const InvoiceCreate = () => {
     
     const result = await runTransaction(counterRef, (current) => {
       if (current === null) {
-        return 10004; // First invoice starts at 10004
+        return 10000; // First invoice starts at 10000
       }
       return current + 1;
     });
