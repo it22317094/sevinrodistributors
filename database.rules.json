@@ -3,14 +3,14 @@
     "invoiceCounter": {
       ".read": "auth != null",
       ".write": "auth != null && (data.val() == null || newData.val() > data.val())",
-      ".validate": "newData.isNumber() && newData.val() >= 10004"
+      ".validate": "newData.isNumber() && newData.val() >= 10000"
     },
     "invoices": {
       ".read": "auth != null",
       ".write": "auth != null",
       ".indexOn": ["number"],
       "$invoiceNumber": {
-        ".validate": "newData.hasChildren(['number', 'customerId', 'customerName', 'items', 'subtotal', 'total', 'date', 'status', 'createdAt', 'updatedAt']) && newData.child('number').isNumber() && newData.child('number').val() >= 10004 && $invoiceNumber == newData.child('number').val()"
+        ".validate": "newData.hasChildren(['number', 'customerId', 'customerName', 'items', 'subtotal', 'total', 'date', 'status', 'createdAt', 'updatedAt']) && newData.child('number').isNumber() && newData.child('number').val() >= 10000 && $invoiceNumber == newData.child('number').val()"
       }
     },
     "company": {
