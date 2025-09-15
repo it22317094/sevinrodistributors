@@ -91,35 +91,35 @@ export function InvoicePreviewModal({
           <div className="border rounded-lg">
             <Table>
               <TableHeader>
-                <TableRow className="bg-orange-100">
-                  <TableHead className="w-16">No.</TableHead>
-                  <TableHead>Item</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="w-20">Qty.</TableHead>
-                  <TableHead className="w-32">Price</TableHead>
+                <TableRow className="bg-orange-200">
+                  <TableHead className="w-16 border-r border-orange-300">No.</TableHead>
+                  <TableHead className="border-r border-orange-300">Item Code</TableHead>
+                  <TableHead className="border-r border-orange-300">Description</TableHead>
+                  <TableHead className="w-20 border-r border-orange-300">Qty</TableHead>
+                  <TableHead className="w-32 border-r border-orange-300">Price</TableHead>
                   <TableHead className="w-32 text-right">Total</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {items.map((item, index) => (
-                  <TableRow key={`${item.itemCode}-${item.unitPrice}`}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{item.itemCode}</TableCell>
-                    <TableCell>{item.description}</TableCell>
-                    <TableCell>{item.quantity}</TableCell>
-                    <TableCell>Rs. {item.unitPrice.toFixed(2)}</TableCell>
+                  <TableRow key={`${item.itemCode}-${item.unitPrice}`} className="border-b">
+                    <TableCell className="border-r border-gray-300">{index + 1}</TableCell>
+                    <TableCell className="border-r border-gray-300">{item.itemCode}</TableCell>
+                    <TableCell className="border-r border-gray-300">{item.description}</TableCell>
+                    <TableCell className="border-r border-gray-300">{item.quantity}</TableCell>
+                    <TableCell className="border-r border-gray-300">Rs. {item.unitPrice.toFixed(2)}</TableCell>
                     <TableCell className="text-right">Rs. {item.total.toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
                 
                 {/* Empty rows for spacing */}
                 {Array.from({ length: Math.max(0, 15 - items.length) }).map((_, index) => (
-                  <TableRow key={`empty-${index}`}>
-                    <TableCell>&nbsp;</TableCell>
-                    <TableCell>&nbsp;</TableCell>
-                    <TableCell>&nbsp;</TableCell>
-                    <TableCell>&nbsp;</TableCell>
-                    <TableCell>&nbsp;</TableCell>
+                  <TableRow key={`empty-${index}`} className="border-b">
+                    <TableCell className="border-r border-gray-300">&nbsp;</TableCell>
+                    <TableCell className="border-r border-gray-300">&nbsp;</TableCell>
+                    <TableCell className="border-r border-gray-300">&nbsp;</TableCell>
+                    <TableCell className="border-r border-gray-300">&nbsp;</TableCell>
+                    <TableCell className="border-r border-gray-300">&nbsp;</TableCell>
                     <TableCell>&nbsp;</TableCell>
                   </TableRow>
                 ))}
@@ -127,24 +127,27 @@ export function InvoicePreviewModal({
             </Table>
             
             {/* Total */}
-            <div className="border-t p-4 bg-orange-50">
+            <div className="border-t p-4 bg-orange-100">
               <div className="flex justify-end">
                 <div className="text-right">
-                  <p className="font-semibold">Total Amount: Rs. {total.toFixed(2)}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">Total Amount:</span>
+                    <span className="font-semibold">Rs. {total.toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Signature lines */}
-          <div className="flex justify-between pt-8 border-t">
+          <div className="flex justify-between pt-12 mt-8">
             <div className="text-center">
               <div className="border-b border-dotted border-gray-400 w-48 mb-2"></div>
-              <p className="text-sm">Authorised By</p>
+              <p className="text-sm font-medium">Authorised By</p>
             </div>
             <div className="text-center">
               <div className="border-b border-dotted border-gray-400 w-48 mb-2"></div>
-              <p className="text-sm">Customer Signature</p>
+              <p className="text-sm font-medium">Customer Signature</p>
             </div>
           </div>
 

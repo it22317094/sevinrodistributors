@@ -44,7 +44,7 @@
       ".read": "auth != null",
       ".write": "auth != null",
       "$customerId": {
-        ".validate": "newData.hasChildren(['name', 'address', 'telephone', 'uniqueId'])"
+        ".validate": "newData.hasChildren(['name', 'contact', 'email', 'status', 'outstanding', 'createdAt', 'updatedAt'])"
       }
     },
     "suppliers": {
