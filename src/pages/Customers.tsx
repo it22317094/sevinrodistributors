@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { AddCustomerModal } from "@/components/AddCustomerModal";
+import { CustomerCard } from "@/components/CustomerCard";
+import { InvoicePreviewModal } from "@/components/InvoicePreviewModal";
+import { useInvoiceFromOrders } from "@/hooks/useInvoiceFromOrders";
 import { Plus, Users, CreditCard, AlertTriangle, TrendingUp } from "lucide-react";
 
 const customers = [
@@ -13,6 +15,35 @@ const customers = [
 
 export default function Customers() {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [selectedCustomerName, setSelectedCustomerName] = useState<string>("");
+  const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<number | null>(null);
+  
+  const { 
+    loading, 
+    aggregatedItems, 
+    fetchEligibleOrders, 
+    createInvoice 
+  } = useInvoiceFromOrders();
+
+  const handleInvoiceClick = async (customerId: number, customerName: string) => {
+    setSelectedCustomerId(customerId);
+    setSelectedCustomerName(customerName);
+    setCreatedInvoiceNumber(null);
+    await fetchEligibleOrders(customerId);
+    setShowInvoiceModal(true);
+  };
+
+  const handleConfirmInvoice = async () => {
+    if (selectedCustomerId && selectedCustomerName) {
+      const invoiceNumber = await createInvoice(selectedCustomerId, selectedCustomerName);
+      if (invoiceNumber) {
+        setCreatedInvoiceNumber(invoiceNumber);
+        // Keep modal open to show the created invoice with PDF option
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,36 +116,11 @@ export default function Customers() {
           <CardContent>
             <div className="space-y-4">
               {customers.map((customer) => (
-                <div
+                <CustomerCard
                   key={customer.id}
-                  className="flex flex-col lg:flex-row lg:items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-lg">{customer.name}</h3>
-                      <Badge variant={customer.status === "Active" ? "default" : "destructive"}>
-                        {customer.status}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      <p>Contact: {customer.contact}</p>
-                      <p>Email: {customer.email}</p>
-                      <p>Last Order: {customer.lastOrder}</p>
-                    </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-4 mt-4 lg:mt-0">
-                    <div className="text-center">
-                      <div className={`text-lg font-semibold ${customer.status === "Overdue" ? "text-destructive" : "text-primary"}`}>
-                        {customer.outstanding}
-                      </div>
-                      <div className="text-xs text-muted-foreground">Outstanding</div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">View</Button>
-                      <Button variant="outline" size="sm">Invoice</Button>
-                    </div>
-                  </div>
-                </div>
+                  customer={customer}
+                  onInvoiceClick={handleInvoiceClick}
+                />
               ))}
             </div>
           </CardContent>
@@ -124,6 +130,18 @@ export default function Customers() {
         <AddCustomerModal 
           open={showCustomerModal} 
           onOpenChange={setShowCustomerModal} 
+        />
+
+        {/* Invoice Preview Modal */}
+        <InvoicePreviewModal
+          open={showInvoiceModal}
+          onOpenChange={setShowInvoiceModal}
+          customerId={selectedCustomerId || 0}
+          customerName={selectedCustomerName}
+          items={aggregatedItems}
+          invoiceNumber={createdInvoiceNumber || undefined}
+          onConfirm={handleConfirmInvoice}
+          showConfirmButton={!createdInvoiceNumber}
         />
       </div>
     </div>
