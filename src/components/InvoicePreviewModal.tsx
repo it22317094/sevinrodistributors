@@ -8,7 +8,7 @@ import { useInvoicePDFGenerator } from "@/hooks/useInvoicePDFGenerator";
 interface InvoicePreviewModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  customerId: number;
+  customerId: string;
   customerName: string;
   items: AggregatedItem[];
   invoiceNumber?: number;

@@ -2,18 +2,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 interface Customer {
-  id: number;
+  id: string;
   name: string;
   contact: string;
   email: string;
   status: string;
-  outstanding: string;
-  lastOrder: string;
+  outstanding: number;
+  lastOrder?: string;
 }
 
 interface CustomerCardProps {
   customer: Customer;
-  onInvoiceClick: (customerId: number, customerName: string) => void;
+  onInvoiceClick: (customerId: string, customerName: string) => void;
 }
 
 export function CustomerCard({ customer, onInvoiceClick }: CustomerCardProps) {
@@ -35,7 +35,7 @@ export function CustomerCard({ customer, onInvoiceClick }: CustomerCardProps) {
       <div className="flex flex-col sm:flex-row gap-4 mt-4 lg:mt-0">
         <div className="text-center">
           <div className={`text-lg font-semibold ${customer.status === "Overdue" ? "text-destructive" : "text-primary"}`}>
-            {customer.outstanding}
+            Rs. {customer.outstanding.toLocaleString()}
           </div>
           <div className="text-xs text-muted-foreground">Outstanding</div>
         </div>

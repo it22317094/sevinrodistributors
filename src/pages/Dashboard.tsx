@@ -17,10 +17,10 @@ import {
 } from "lucide-react";
 
 const recentActivity = [
-  { id: 1, type: "invoice", description: "Invoice #INV-001 created for Fashion House Ltd", amount: "$2,450", time: "2 hours ago" },
-  { id: 2, type: "payment", description: "Payment received from Designer Boutique", amount: "$1,200", time: "4 hours ago" },
-  { id: 3, type: "delivery", description: "Delivery completed for order #ORD-045", amount: "$3,890", time: "6 hours ago" },
-  { id: 4, type: "supplier", description: "New fabric order placed with Premium Textiles", amount: "$5,670", time: "1 day ago" },
+  { id: 1, type: "invoice", description: "Invoice #INV-001 created for Fashion House Ltd", amount: "Rs. 2,450", time: "2 hours ago" },
+  { id: 2, type: "payment", description: "Payment received from Designer Boutique", amount: "Rs. 1,200", time: "4 hours ago" },
+  { id: 3, type: "delivery", description: "Delivery completed for order #ORD-045", amount: "Rs. 3,890", time: "6 hours ago" },
+  { id: 4, type: "supplier", description: "New fabric order placed with Premium Textiles", amount: "Rs. 5,670", time: "1 day ago" },
 ];
 
 export default function Dashboard() {
@@ -85,7 +85,7 @@ export default function Dashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$184,320</div>
+              <div className="text-2xl font-bold">Rs. 184,320</div>
               <p className="text-xs text-muted-foreground">+15.3% from last month</p>
             </CardContent>
           </Card>
@@ -95,7 +95,7 @@ export default function Dashboard() {
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">$46,440</div>
+              <div className="text-2xl font-bold text-destructive">Rs. 46,440</div>
               <p className="text-xs text-muted-foreground">12 overdue accounts</p>
             </CardContent>
           </Card>

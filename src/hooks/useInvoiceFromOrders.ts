@@ -21,7 +21,7 @@ export interface AggregatedItem {
 
 export interface Order {
   id: string;
-  customerId: number;
+  customerId: string;
   customerName: string;
   items: OrderItem[];
   status: string;
@@ -31,7 +31,7 @@ export interface Order {
 
 export interface InvoiceData {
   number: number;
-  customerId: number;
+  customerId: string;
   customerName: string;
   items: AggregatedItem[];
   subtotal: number;
@@ -48,7 +48,7 @@ export function useInvoiceFromOrders() {
   const [eligibleOrders, setEligibleOrders] = useState<Order[]>([]);
   const { toast } = useToast();
 
-  const fetchEligibleOrders = async (customerId: number) => {
+  const fetchEligibleOrders = async (customerId: string) => {
     try {
       setLoading(true);
       const ordersRef = ref(realtimeDb, 'orders');
@@ -115,7 +115,7 @@ export function useInvoiceFromOrders() {
     }
   };
 
-  const createInvoice = async (customerId: number, customerName: string): Promise<number | null> => {
+  const createInvoice = async (customerId: string, customerName: string): Promise<number | null> => {
     try {
       setLoading(true);
 

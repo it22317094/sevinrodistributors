@@ -5,21 +5,17 @@ import { AddCustomerModal } from "@/components/AddCustomerModal";
 import { CustomerCard } from "@/components/CustomerCard";
 import { InvoicePreviewModal } from "@/components/InvoicePreviewModal";
 import { useInvoiceFromOrders } from "@/hooks/useInvoiceFromOrders";
+import { useFirebaseCustomers } from "@/hooks/useFirebaseCustomers";
 import { Plus, Users, CreditCard, AlertTriangle, TrendingUp } from "lucide-react";
-
-const customers = [
-  { id: 1, name: "Fashion House Ltd", contact: "Emma Davis", email: "emma@fashionhouse.com", status: "Active", outstanding: "$12,450", lastOrder: "2024-01-15" },
-  { id: 2, name: "Designer Boutique", contact: "James Brown", email: "james@boutique.com", status: "Active", outstanding: "$8,320", lastOrder: "2024-01-14" },
-  { id: 3, name: "Retail Chain Co", contact: "Lisa Anderson", email: "lisa@retailchain.com", status: "Overdue", outstanding: "$25,670", lastOrder: "2024-01-10" },
-];
 
 export default function Customers() {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedCustomerName, setSelectedCustomerName] = useState<string>("");
   const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<number | null>(null);
   
+  const { customers, loading: customersLoading } = useFirebaseCustomers();
   const { 
     loading, 
     aggregatedItems, 
@@ -27,7 +23,7 @@ export default function Customers() {
     createInvoice 
   } = useInvoiceFromOrders();
 
-  const handleInvoiceClick = async (customerId: number, customerName: string) => {
+  const handleInvoiceClick = async (customerId: string, customerName: string) => {
     setSelectedCustomerId(customerId);
     setSelectedCustomerName(customerName);
     setCreatedInvoiceNumber(null);
@@ -81,7 +77,7 @@ export default function Customers() {
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">$46,440</div>
+              <div className="text-2xl font-bold text-destructive">Rs. 46,440</div>
               <p className="text-xs text-muted-foreground">-12% from last month</p>
             </CardContent>
           </Card>
@@ -101,7 +97,7 @@ export default function Customers() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">$184,320</div>
+              <div className="text-2xl font-bold">Rs. 184,320</div>
               <p className="text-xs text-muted-foreground">+15.3% from last month</p>
             </CardContent>
           </Card>
@@ -136,7 +132,7 @@ export default function Customers() {
         <InvoicePreviewModal
           open={showInvoiceModal}
           onOpenChange={setShowInvoiceModal}
-          customerId={selectedCustomerId || 0}
+          customerId={selectedCustomerId || ""}
           customerName={selectedCustomerName}
           items={aggregatedItems}
           invoiceNumber={createdInvoiceNumber || undefined}
