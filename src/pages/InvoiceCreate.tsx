@@ -58,12 +58,39 @@ const InvoiceCreate = () => {
     { code: 'SL1082', description: 'T Shirt', price: 990 }
   ];
 
-  // Mock customers - in production, load from Firebase
-  const mockCustomers: Customer[] = [
-    { id: '1', name: 'Cotton Feel', address: 'Matara' },
-    { id: '2', name: 'Fashion Hub', address: 'Colombo' },
-    { id: '3', name: 'Style Corner', address: 'Kandy' }
-  ];
+  // Load customers from Firebase
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  
+  // Load customers from Firebase
+  const loadCustomers = async () => {
+    try {
+      const customersRef = ref(realtimeDb, 'customers');
+      const snapshot = await get(customersRef);
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const customersList = Object.keys(data).map(key => ({
+          id: key,
+          name: data[key].name,
+          address: data[key].address
+        }));
+        setCustomers(customersList);
+      } else {
+        setCustomers([]);
+      }
+    } catch (error) {
+      console.error('Error loading customers:', error);
+    }
+  };
+
+  // Add ability to refresh customers list when page is focused
+  useEffect(() => {
+    const handleFocus = () => {
+      loadCustomers();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
 
   // Function to get the next invoice number for display (without incrementing)
   const getNextInvoiceNumber = async (): Promise<number> => {
@@ -114,12 +141,13 @@ const InvoiceCreate = () => {
     }
   };
 
-  // Load the next invoice number and item codes when component mounts
+  // Load the next invoice number, item codes, and customers when component mounts
   useEffect(() => {
     const loadData = async () => {
       const nextNumber = await getNextInvoiceNumber();
       setCurrentInvoiceNumber(nextNumber);
       await loadItemCodes();
+      await loadCustomers();
     };
     
     loadData();
@@ -225,7 +253,7 @@ const InvoiceCreate = () => {
       const invoiceData = {
         number: newInvoiceNumber,
         customerId: selectedCustomer,
-        customerName: mockCustomers.find(c => c.id === selectedCustomer)?.name,
+        customerName: customers.find(c => c.id === selectedCustomer)?.name,
         orderNumber,
         items: items.filter(item => item.description && item.quantity > 0),
         subtotal,
@@ -307,7 +335,7 @@ const InvoiceCreate = () => {
                       <SelectValue placeholder="Select a customer" />
                     </SelectTrigger>
                     <SelectContent>
-                      {mockCustomers.map((customer) => (
+                      {customers.map((customer) => (
                         <SelectItem key={customer.id} value={customer.id}>
                           {customer.name} - {customer.address}
                         </SelectItem>

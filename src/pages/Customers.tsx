@@ -15,7 +15,7 @@ export default function Customers() {
   const [selectedCustomerName, setSelectedCustomerName] = useState<string>("");
   const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<number | null>(null);
   
-  const { customers, loading: customersLoading } = useFirebaseCustomers();
+  const { customers, loading: customersLoading, fetchCustomers } = useFirebaseCustomers();
   const { 
     loading, 
     aggregatedItems, 
@@ -125,7 +125,8 @@ export default function Customers() {
         {/* Add Customer Modal */}
         <AddCustomerModal 
           open={showCustomerModal} 
-          onOpenChange={setShowCustomerModal} 
+          onOpenChange={setShowCustomerModal}
+          onCustomerAdded={fetchCustomers}
         />
 
         {/* Invoice Preview Modal */}

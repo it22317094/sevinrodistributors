@@ -11,6 +11,7 @@ import { realtimeDb } from "@/lib/firebase";
 interface AddCustomerModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCustomerAdded?: () => void;
 }
 
 interface CustomerFormData {
@@ -20,7 +21,7 @@ interface CustomerFormData {
   uniqueId: string;
 }
 
-export function AddCustomerModal({ open, onOpenChange }: AddCustomerModalProps) {
+export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCustomerModalProps) {
   const [formData, setFormData] = useState<CustomerFormData>({
     name: "",
     address: "",
@@ -129,6 +130,11 @@ export function AddCustomerModal({ open, onOpenChange }: AddCustomerModalProps) 
       // Reset form and close modal
       setFormData({ name: "", address: "", telephone: "", uniqueId: "" });
       onOpenChange(false);
+      
+      // Notify parent component to refresh customer list
+      if (onCustomerAdded) {
+        onCustomerAdded();
+      }
     } catch (error) {
       console.error("Error adding customer:", error);
       toast({
