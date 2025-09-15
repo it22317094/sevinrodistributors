@@ -16,6 +16,12 @@ export default function Customers() {
   const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<number | null>(null);
   
   const { customers, loading: customersLoading, fetchCustomers } = useFirebaseCustomers();
+
+  // Calculate real-time statistics from Firebase data
+  const totalCustomers = customers.length;
+  const totalOutstanding = customers.reduce((sum, customer) => sum + customer.outstanding, 0);
+  const overdueAccounts = customers.filter(customer => customer.status === 'Overdue').length;
+  const activeCustomers = customers.filter(customer => customer.status === 'Active').length;
   const { 
     loading, 
     aggregatedItems, 
@@ -67,8 +73,8 @@ export default function Customers() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">156</div>
-              <p className="text-xs text-muted-foreground">+8 from last month</p>
+              <div className="text-2xl font-bold">{totalCustomers}</div>
+              <p className="text-xs text-muted-foreground">{activeCustomers} active customers</p>
             </CardContent>
           </Card>
           <Card>
@@ -77,8 +83,10 @@ export default function Customers() {
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">Rs. 46,440</div>
-              <p className="text-xs text-muted-foreground">-12% from last month</p>
+              <div className={`text-2xl font-bold ${totalOutstanding > 0 ? 'text-destructive' : 'text-primary'}`}>
+                Rs. {totalOutstanding.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <p className="text-xs text-muted-foreground">Across {totalCustomers} customers</p>
             </CardContent>
           </Card>
           <Card>
@@ -87,8 +95,12 @@ export default function Customers() {
               <AlertTriangle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">12</div>
-              <p className="text-xs text-muted-foreground">Requires attention</p>
+              <div className={`text-2xl font-bold ${overdueAccounts > 0 ? 'text-destructive' : 'text-primary'}`}>
+                {overdueAccounts}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {overdueAccounts > 0 ? 'Requires attention' : 'All accounts current'}
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -97,8 +109,8 @@ export default function Customers() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Rs. 184,320</div>
-              <p className="text-xs text-muted-foreground">+15.3% from last month</p>
+              <div className="text-2xl font-bold">Rs. {totalOutstanding.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <p className="text-xs text-muted-foreground">Outstanding receivables</p>
             </CardContent>
           </Card>
         </div>
