@@ -22,7 +22,11 @@
       ".write": "auth != null",
       "exchangeRates": {
         ".read": "auth != null",
-        ".write": "auth != null"
+        ".write": "auth != null",
+        "usdToLkr": {
+          ".read": "auth != null",
+          ".write": "auth != null"
+        }
       }
     },
     "orders": {
