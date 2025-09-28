@@ -7,7 +7,6 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Header } from "./components/Header";
 import Dashboard from "./pages/Dashboard";
-
 import Customers from "./pages/Customers";
 import Inventory from "./pages/Inventory";
 import Invoices from "./pages/Invoices";
@@ -17,6 +16,7 @@ import Reports from "./pages/Reports";
 import Billing from "./pages/Billing";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import Suppliers from "./pages/Suppliers";
 
 const queryClient = new QueryClient();
 
@@ -100,6 +100,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <Billing />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/suppliers"
+          element={
+            <ProtectedRoute>
+              <Suppliers />
             </ProtectedRoute>
           }
         />
