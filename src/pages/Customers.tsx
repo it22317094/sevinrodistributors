@@ -106,10 +106,24 @@ export default function Customers() {
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${totalOutstanding > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                Rs. {totalOutstanding.toLocaleString('en-IN')}
+              <div className="space-y-1">
+                {customers.filter(c => c.outstanding > 0).length > 0 ? (
+                  <>
+                    <div className="text-xs text-muted-foreground">
+                      {customers
+                        .filter(c => c.outstanding > 0)
+                        .map(c => c.name)
+                        .join(' + ')} = 
+                    </div>
+                    <div className="text-2xl font-bold text-red-600">
+                      Rs. {totalOutstanding.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-2xl font-bold text-green-600">Rs. 0.00</div>
+                )}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground mt-2">
                 {customers.filter(c => c.outstanding > 0).length} accounts with balance
               </p>
             </CardContent>
