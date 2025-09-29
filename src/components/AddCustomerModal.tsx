@@ -18,7 +18,6 @@ interface CustomerFormData {
   name: string;
   address: string;
   telephone: string;
-  uniqueId: string;
 }
 
 export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCustomerModalProps) {
@@ -26,13 +25,18 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
     name: "",
     address: "",
     telephone: "",
-    uniqueId: "",
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const handleInputChange = (field: keyof CustomerFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const generateUniqueId = () => {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 8);
+    return `CUST-${timestamp}-${random}`.toUpperCase();
   };
 
   const validateForm = () => {
@@ -56,14 +60,6 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
       toast({
         title: "Validation Error",
         description: "Telephone number is required.",
-        variant: "destructive",
-      });
-      return false;
-    }
-    if (!formData.uniqueId.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Unique ID is required.",
         variant: "destructive",
       });
       return false;
@@ -98,37 +94,28 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
 
     setLoading(true);
     try {
-      // Check if unique ID already exists
-      const idExists = await checkUniqueId(formData.uniqueId);
-      if (idExists) {
-        toast({
-          title: "Error",
-          description: "This Unique ID already exists. Please use a different ID.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
+      // Generate unique ID automatically
+      const uniqueId = generateUniqueId();
 
-      // Save customer with unique ID as key
-      const customerRef = ref(realtimeDb, `customers/${formData.uniqueId}`);
+      // Save customer with auto-generated unique ID as key
+      const customerRef = ref(realtimeDb, `customers/${uniqueId}`);
       await set(customerRef, {
         name: formData.name,
         address: formData.address,
         telephone: formData.telephone,
-        uniqueId: formData.uniqueId,
+        uniqueId: uniqueId,
         createdAt: new Date().toISOString(),
         status: "Active",
-        outstanding: "LKR 0.00",
+        outstanding: 0,
       });
 
       toast({
         title: "Success",
-        description: "Customer added successfully!",
+        description: `Customer added successfully! ID: ${uniqueId}`,
       });
 
       // Reset form and close modal
-      setFormData({ name: "", address: "", telephone: "", uniqueId: "" });
+      setFormData({ name: "", address: "", telephone: "" });
       onOpenChange(false);
       
       // Notify parent component to refresh customer list
@@ -153,7 +140,7 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
         <DialogHeader>
           <DialogTitle>Add New Customer</DialogTitle>
           <DialogDescription>
-            Enter the customer information below. All fields are required and the Unique ID must be unique.
+            Enter the customer information below. A unique ID will be generated automatically.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -186,16 +173,6 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
                 value={formData.telephone}
                 onChange={(e) => handleInputChange("telephone", e.target.value)}
                 placeholder="Enter telephone number"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="uniqueId">Unique ID</Label>
-              <Input
-                id="uniqueId"
-                value={formData.uniqueId}
-                onChange={(e) => handleInputChange("uniqueId", e.target.value)}
-                placeholder="Enter unique customer ID"
                 required
               />
             </div>

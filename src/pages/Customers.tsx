@@ -65,45 +65,23 @@ export default function Customers() {
           </Button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Customers</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalCustomers}</div>
-              <p className="text-xs text-muted-foreground">{activeCustomers} active customers</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Outstanding Balance</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${totalOutstanding > 0 ? 'text-destructive' : 'text-primary'}`}>
-                Rs. {totalOutstanding.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-              <p className="text-xs text-muted-foreground">Across {totalCustomers} customers</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Overdue Accounts</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${overdueAccounts > 0 ? 'text-destructive' : 'text-primary'}`}>
-                {overdueAccounts}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {overdueAccounts > 0 ? 'Requires attention' : 'All accounts current'}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Outstanding Balance Summary */}
+        <Card className="mb-8">
+          <CardHeader className="text-center">
+            <CardTitle className="text-lg font-medium">Total Outstanding Balance</CardTitle>
+            <CardDescription>
+              {totalCustomers} customers • {overdueAccounts} overdue • {activeCustomers} active
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center">
+            <div className={`text-4xl font-bold mb-2 ${totalOutstanding > 0 ? 'text-destructive' : 'text-primary'}`}>
+              Rs. {totalOutstanding.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {totalOutstanding > 0 ? 'Total amount pending collection' : 'All balances cleared'}
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Customers List */}
         <Card>
