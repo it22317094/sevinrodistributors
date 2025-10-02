@@ -22,8 +22,9 @@ export const generateInvoicePDF = (
   doc.setTextColor(0, 0, 0);
   doc.setFont(undefined, 'normal');
   const rightX = pageWidth - 20;
-  doc.text('No - 136/A, Akurana, Gampaha', rightX, 20, { align: 'right' });
-  doc.text('Te: 071 39 69 580, 0777 52 90 58', rightX, 25, { align: 'right' });
+  doc.text('Sevinro Distributors', rightX, 15, { align: 'right' });
+  doc.text('No: 138/A, Alkaravita, Gampaha', rightX, 20, { align: 'right' });
+  doc.text('Tel: 071 39 65 580, 0777 92 90 36', rightX, 25, { align: 'right' });
   
   // INVOICE title (centered)
   doc.setFontSize(20);

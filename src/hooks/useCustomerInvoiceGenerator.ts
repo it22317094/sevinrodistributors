@@ -71,7 +71,7 @@ export const useCustomerInvoiceGenerator = () => {
 
       const companyData: CompanyData = companySnap.exists() ? companySnap.val() : {
         name: "Sevinro Distributors",
-        addressLine: "138/A, Alkaravita, Gampaha",
+        addressLine: "No: 138/A, Alkaravita, Gampaha",
         phone: "071 39 65 580, 0777 92 90 36"
       };
 
@@ -202,8 +202,9 @@ export const useCustomerInvoiceGenerator = () => {
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'normal');
         const rightX = pageWidth - 20;
+        doc.text('Sevinro Distributors', rightX, 15, { align: 'right' });
         doc.text(companyData.addressLine, rightX, 20, { align: 'right' });
-        doc.text(`Tel : ${companyData.phone}`, rightX, 25, { align: 'right' });
+        doc.text(`Tel: ${companyData.phone}`, rightX, 25, { align: 'right' });
 
         // INVOICE title (centered)
         doc.setFontSize(20);
