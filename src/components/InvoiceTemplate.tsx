@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Sale, Customer, InventoryItem } from '@/hooks/useFirebaseReports';
 
-export const generateInvoicePDF = async (
+export const generateInvoicePDF = (
   sale: Sale, 
   customer: Customer | undefined, 
   inventory: InventoryItem[],
@@ -12,28 +12,12 @@ export const generateInvoicePDF = async (
   const pageWidth = doc.internal.pageSize.width;
   
   // Add company logo at top
-  try {
-    const logoImg = new Image();
-    logoImg.src = '/assets/images/logo.png';
-    await new Promise((resolve, reject) => {
-      logoImg.onload = resolve;
-      logoImg.onerror = reject;
-    });
-    
-    // Calculate dimensions to maintain aspect ratio (1356×896)
-    const aspectRatio = 1356 / 896;
-    const logoHeight = 20;
-    const logoWidth = logoHeight * aspectRatio;
-    
-    doc.addImage(logoImg, 'PNG', 20, 15, logoWidth, logoHeight);
-  } catch (error) {
-    console.error('Error loading logo:', error);
-    // Fallback to text logo
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(255, 165, 0);
-    doc.text('SEVINRO', 20, 25);
-  }
+  // Note: Logo should be preloaded in the application for synchronous access
+  // For now, we'll use the text logo as placeholder
+  doc.setFontSize(16);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(255, 165, 0);
+  doc.text('SEVINRO', 20, 25);
   
   // Company details (top right)
   doc.setFontSize(7);
