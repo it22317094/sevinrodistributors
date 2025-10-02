@@ -134,6 +134,7 @@ export const useInvoiceGenerator = () => {
       doc.setTextColor(0, 0, 0);
       doc.setFont(undefined, 'normal');
       const rightX = pageWidth - 15;
+      doc.text('Sevinro Distributors', rightX, 10, { align: 'right' });
       doc.text('No: 138/A, Alkaravita, Gampaha', rightX, 15, { align: 'right' });
       doc.text('Tel: 071 39 65 580, 0777 92 90 36', rightX, 20, { align: 'right' });
 
@@ -325,6 +326,7 @@ export const useInvoiceGenerator = () => {
       doc.setTextColor(0, 0, 0);
       doc.setFont(undefined, 'normal');
       const rightX = pageWidth - 15;
+      doc.text('Sevinro Distributors', rightX, 10, { align: 'right' });
       doc.text('No: 138/A, Alkaravita, Gampaha', rightX, 15, { align: 'right' });
       doc.text('Tel: 071 39 65 580, 0777 92 90 36', rightX, 20, { align: 'right' });
 

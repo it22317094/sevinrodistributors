@@ -128,39 +128,63 @@ export function useInvoiceFromOrders() {
         return null;
       }
 
-      // Atomically increment invoice counter
-      const counterRef = ref(realtimeDb, 'invoiceCounter');
-      const invoiceNumber = await runTransaction(counterRef, (currentValue) => {
-        if (currentValue === null) {
-          return 10000; // Start from 10000 if no counter exists
+      // Check if customer already has an invoice
+      const invoicesRef = ref(realtimeDb, 'invoices');
+      const invoicesSnapshot = await get(invoicesRef);
+      
+      let existingInvoiceNumber: number | null = null;
+      let existingInvoiceData: InvoiceData | null = null;
+
+      if (invoicesSnapshot.exists()) {
+        const invoicesData = invoicesSnapshot.val();
+        // Find existing invoice for this customer
+        for (const [invoiceNum, invoice] of Object.entries(invoicesData)) {
+          const inv = invoice as InvoiceData;
+          if (inv.customerId === customerId) {
+            existingInvoiceNumber = Number(invoiceNum);
+            existingInvoiceData = inv;
+            break;
+          }
         }
-        return currentValue + 1;
-      });
+      }
 
-      if (invoiceNumber.committed && invoiceNumber.snapshot.val()) {
-        const newInvoiceNumber = invoiceNumber.snapshot.val();
+      if (existingInvoiceNumber && existingInvoiceData) {
+        // Merge new items with existing invoice
+        const existingItemsMap = new Map<string, AggregatedItem>();
         
-        // Calculate totals
-        const subtotal = aggregatedItems.reduce((sum, item) => sum + item.total, 0);
-        const total = subtotal; // No tax for now
+        // Add existing items to map
+        existingInvoiceData.items.forEach(item => {
+          const key = `${item.itemCode}-${item.unitPrice}`;
+          existingItemsMap.set(key, { ...item });
+        });
 
-        // Create invoice data
-        const invoiceData: InvoiceData = {
-          number: newInvoiceNumber,
-          customerId,
-          customerName,
-          items: aggregatedItems,
+        // Merge new aggregated items
+        aggregatedItems.forEach(item => {
+          const key = `${item.itemCode}-${item.unitPrice}`;
+          if (existingItemsMap.has(key)) {
+            const existingItem = existingItemsMap.get(key)!;
+            existingItem.quantity += item.quantity;
+            existingItem.total += item.total;
+          } else {
+            existingItemsMap.set(key, { ...item });
+          }
+        });
+
+        const mergedItems = Array.from(existingItemsMap.values());
+        const subtotal = mergedItems.reduce((sum, item) => sum + item.total, 0);
+        const total = subtotal;
+
+        // Update existing invoice
+        const updatedInvoiceData: InvoiceData = {
+          ...existingInvoiceData,
+          items: mergedItems,
           subtotal,
           total,
-          date: new Date().toISOString().split('T')[0],
-          status: 'CREATED',
-          createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         };
 
-        // Save invoice
-        const invoiceRef = ref(realtimeDb, `invoices/${newInvoiceNumber}`);
-        await set(invoiceRef, invoiceData);
+        const invoiceRef = ref(realtimeDb, `invoices/${existingInvoiceNumber}`);
+        await set(invoiceRef, updatedInvoiceData);
 
         // Update orders to mark as invoiced
         const updatePromises = eligibleOrders.map(order => {
@@ -168,7 +192,7 @@ export function useInvoiceFromOrders() {
           return set(orderRef, {
             ...order,
             invoiced: true,
-            invoiceNumber: newInvoiceNumber,
+            invoiceNumber: existingInvoiceNumber,
             status: 'INVOICED',
             updatedAt: new Date().toISOString()
           });
@@ -178,13 +202,65 @@ export function useInvoiceFromOrders() {
 
         toast({
           title: "Success",
-          description: `Invoice ${newInvoiceNumber} created successfully`,
+          description: `Invoice ${existingInvoiceNumber} updated with new items`,
         });
 
-        return newInvoiceNumber;
-      }
+        return existingInvoiceNumber;
+      } else {
+        // Create new invoice
+        const counterRef = ref(realtimeDb, 'invoiceCounter');
+        const invoiceNumber = await runTransaction(counterRef, (currentValue) => {
+          if (currentValue === null) {
+            return 10000;
+          }
+          return currentValue + 1;
+        });
 
-      throw new Error('Failed to generate invoice number');
+        if (invoiceNumber.committed && invoiceNumber.snapshot.val()) {
+          const newInvoiceNumber = invoiceNumber.snapshot.val();
+          
+          const subtotal = aggregatedItems.reduce((sum, item) => sum + item.total, 0);
+          const total = subtotal;
+
+          const invoiceData: InvoiceData = {
+            number: newInvoiceNumber,
+            customerId,
+            customerName,
+            items: aggregatedItems,
+            subtotal,
+            total,
+            date: new Date().toISOString().split('T')[0],
+            status: 'CREATED',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+
+          const invoiceRef = ref(realtimeDb, `invoices/${newInvoiceNumber}`);
+          await set(invoiceRef, invoiceData);
+
+          const updatePromises = eligibleOrders.map(order => {
+            const orderRef = ref(realtimeDb, `orders/${order.id}`);
+            return set(orderRef, {
+              ...order,
+              invoiced: true,
+              invoiceNumber: newInvoiceNumber,
+              status: 'INVOICED',
+              updatedAt: new Date().toISOString()
+            });
+          });
+
+          await Promise.all(updatePromises);
+
+          toast({
+            title: "Success",
+            description: `Invoice ${newInvoiceNumber} created successfully`,
+          });
+
+          return newInvoiceNumber;
+        }
+
+        throw new Error('Failed to generate invoice number');
+      }
     } catch (error) {
       console.error('Error creating invoice:', error);
       toast({
