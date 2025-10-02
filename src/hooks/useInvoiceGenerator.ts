@@ -94,7 +94,7 @@ export const useInvoiceGenerator = () => {
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
 
-      // Add logo (top left) - with exact dimensions maintaining 1356×896 aspect ratio
+      // Add logo (centered at top) - with exact dimensions maintaining 1356×896 aspect ratio
       try {
         const logoImg = new Image();
         logoImg.src = '/assets/images/logo.png';
@@ -105,98 +105,108 @@ export const useInvoiceGenerator = () => {
         
         // Calculate dimensions to maintain aspect ratio (1356×896)
         const aspectRatio = 1356 / 896;
-        const logoHeight = 20;
+        const logoHeight = 25;
         const logoWidth = logoHeight * aspectRatio;
         
-        doc.addImage(logoImg, 'PNG', 20, 15, logoWidth, logoHeight);
+        // Center the logo
+        const logoX = (pageWidth - logoWidth) / 2;
+        doc.addImage(logoImg, 'PNG', logoX, 15, logoWidth, logoHeight);
       } catch (error) {
         console.log('Logo not loaded, continuing without it');
         // Fallback to text logo
-        doc.setFontSize(12);
+        doc.setFontSize(15);
         doc.setFont(undefined, 'bold');
         doc.setTextColor(255, 165, 0);
-        doc.text('SEVINRO DISTRIBUTORS', 20, 25);
+        doc.text('SEVINRO DISTRIBUTORS', pageWidth / 2, 28, { align: 'center' });
       }
 
-      // Company details (top right)
-      doc.setFontSize(8);
-      doc.setTextColor(0, 0, 0);
-      doc.setFont(undefined, 'normal');
-      const rightX = pageWidth - 20;
-      doc.text('No: 138/A, Alkaravita, Gampaha', rightX, 20, { align: 'right' });
-      doc.text('Tel: 071 39 65 580, 0777 92 90 36', rightX, 25, { align: 'right' });
-
-      // INVOICE title (centered)
-      doc.setFontSize(18);
+      // INVOICE title (centered, below logo)
+      doc.setFontSize(20);
       doc.setFont(undefined, 'bold');
+      doc.setTextColor(0, 0, 0);
       doc.text('INVOICE', pageWidth / 2, 50, { align: 'center' });
 
-      // Customer info - Left side (TO :-)
-      doc.setFontSize(10);
+      // Customer info - Left side (TO :- with exact spacing)
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.text('TO :-', 20, 65);
+      
       doc.setFont(undefined, 'normal');
-      doc.text(`TO :- ${invoiceData.customer_name}`, 20, 70);
+      doc.text(invoiceData.customer_name, 37, 65);
       
       if (invoiceData.customer_address) {
-        doc.setFontSize(9);
-        doc.text(invoiceData.customer_address, 20, 76);
+        doc.setFontSize(10);
+        doc.text(invoiceData.customer_address, 20, 72);
       }
 
       // Invoice details - Right side
       const invoiceDetailsX = pageWidth - 70;
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(11);
+      doc.text('Invoice No:', invoiceDetailsX, 65);
+      doc.text('Order No:', invoiceDetailsX, 72);
+      doc.text('Date:', invoiceDetailsX, 79);
+      
       doc.setFont(undefined, 'normal');
-      doc.setFontSize(8);
-      doc.text(`Invoice No - ${invoiceData.invoice_no}`, invoiceDetailsX, 70);
-      doc.text(`Order No - ${invoiceData.order_no || `ON00${invoiceData.invoice_no}`}`, invoiceDetailsX, 75);
-      doc.text(`Date - ${new Date(invoiceData.invoice_date).toLocaleDateString('en-GB')}`, invoiceDetailsX, 80);
+      doc.text(invoiceData.invoice_no, invoiceDetailsX + 25, 65);
+      doc.text(invoiceData.order_no || `ON00${invoiceData.invoice_no}`, invoiceDetailsX + 25, 72);
+      doc.text(new Date(invoiceData.invoice_date).toLocaleDateString('en-GB'), invoiceDetailsX + 25, 79);
 
-      // Items table with orange header
+      // Items table
       autoTable(doc, {
         head: [['No', 'Item', 'Description', 'Qty', 'Price', 'Total']],
         body: tableData,
         startY: 90,
         styles: {
-          fontSize: 9,
-          cellPadding: 3,
+          fontSize: 11,
+          cellPadding: 4,
           lineColor: [0, 0, 0],
-          lineWidth: 0.1,
+          lineWidth: 0.5,
         },
         headStyles: {
-          fillColor: [255, 165, 0], // Orange
-          textColor: [255, 255, 255],
+          fillColor: [255, 255, 255],
+          textColor: [0, 0, 0],
           fontStyle: 'bold',
-          fontSize: 10,
+          fontSize: 11,
+          lineColor: [0, 0, 0],
+          lineWidth: 0.5,
         },
         columnStyles: {
           0: { halign: 'center', cellWidth: 15 },
-          1: { cellWidth: 25 },
-          2: { cellWidth: 45 },
+          1: { cellWidth: 30 },
+          2: { cellWidth: 50 },
           3: { halign: 'center', cellWidth: 20 },
-          4: { halign: 'right', cellWidth: 30 },
-          5: { halign: 'right', cellWidth: 35 },
+          4: { halign: 'right', cellWidth: 25 },
+          5: { halign: 'right', cellWidth: 30 },
         },
         margin: { left: 20, right: 20 },
       });
 
       const finalY = (doc as any).lastAutoTable?.finalY || 250;
 
-      // Total section (right aligned)
-      const totalY = finalY + 10;
+      // Total section
+      const totalY = finalY + 15;
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(12);
-      doc.text(`Total Amount Rs. ${formatCurrency(grandTotal)}`, pageWidth - 20, totalY, { align: 'right' });
+      doc.setFontSize(13);
+      doc.text('Total Amount', 20, totalY);
+      doc.text(`Rs. ${formatCurrency(grandTotal)}`, pageWidth - 20, totalY, { align: 'right' });
+      
+      // Horizontal line
+      doc.setLineWidth(0.5);
+      doc.line(20, totalY + 5, pageWidth - 20, totalY + 5);
 
       // Signature lines
-      const signatureY = totalY + 50;
-      doc.setFont(undefined, 'normal');
-      doc.setFontSize(9);
+      const signatureY = totalY + 40;
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(11);
       
-      // Left signature line
-      doc.line(20, signatureY, 90, signatureY);
-      doc.text('Authorized By', 45, signatureY + 10, { align: 'center' });
+      // Left signature
+      doc.line(20, signatureY, 85, signatureY);
+      doc.text('Authorized By', 52, signatureY + 7, { align: 'center' });
       
-      // Right signature line
-      doc.line(pageWidth - 90, signatureY, pageWidth - 20, signatureY);
-      doc.text('Customer Signature', pageWidth - 55, signatureY + 10, { align: 'center' });
+      // Right signature
+      doc.line(pageWidth - 85, signatureY, pageWidth - 20, signatureY);
+      doc.text('Customer Signature', pageWidth - 52, signatureY + 7, { align: 'center' });
 
       // Save PDF
       doc.save(`Invoice_${invoiceData.invoice_no}.pdf`);
