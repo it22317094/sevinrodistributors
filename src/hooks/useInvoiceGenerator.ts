@@ -71,17 +71,20 @@ export const useInvoiceGenerator = () => {
       }
 
 
-      // Calculate totals
+      // Calculate totals and format with commas
+      const formatCurrency = (amount: number) => {
+        return amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      };
+
       const tableData = items.map((item, index) => {
         const lineTotal = item.quantity * item.price;
         return [
           (index + 1).toString(),
           item.item_code || '',
-          `${item.item_code} - ${item.description}`,
+          item.description || '',
           item.quantity.toString(),
-          item.price.toFixed(2),
-          'RS',
-          lineTotal.toFixed(2)
+          formatCurrency(item.price),
+          `Rs. ${formatCurrency(lineTotal)}`
         ];
       });
 
@@ -109,33 +112,32 @@ export const useInvoiceGenerator = () => {
       } catch (error) {
         console.log('Logo not loaded, continuing without it');
         // Fallback to text logo
-        doc.setFontSize(14);
+        doc.setFontSize(12);
         doc.setFont(undefined, 'bold');
         doc.setTextColor(255, 165, 0);
-        doc.text('SEVINRO', 20, 25);
+        doc.text('SEVINRO DISTRIBUTORS', 20, 25);
       }
 
       // Company details (top right)
-      doc.setFontSize(7);
+      doc.setFontSize(8);
       doc.setTextColor(0, 0, 0);
       doc.setFont(undefined, 'normal');
       const rightX = pageWidth - 20;
-      doc.text('No - 136/A, Akurana, Gampaha', rightX, 20, { align: 'right' });
-      doc.text('Te: 071 39 69 580, 0777 52 90 58', rightX, 25, { align: 'right' });
+      doc.text('No: 138/A, Alkaravita, Gampaha', rightX, 20, { align: 'right' });
+      doc.text('Tel: 071 39 65 580, 0777 92 90 36', rightX, 25, { align: 'right' });
 
       // INVOICE title (centered)
       doc.setFontSize(18);
       doc.setFont(undefined, 'bold');
       doc.text('INVOICE', pageWidth / 2, 50, { align: 'center' });
 
-      // Customer info - Left side (TO:-)
-      doc.setFontSize(9);
-      doc.setFont(undefined, 'bold');
-      doc.text('TO:-', 20, 70);
-      
+      // Customer info - Left side (TO :-)
+      doc.setFontSize(10);
       doc.setFont(undefined, 'normal');
-      doc.text(invoiceData.customer_name, 32, 70);
+      doc.text(`TO :- ${invoiceData.customer_name}`, 20, 70);
+      
       if (invoiceData.customer_address) {
+        doc.setFontSize(9);
         doc.text(invoiceData.customer_address, 20, 76);
       }
 
@@ -149,12 +151,12 @@ export const useInvoiceGenerator = () => {
 
       // Items table with orange header
       autoTable(doc, {
-        head: [['No', 'Items', 'Description', 'Qty', 'Price', '', 'Total']],
+        head: [['No', 'Item', 'Description', 'Qty', 'Price', 'Total']],
         body: tableData,
         startY: 90,
         styles: {
-          fontSize: 8,
-          cellPadding: 3.5,
+          fontSize: 9,
+          cellPadding: 3,
           lineColor: [0, 0, 0],
           lineWidth: 0.1,
         },
@@ -162,16 +164,15 @@ export const useInvoiceGenerator = () => {
           fillColor: [255, 165, 0], // Orange
           textColor: [255, 255, 255],
           fontStyle: 'bold',
-          fontSize: 9,
+          fontSize: 10,
         },
         columnStyles: {
-          0: { halign: 'center', cellWidth: 20 },
+          0: { halign: 'center', cellWidth: 15 },
           1: { cellWidth: 25 },
           2: { cellWidth: 45 },
           3: { halign: 'center', cellWidth: 20 },
-          4: { halign: 'right', cellWidth: 25 },
-          5: { halign: 'left', cellWidth: 15 },
-          6: { halign: 'right', cellWidth: 30 },
+          4: { halign: 'right', cellWidth: 30 },
+          5: { halign: 'right', cellWidth: 35 },
         },
         margin: { left: 20, right: 20 },
       });
@@ -181,10 +182,8 @@ export const useInvoiceGenerator = () => {
       // Total section (right aligned)
       const totalY = finalY + 10;
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(11);
-      doc.text('Total Amount', pageWidth - 80, totalY);
-      doc.text('RS', pageWidth - 45, totalY);
-      doc.text(grandTotal.toFixed(2), pageWidth - 20, totalY, { align: 'right' });
+      doc.setFontSize(12);
+      doc.text(`Total Amount Rs. ${formatCurrency(grandTotal)}`, pageWidth - 20, totalY, { align: 'right' });
 
       // Signature lines
       const signatureY = totalY + 50;
