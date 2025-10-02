@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Sale, Customer, InventoryItem } from '@/hooks/useFirebaseReports';
 
-export const generateInvoicePDF = (
+export const generateInvoicePDF = async (
   sale: Sale, 
   customer: Customer | undefined, 
   inventory: InventoryItem[],
@@ -11,14 +11,32 @@ export const generateInvoicePDF = (
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   
-  // Add SEVINRO logo (top left)
-  doc.setFontSize(18);
-  doc.setFont(undefined, 'bold');
-  doc.setTextColor(255, 165, 0); // Orange color
-  doc.text('SEVINRO', 20, 25);
+  // Add company logo at top
+  try {
+    const logoImg = new Image();
+    logoImg.src = '/assets/images/logo.png';
+    await new Promise((resolve, reject) => {
+      logoImg.onload = resolve;
+      logoImg.onerror = reject;
+    });
+    
+    // Calculate dimensions to maintain aspect ratio (1356×896)
+    const aspectRatio = 1356 / 896;
+    const logoHeight = 20;
+    const logoWidth = logoHeight * aspectRatio;
+    
+    doc.addImage(logoImg, 'PNG', 20, 15, logoWidth, logoHeight);
+  } catch (error) {
+    console.error('Error loading logo:', error);
+    // Fallback to text logo
+    doc.setFontSize(16);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(255, 165, 0);
+    doc.text('SEVINRO', 20, 25);
+  }
   
   // Company details (top right)
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.setTextColor(0, 0, 0);
   doc.setFont(undefined, 'normal');
   const rightX = pageWidth - 20;
@@ -26,30 +44,30 @@ export const generateInvoicePDF = (
   doc.text('Te: 071 39 69 580, 0777 52 90 58', rightX, 25, { align: 'right' });
   
   // INVOICE title (centered)
-  doc.setFontSize(20);
+  doc.setFontSize(18);
   doc.setFont(undefined, 'bold');
   doc.text('INVOICE', pageWidth / 2, 50, { align: 'center' });
   
-  // Customer info - Left side (TO:)
-  doc.setFontSize(10);
+  // Customer info - Left side (TO:-)
+  doc.setFontSize(9);
   doc.setFont(undefined, 'bold');
-  doc.text('TO :-', 20, 70);
+  doc.text('TO:-', 20, 70);
   
   doc.setFont(undefined, 'normal');
   if (customer) {
-    doc.text(customer.name, 20, 80);
+    doc.text(customer.name, 32, 70);
     if (customer.address) {
-      doc.text(customer.address, 20, 85);
+      doc.text(customer.address, 20, 76);
     }
   } else {
-    doc.text('Cotton Feel', 20, 80);
-    doc.text('Matara', 20, 85);
+    doc.text('Cotton Feel', 32, 70);
+    doc.text('Matara', 20, 76);
   }
   
   // Invoice details - Right side
   const invoiceDetailsX = pageWidth - 70;
   doc.setFont(undefined, 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(8);
   doc.text(`Invoice No - SI00${invoiceNumber}`, invoiceDetailsX, 70);
   doc.text(`Order No - ON00${invoiceNumber}`, invoiceDetailsX, 75);
   doc.text(`Date - ${new Date(sale.date).toLocaleDateString('en-GB')}`, invoiceDetailsX, 80);
@@ -78,10 +96,10 @@ export const generateInvoicePDF = (
     autoTable(doc, {
       head: [['No', 'Items', 'Description', 'Qty', 'Price', '', 'Total']],
       body: tableData,
-      startY: 95,
+      startY: 90,
       styles: {
-        fontSize: 9,
-        cellPadding: 4,
+        fontSize: 8,
+        cellPadding: 3.5,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
       },
@@ -89,7 +107,7 @@ export const generateInvoicePDF = (
         fillColor: [255, 165, 0], // Orange header
         textColor: [255, 255, 255],
         fontStyle: 'bold',
-        fontSize: 10,
+        fontSize: 9,
       },
       columnStyles: {
         0: { halign: 'center', cellWidth: 20 },
@@ -111,7 +129,7 @@ export const generateInvoicePDF = (
   // Total section (right aligned)
   const totalY = finalY + 10;
   doc.setFont(undefined, 'bold');
-  doc.setFontSize(12);
+  doc.setFontSize(11);
   doc.text('Total Amount', pageWidth - 80, totalY);
   doc.text('RS', pageWidth - 45, totalY);
   doc.text(`${sale.total.toFixed(2)}`, pageWidth - 20, totalY, { align: 'right' });
@@ -119,7 +137,7 @@ export const generateInvoicePDF = (
   // Signature lines
   const signatureY = totalY + 50;
   doc.setFont(undefined, 'normal');
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   
   // Left signature line
   doc.line(20, signatureY, 90, signatureY);
