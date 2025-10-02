@@ -91,7 +91,7 @@ export const useInvoiceGenerator = () => {
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
 
-      // Add logo (top left)
+      // Add logo (top left) - scaled proportionally
       try {
         const logoImg = new Image();
         logoImg.src = '/assets/images/logo.png';
@@ -99,7 +99,21 @@ export const useInvoiceGenerator = () => {
           logoImg.onload = resolve;
           logoImg.onerror = reject;
         });
-        doc.addImage(logoImg, 'PNG', 15, 10, 50, 20);
+        
+        // Calculate scaled dimensions maintaining aspect ratio
+        const maxWidth = 50;
+        const maxHeight = 25;
+        const imgAspectRatio = logoImg.width / logoImg.height;
+        
+        let logoWidth = maxWidth;
+        let logoHeight = maxWidth / imgAspectRatio;
+        
+        if (logoHeight > maxHeight) {
+          logoHeight = maxHeight;
+          logoWidth = maxHeight * imgAspectRatio;
+        }
+        
+        doc.addImage(logoImg, 'PNG', 15, 10, logoWidth, logoHeight);
       } catch (error) {
         console.log('Logo not loaded, continuing without it');
       }
