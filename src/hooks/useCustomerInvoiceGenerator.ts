@@ -71,7 +71,7 @@ export const useCustomerInvoiceGenerator = () => {
 
       const companyData: CompanyData = companySnap.exists() ? companySnap.val() : {
         name: "Sevinro Distributors",
-        addressLine: "No: 138/A, Alkaravita, Gampaha",
+        addressLine: "138/A, Alkaravita, Gampaha",
         phone: "071 39 65 580, 0777 92 90 36"
       };
 
@@ -192,22 +192,18 @@ export const useCustomerInvoiceGenerator = () => {
         }
 
         // Header - SEVINRO logo text (top left)
-        doc.setFontSize(20);
+        doc.setFontSize(18);
         doc.setFont(undefined, 'bold');
-        doc.setTextColor(255, 140, 0); // Orange color
-        doc.text('SEVINRO', 20, 20);
-        doc.setFontSize(8);
-        doc.setTextColor(200, 200, 200);
-        doc.setFont(undefined, 'normal');
-        doc.text('DISTRIBUTORS', 20, 25);
+        doc.setTextColor(255, 165, 0); // Orange color for SEVINRO
+        doc.text('SEVINRO', 20, 25);
 
         // Company details (top right)
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'normal');
         const rightX = pageWidth - 20;
-        doc.text('No : 138/A, Akaravita, Gampaha', rightX, 20, { align: 'right' });
-        doc.text('Tel : 071 39 65 580, 0777 92 90 36', rightX, 25, { align: 'right' });
+        doc.text(companyData.addressLine, rightX, 20, { align: 'right' });
+        doc.text(`Tel : ${companyData.phone}`, rightX, 25, { align: 'right' });
 
         // INVOICE title (centered)
         doc.setFontSize(20);
@@ -218,24 +214,23 @@ export const useCustomerInvoiceGenerator = () => {
         // Customer info - Left side (TO:)
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
-        doc.text('TO :-', 20, 60);
+        doc.text('TO :-', 20, 70);
         
         doc.setFont(undefined, 'normal');
-        doc.setFontSize(9);
-        doc.text(customerData.toName, 35, 60);
-        doc.text(customerData.toCity, 20, 65);
+        doc.text(customerData.toName, 20, 80);
+        doc.text(customerData.toCity, 20, 85);
 
         // Invoice details - Right side
-        const invoiceDetailsX = pageWidth - 75;
+        const invoiceDetailsX = pageWidth - 70;
         doc.setFont(undefined, 'normal');
         doc.setFontSize(9);
-        doc.text(`Invoice No  - ${params.invoiceNumber}`, invoiceDetailsX, 55);
+        doc.text(`Invoice No : - ${params.invoiceNumber}`, invoiceDetailsX, 70);
         
         const orderNosText = orderNumbers.length > 5 
           ? `${orderNumbers.slice(0, 3).join(', ')} + ${orderNumbers.length - 3} more`
           : orderNumbers.join(', ');
-        doc.text(`Order Nos   - ${orderNosText}`, invoiceDetailsX, 60);
-        doc.text(`Date        - ${params.invoiceDate}`, invoiceDetailsX, 65);
+        doc.text(`Order Nos : - ${orderNosText}`, invoiceDetailsX, 75);
+        doc.text(`Date : - ${params.invoiceDate}`, invoiceDetailsX, 80);
 
         // Process items for table
         let grandTotal = 0;
@@ -246,62 +241,56 @@ export const useCustomerInvoiceGenerator = () => {
             item.code,
             item.description,
             item.qty.toString(),
-            `${item.price.toFixed(2)}`,
-            'Rs.',
-            `${item.total.toFixed(2)}`
+            `Rs. ${item.price.toFixed(2)}`,
+            `Rs. ${item.total.toFixed(2)}`
           ];
         });
 
         // Add empty rows to match template (total 15 rows)
         const emptyRowsNeeded = Math.max(0, 15 - processedItems.length);
         for (let i = 0; i < emptyRowsNeeded; i++) {
-          processedItems.push(['', '', '', '', '', '', '']);
+          processedItems.push(['', '', '', '', '', '']);
         }
 
         // Items table
         autoTable(doc, {
-          head: [['No', 'Item', 'Description', 'Qty', 'Price', '', 'Total']],
+          head: [['No', 'Item (SKU)', 'Description', 'Qty', 'Price', 'Total']],
           body: processedItems,
-          startY: 75,
+          startY: 95,
           styles: {
             fontSize: 9,
-            cellPadding: 3,
-            lineColor: [0, 0, 0],
+            cellPadding: 4,
+            lineColor: [255, 165, 0], // Orange borders
             lineWidth: 0.5,
           },
           headStyles: {
-            fillColor: [230, 126, 34], // Orange header #E67E22
-            textColor: [255, 255, 255],
+            fillColor: [255, 165, 0], // Orange header background
+            textColor: [255, 255, 255], // White text
             fontStyle: 'bold',
             fontSize: 10,
-            halign: 'center',
           },
           bodyStyles: {
-            fillColor: [253, 235, 208], // Light peach #FDEBD0
-          },
-          alternateRowStyles: {
-            fillColor: [253, 235, 208], // Same peach for all rows
+            fillColor: [255, 248, 240], // Light peach fill
           },
           columnStyles: {
-            0: { halign: 'center', cellWidth: 15 },
-            1: { halign: 'center', cellWidth: 25 },
-            2: { halign: 'left', cellWidth: 50 },
-            3: { halign: 'center', cellWidth: 15 },
-            4: { halign: 'right', cellWidth: 25 },
-            5: { halign: 'left', cellWidth: 15 },
-            6: { halign: 'right', cellWidth: 30 },
+            0: { halign: 'center', cellWidth: 20 }, // No
+            1: { cellWidth: 35 }, // Item (SKU)
+            2: { cellWidth: 45 }, // Description
+            3: { halign: 'center', cellWidth: 20 }, // Qty
+            4: { halign: 'right', cellWidth: 30 }, // Price
+            5: { halign: 'right', cellWidth: 35 }, // Total
           },
-          margin: { left: 20, right: 20 },
+          margin: { left: 15, right: 15 },
         });
 
         const finalY = (doc as any).lastAutoTable?.finalY || 350;
 
         // Total Amount section (bottom right)
-        const totalY = finalY + 5;
+        const totalY = finalY + 10;
         doc.setFont(undefined, 'bold');
-        doc.setFontSize(11);
-        doc.text('Total Amount', pageWidth - 75, totalY);
-        doc.text('Rs.', pageWidth - 40, totalY);
+        doc.setFontSize(12);
+        doc.text('Total Amount', pageWidth - 80, totalY);
+        doc.text('Rs.', pageWidth - 45, totalY);
         doc.text(`${grandTotal.toFixed(2)}`, pageWidth - 20, totalY, { align: 'right' });
 
         // Signature lines

@@ -12,22 +12,18 @@ export const generateInvoicePDF = (
   const pageWidth = doc.internal.pageSize.width;
   
   // Add SEVINRO logo (top left)
-  doc.setFontSize(20);
+  doc.setFontSize(18);
   doc.setFont(undefined, 'bold');
-  doc.setTextColor(255, 140, 0); // Orange color
-  doc.text('SEVINRO', 20, 20);
-  doc.setFontSize(8);
-  doc.setTextColor(200, 200, 200);
-  doc.setFont(undefined, 'normal');
-  doc.text('DISTRIBUTORS', 20, 25);
+  doc.setTextColor(255, 165, 0); // Orange color
+  doc.text('SEVINRO', 20, 25);
   
   // Company details (top right)
-  doc.setFontSize(9);
+  doc.setFontSize(8);
   doc.setTextColor(0, 0, 0);
   doc.setFont(undefined, 'normal');
   const rightX = pageWidth - 20;
-  doc.text('No : 138/A, Akaravita, Gampaha', rightX, 20, { align: 'right' });
-  doc.text('Tel : 071 39 65 580, 0777 92 90 36', rightX, 25, { align: 'right' });
+  doc.text('No - 136/A, Akurana, Gampaha', rightX, 20, { align: 'right' });
+  doc.text('Te: 071 39 69 580, 0777 52 90 58', rightX, 25, { align: 'right' });
   
   // INVOICE title (centered)
   doc.setFontSize(20);
@@ -37,27 +33,26 @@ export const generateInvoicePDF = (
   // Customer info - Left side (TO:)
   doc.setFontSize(10);
   doc.setFont(undefined, 'bold');
-  doc.text('TO :-', 20, 60);
+  doc.text('TO :-', 20, 70);
   
   doc.setFont(undefined, 'normal');
-  doc.setFontSize(9);
   if (customer) {
-    doc.text(customer.name, 35, 60);
+    doc.text(customer.name, 20, 80);
     if (customer.address) {
-      doc.text(customer.address, 20, 65);
+      doc.text(customer.address, 20, 85);
     }
   } else {
-    doc.text('Cotton Feel', 35, 60);
-    doc.text('Matara', 20, 65);
+    doc.text('Cotton Feel', 20, 80);
+    doc.text('Matara', 20, 85);
   }
   
   // Invoice details - Right side
-  const invoiceDetailsX = pageWidth - 75;
+  const invoiceDetailsX = pageWidth - 70;
   doc.setFont(undefined, 'normal');
   doc.setFontSize(9);
-  doc.text(`Invoice No  - SI00${invoiceNumber}`, invoiceDetailsX, 55);
-  doc.text(`Order No    - ON00${invoiceNumber}`, invoiceDetailsX, 60);
-  doc.text(`Date        - ${new Date(sale.date).toLocaleDateString('en-GB')}`, invoiceDetailsX, 65);
+  doc.text(`Invoice No - SI00${invoiceNumber}`, invoiceDetailsX, 70);
+  doc.text(`Order No - ON00${invoiceNumber}`, invoiceDetailsX, 75);
+  doc.text(`Date - ${new Date(sale.date).toLocaleDateString('en-GB')}`, invoiceDetailsX, 80);
   
   // Items table
   const tableData = sale.items.map((item, index) => {
@@ -65,10 +60,10 @@ export const generateInvoicePDF = (
     return [
       (index + 1).toString(),
       item.sku,
-      item.description || inventoryItem?.name || 'T-shirt',
+      item.description || inventoryItem?.name || 'T-Shirt',
       item.qty.toString(),
       `${item.price.toFixed(2)}`,
-      'Rs.',
+      `RS`,
       `${(item.qty * item.price).toFixed(2)}`
     ];
   });
@@ -81,33 +76,26 @@ export const generateInvoicePDF = (
   
   try {
     autoTable(doc, {
-      head: [['No', 'Item', 'Description', 'Qty', 'Price', '', 'Total']],
+      head: [['No', 'Items', 'Description', 'Qty', 'Price', '', 'Total']],
       body: tableData,
-      startY: 75,
+      startY: 95,
       styles: {
         fontSize: 9,
-        cellPadding: 3,
+        cellPadding: 4,
         lineColor: [0, 0, 0],
-        lineWidth: 0.5,
+        lineWidth: 0.1,
       },
       headStyles: {
-        fillColor: [230, 126, 34], // Orange header #E67E22
+        fillColor: [255, 165, 0], // Orange header
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         fontSize: 10,
-        halign: 'center',
-      },
-      bodyStyles: {
-        fillColor: [253, 235, 208], // Light peach #FDEBD0
-      },
-      alternateRowStyles: {
-        fillColor: [253, 235, 208], // Same peach for all rows
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 15 },
-        1: { halign: 'center', cellWidth: 25 },
-        2: { halign: 'left', cellWidth: 50 },
-        3: { halign: 'center', cellWidth: 15 },
+        0: { halign: 'center', cellWidth: 20 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 45 },
+        3: { halign: 'center', cellWidth: 20 },
         4: { halign: 'right', cellWidth: 25 },
         5: { halign: 'left', cellWidth: 15 },
         6: { halign: 'right', cellWidth: 30 },
@@ -121,11 +109,11 @@ export const generateInvoicePDF = (
   const finalY = (doc as any).lastAutoTable?.finalY || 300;
   
   // Total section (right aligned)
-  const totalY = finalY + 5;
+  const totalY = finalY + 10;
   doc.setFont(undefined, 'bold');
-  doc.setFontSize(11);
-  doc.text('Total Amount', pageWidth - 75, totalY);
-  doc.text('Rs.', pageWidth - 40, totalY);
+  doc.setFontSize(12);
+  doc.text('Total Amount', pageWidth - 80, totalY);
+  doc.text('RS', pageWidth - 45, totalY);
   doc.text(`${sale.total.toFixed(2)}`, pageWidth - 20, totalY, { align: 'right' });
   
   // Signature lines
