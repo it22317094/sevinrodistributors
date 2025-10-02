@@ -25,9 +25,10 @@ interface Invoice {
 export default function Invoices() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { generateInvoicePDF, loading: pdfLoading } = useInvoiceGenerator();
+  const { generateInvoicePDF, generateCombinedInvoicePDF, loading: pdfLoading } = useInvoiceGenerator();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
+  const [groupByCustomer, setGroupByCustomer] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -94,6 +95,24 @@ export default function Invoices() {
     return invoices.filter(invoice => 
       invoice.status === 'pending' && new Date(invoice.date) < thirtyDaysAgo
     ).length;
+  };
+
+  const getCustomerInvoices = () => {
+    const customerMap = new Map<string, Invoice[]>();
+    filteredInvoices.forEach(invoice => {
+      const existing = customerMap.get(invoice.customerName) || [];
+      customerMap.set(invoice.customerName, [...existing, invoice]);
+    });
+    return Array.from(customerMap.entries()).map(([customerName, invoices]) => ({
+      customerName,
+      invoices,
+      total: invoices.reduce((sum, inv) => sum + (inv.total || 0), 0)
+    }));
+  };
+
+  const handleGenerateCombinedPDF = (customerInvoices: Invoice[]) => {
+    const invoiceIds = customerInvoices.map(inv => inv.id);
+    generateCombinedInvoicePDF(invoiceIds);
   };
 
 
@@ -240,6 +259,12 @@ export default function Invoices() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <Button 
+                variant={groupByCustomer ? "default" : "outline"}
+                onClick={() => setGroupByCustomer(!groupByCustomer)}
+              >
+                {groupByCustomer ? 'Show All' : 'Group by Customer'}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -264,6 +289,74 @@ export default function Invoices() {
                   <Plus className="h-4 w-4 mr-2" />
                   Create Invoice
                 </Button>
+              </div>
+            ) : groupByCustomer ? (
+              <div className="space-y-6">
+                {getCustomerInvoices().map((customerGroup) => (
+                  <div key={customerGroup.customerName} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <div>
+                        <h3 className="font-bold text-lg">{customerGroup.customerName}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {customerGroup.invoices.length} invoice(s) • Total: RS {customerGroup.total.toLocaleString()}
+                        </p>
+                      </div>
+                      {customerGroup.invoices.length > 1 && (
+                        <Button
+                          variant="default"
+                          disabled={pdfLoading}
+                          onClick={() => handleGenerateCombinedPDF(customerGroup.invoices)}
+                        >
+                          {pdfLoading ? 'Generating...' : 'Generate Combined PDF'}
+                        </Button>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      {customerGroup.invoices.map((invoice) => (
+                        <div
+                          key={invoice.id}
+                          className="flex items-center justify-between p-3 bg-accent/50 rounded-lg"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{invoice.invoiceNumber}</span>
+                              <Badge 
+                                variant={
+                                  invoice.status === "paid" ? "default" : 
+                                  invoice.status === "pending" ? "secondary" : 
+                                  "destructive"
+                                }
+                              >
+                                {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {invoice.date} • RS {invoice.total?.toLocaleString()}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              disabled={pdfLoading}
+                              onClick={() => generateInvoicePDF(invoice.id)}
+                            >
+                              PDF
+                            </Button>
+                            {invoice.status !== "paid" && (
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleMarkPaid(invoice.id, invoice)}
+                              >
+                                Mark Paid
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="space-y-4">
