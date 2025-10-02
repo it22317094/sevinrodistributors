@@ -16,6 +16,7 @@ interface AddCustomerModalProps {
 
 interface CustomerFormData {
   name: string;
+  email: string;
   address: string;
   telephone: string;
 }
@@ -23,6 +24,7 @@ interface CustomerFormData {
 export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCustomerModalProps) {
   const [formData, setFormData] = useState<CustomerFormData>({
     name: "",
+    email: "",
     address: "",
     telephone: "",
   });
@@ -44,6 +46,23 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
       toast({
         title: "Validation Error",
         description: "Customer name is required.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!formData.email.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Email is required.",
+        variant: "destructive",
+      });
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid email address.",
         variant: "destructive",
       });
       return false;
@@ -101,6 +120,7 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
       const customerRef = ref(realtimeDb, `customers/${uniqueId}`);
       await set(customerRef, {
         name: formData.name,
+        email: formData.email,
         address: formData.address,
         telephone: formData.telephone,
         uniqueId: uniqueId,
@@ -115,7 +135,7 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
       });
 
       // Reset form and close modal
-      setFormData({ name: "", address: "", telephone: "" });
+      setFormData({ name: "", email: "", address: "", telephone: "" });
       onOpenChange(false);
       
       // Notify parent component to refresh customer list
@@ -152,6 +172,17 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Enter customer name"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                placeholder="Enter email address"
                 required
               />
             </div>
