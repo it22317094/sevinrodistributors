@@ -81,7 +81,7 @@ export const useInvoiceGenerator = () => {
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
 
-      // Add logo
+      // Add logo (left aligned)
       try {
         const logoImg = new Image();
         logoImg.src = '/assets/images/logo.png';
@@ -90,15 +90,20 @@ export const useInvoiceGenerator = () => {
           logoImg.onerror = reject;
         });
         
-        const logoWidth = 35;
-        const logoHeight = 25;
-        const logoX = (pageWidth - logoWidth) / 2;
-        doc.addImage(logoImg, 'PNG', logoX, 15, logoWidth, logoHeight);
+        const logoWidth = 40;
+        const logoHeight = 28;
+        doc.addImage(logoImg, 'PNG', 20, 10, logoWidth, logoHeight);
       } catch {
-        doc.setFontSize(15);
+        doc.setFontSize(12);
         doc.setFont(undefined, 'bold');
-        doc.text('COMPANY LOGO', pageWidth / 2, 28, { align: 'center' });
+        doc.text('COMPANY LOGO', 20, 25);
       }
+
+      // Company details (top right)
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      doc.text('No: 138/A, Alkaravita, Gampaha', pageWidth - 20, 15, { align: 'right' });
+      doc.text('Tel: 071 39 65 580, 0777 92 90 36', pageWidth - 20, 22, { align: 'right' });
 
       // Invoice title
       doc.setFontSize(20);
@@ -106,44 +111,71 @@ export const useInvoiceGenerator = () => {
       doc.text('INVOICE', pageWidth / 2, 50, { align: 'center' });
 
       // Customer info
-      doc.setFontSize(15);
+      doc.setFontSize(12);
       doc.setFont(undefined, 'bold');
-      doc.text('TO :-', 20, 65);
+      doc.text('TO :-', 20, 70);
       doc.setFont(undefined, 'normal');
-      doc.text(invoiceData.customer_name, 35, 65);
+      doc.text(invoiceData.customer_name, 42, 70);
 
-      // Invoice details
+      // Invoice details (right aligned)
       doc.setFont(undefined, 'bold');
-      doc.text('Invoice No -', pageWidth - 60, 65);
-      doc.text('Order No -', pageWidth - 60, 72);
-      doc.text('Date -', pageWidth - 60, 79);
+      doc.text('Invoice No -', pageWidth - 75, 70);
+      doc.text('Order No -', pageWidth - 75, 78);
+      doc.text('Date -', pageWidth - 75, 86);
       
       doc.setFont(undefined, 'normal');
-      doc.text(invoiceData.invoice_no, pageWidth - 25, 65);
-      doc.text(invoiceData.order_no, pageWidth - 25, 72);
-      doc.text(new Date(invoiceData.invoice_date).toLocaleDateString('en-GB'), pageWidth - 25, 79);
+      doc.text(invoiceData.invoice_no, pageWidth - 20, 70, { align: 'right' });
+      doc.text(invoiceData.order_no, pageWidth - 20, 78, { align: 'right' });
+      doc.text(new Date(invoiceData.invoice_date).toLocaleDateString('en-GB'), pageWidth - 20, 86, { align: 'right' });
 
-      // Items table
+      // Prepare table data with separate Rs. column
+      const enhancedTableData = items.map((item, index) => [
+        (index + 1).toString(),
+        item.item_code,
+        item.description,
+        item.quantity.toString(),
+        formatCurrency(item.price).replace('Rs. ', ''),
+        'Rs.',
+        formatCurrency(item.quantity * item.price).replace('Rs. ', '')
+      ]);
+
+      // Items table with orange header
       autoTable(doc, {
-        head: [['No', 'Item', 'Description', 'Qty', 'Price', 'Total']],
-        body: tableData,
-        startY: 90,
-        styles: { fontSize: 15 },
-        headStyles: { fontStyle: 'bold' },
+        head: [['No', 'Item', 'Description', 'Qty', 'Price', '', 'Total']],
+        body: enhancedTableData,
+        startY: 100,
+        styles: { 
+          fontSize: 11,
+          cellPadding: 5
+        },
+        headStyles: { 
+          fillColor: [255, 140, 0],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+        alternateRowStyles: {
+          fillColor: [255, 250, 240]
+        },
         columnStyles: {
-          0: { halign: 'center' },
-          3: { halign: 'center' },
-          4: { halign: 'right' },
-          5: { halign: 'right' }
+          0: { halign: 'center', cellWidth: 15 },
+          1: { halign: 'center', cellWidth: 25 },
+          2: { halign: 'left', cellWidth: 50 },
+          3: { halign: 'center', cellWidth: 20 },
+          4: { halign: 'right', cellWidth: 25 },
+          5: { halign: 'left', cellWidth: 15 },
+          6: { halign: 'right', cellWidth: 30 }
         }
       });
 
-      const finalY = (doc as any).lastAutoTable.finalY + 10;
+      const finalY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Total amount
+      // Total amount (right aligned)
+      doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
-      doc.text('Total Amount', 20, finalY);
-      doc.text(formatCurrency(grandTotal), pageWidth - 20, finalY, { align: 'right' });
+      doc.text('Total Amount', pageWidth - 85, finalY);
+      doc.text('Rs.', pageWidth - 50, finalY);
+      doc.text(formatCurrency(grandTotal).replace('Rs. ', ''), pageWidth - 20, finalY, { align: 'right' });
 
       // Signatures
       const signatureY = finalY + 20;
