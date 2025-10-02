@@ -127,30 +127,30 @@ export const useInvoiceGenerator = () => {
       doc.text('INVOICE', pageWidth / 2, 50, { align: 'center' });
 
       // Customer info - Left side (TO :- with exact spacing)
-      doc.setFontSize(11);
+      doc.setFontSize(15);
       doc.setFont(undefined, 'bold');
       doc.text('TO :-', 20, 65);
       
       doc.setFont(undefined, 'normal');
-      doc.text(invoiceData.customer_name, 37, 65);
+      doc.text(invoiceData.customer_name, 40, 65);
       
       if (invoiceData.customer_address) {
-        doc.setFontSize(10);
+        doc.setFontSize(15);
         doc.text(invoiceData.customer_address, 20, 72);
       }
 
       // Invoice details - Right side
       const invoiceDetailsX = pageWidth - 70;
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(11);
+      doc.setFontSize(15);
       doc.text('Invoice No:', invoiceDetailsX, 65);
       doc.text('Order No:', invoiceDetailsX, 72);
       doc.text('Date:', invoiceDetailsX, 79);
       
       doc.setFont(undefined, 'normal');
-      doc.text(invoiceData.invoice_no, invoiceDetailsX + 25, 65);
-      doc.text(invoiceData.order_no || `ON00${invoiceData.invoice_no}`, invoiceDetailsX + 25, 72);
-      doc.text(new Date(invoiceData.invoice_date).toLocaleDateString('en-GB'), invoiceDetailsX + 25, 79);
+      doc.text(invoiceData.invoice_no, invoiceDetailsX + 28, 65);
+      doc.text(invoiceData.order_no || `ON00${invoiceData.invoice_no}`, invoiceDetailsX + 28, 72);
+      doc.text(new Date(invoiceData.invoice_date).toLocaleDateString('en-GB'), invoiceDetailsX + 28, 79);
 
       // Items table
       autoTable(doc, {
@@ -158,7 +158,7 @@ export const useInvoiceGenerator = () => {
         body: tableData,
         startY: 90,
         styles: {
-          fontSize: 11,
+          fontSize: 15,
           cellPadding: 4,
           lineColor: [0, 0, 0],
           lineWidth: 0.5,
@@ -167,7 +167,7 @@ export const useInvoiceGenerator = () => {
           fillColor: [255, 255, 255],
           textColor: [0, 0, 0],
           fontStyle: 'bold',
-          fontSize: 11,
+          fontSize: 15,
           lineColor: [0, 0, 0],
           lineWidth: 0.5,
         },
@@ -187,7 +187,7 @@ export const useInvoiceGenerator = () => {
       // Total section
       const totalY = finalY + 15;
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(13);
+      doc.setFontSize(15);
       doc.text('Total Amount', 20, totalY);
       doc.text(`Rs. ${formatCurrency(grandTotal)}`, pageWidth - 20, totalY, { align: 'right' });
       
@@ -198,7 +198,7 @@ export const useInvoiceGenerator = () => {
       // Signature lines
       const signatureY = totalY + 40;
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(11);
+      doc.setFontSize(15);
       
       // Left signature
       doc.line(20, signatureY, 85, signatureY);
