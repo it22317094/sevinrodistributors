@@ -87,12 +87,6 @@ export const useInvoiceGenerator = () => {
 
       const grandTotal = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
 
-      // Add empty rows to match the design (total 20 rows)
-      const emptyRowsNeeded = Math.max(0, 20 - items.length);
-      for (let i = 0; i < emptyRowsNeeded; i++) {
-        tableData.push(['', '', '', '', '', '', '']);
-      }
-
       // Generate PDF
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
