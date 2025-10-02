@@ -66,7 +66,7 @@ export function InvoicePreviewModal({
               <div>
                 <h2 className="text-2xl font-bold">SEVINRO DISTRIBUTORS</h2>
                 <div className="text-sm text-muted-foreground mt-2">
-                  <p>No. 138/A, Alawwa, Gampaha</p>
+                  <p>No: 138/A, Akaravita, Gampaha</p>
                   <p>Tel: 071 39 65 580, 0777 92 90 36</p>
                 </div>
               </div>

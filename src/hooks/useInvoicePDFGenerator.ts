@@ -165,20 +165,23 @@ export const useInvoicePDFGenerator = () => {
           }
         } else {
           // Fallback to text logo if no logoUrl
-          doc.setFontSize(18);
+          doc.setFontSize(20);
           doc.setFont(undefined, 'bold');
-          doc.setTextColor(255, 165, 0);
-          doc.text('SEVINRO', 20, 25);
+          doc.setTextColor(255, 140, 0);
+          doc.text('SEVINRO', 20, 20);
+          doc.setFontSize(8);
+          doc.setTextColor(200, 200, 200);
+          doc.setFont(undefined, 'normal');
+          doc.text('DISTRIBUTORS', 20, 25);
         }
 
         // Company details (top right) - exact format from template
-        doc.setFontSize(8);
+        doc.setFontSize(9);
         doc.setTextColor(0, 0, 0);
         doc.setFont(undefined, 'normal');
         const rightX = pageWidth - 20;
-        doc.text('Sevinro Distributors', rightX, 15, { align: 'right' });
-        doc.text(companyData.addressLine, rightX, 20, { align: 'right' });
-        doc.text(`Tel: ${companyData.phone}`, rightX, 25, { align: 'right' });
+        doc.text('No : 138/A, Akaravita, Gampaha', rightX, 20, { align: 'right' });
+        doc.text('Tel : 071 39 65 580, 0777 92 90 36', rightX, 25, { align: 'right' });
 
         // INVOICE title (centered)
         doc.setFontSize(20);
@@ -189,22 +192,23 @@ export const useInvoicePDFGenerator = () => {
         // Customer info - Left side (TO:) - exact format from template
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
-        doc.text('TO :-', 20, 70);
+        doc.text('TO :-', 20, 60);
         
         doc.setFont(undefined, 'normal');
-        doc.text(customerData.toName, 20, 80);
-        doc.text(customerData.toCity, 20, 85);
+        doc.setFontSize(9);
+        doc.text(customerData.toName, 35, 60);
+        doc.text(customerData.toCity, 20, 65);
 
         // Invoice details - Right side - exact format from template
-        const invoiceDetailsX = pageWidth - 70;
+        const invoiceDetailsX = pageWidth - 75;
         doc.setFont(undefined, 'normal');
         doc.setFontSize(9);
-        doc.text(`Invoice No : - ${invoiceNo}`, invoiceDetailsX, 70);
+        doc.text(`Invoice No  - ${invoiceNo}`, invoiceDetailsX, 55);
         if (invoiceData.orderNo) {
-          doc.text(`Order No : - ${invoiceData.orderNo}`, invoiceDetailsX, 75);
-          doc.text(`Date : - ${formattedDate}`, invoiceDetailsX, 80);
+          doc.text(`Order No    - ${invoiceData.orderNo}`, invoiceDetailsX, 60);
+          doc.text(`Date        - ${formattedDate}`, invoiceDetailsX, 65);
         } else {
-          doc.text(`Date : - ${formattedDate}`, invoiceDetailsX, 75);
+          doc.text(`Date        - ${formattedDate}`, invoiceDetailsX, 60);
         }
 
         // Process items and calculate totals
@@ -230,47 +234,53 @@ export const useInvoicePDFGenerator = () => {
               item.code || item.item || '',
               item.description || '',
               item.qty.toString(),
-              `Rs. ${priceLkr.toFixed(2)}`,
-              `Rs. ${lineTotal.toFixed(2)}`
+              `${priceLkr.toFixed(2)}`,
+              'Rs.',
+              `${lineTotal.toFixed(2)}`
             ];
           });
 
         // Add empty rows to match template (total 15 rows as shown in image)
         const emptyRowsNeeded = Math.max(0, 15 - processedItems.length);
         for (let i = 0; i < emptyRowsNeeded; i++) {
-          processedItems.push(['', '', '', '', '', '']);
+          processedItems.push(['', '', '', '', '', '', '']);
         }
 
         // Items table with exact styling from template
         try {
           autoTable(doc, {
-            head: [['No', 'Items', 'Description', 'Qty', 'Price', 'Total']],
+            head: [['No', 'Item', 'Description', 'Qty', 'Price', '', 'Total']],
             body: processedItems,
-            startY: 95,
+            startY: 75,
             styles: {
               fontSize: 9,
-              cellPadding: 4,
-              lineColor: [255, 165, 0], // Orange borders to match template
+              cellPadding: 3,
+              lineColor: [0, 0, 0],
               lineWidth: 0.5,
             },
             headStyles: {
-              fillColor: [255, 165, 0], // Orange header background
-              textColor: [255, 255, 255], // White text
+              fillColor: [230, 126, 34], // Orange header #E67E22
+              textColor: [255, 255, 255],
               fontStyle: 'bold',
               fontSize: 10,
+              halign: 'center',
             },
             bodyStyles: {
-              fillColor: [255, 248, 240], // Light peach fill like template
+              fillColor: [253, 235, 208], // Light peach #FDEBD0
+            },
+            alternateRowStyles: {
+              fillColor: [253, 235, 208], // Same peach for all rows
             },
             columnStyles: {
-              0: { halign: 'center', cellWidth: 20 }, // No
-              1: { cellWidth: 35 }, // Items
-              2: { cellWidth: 45 }, // Description
-              3: { halign: 'center', cellWidth: 20 }, // Qty
-              4: { halign: 'right', cellWidth: 30 }, // Price
-              5: { halign: 'right', cellWidth: 35 }, // Total
+              0: { halign: 'center', cellWidth: 15 },
+              1: { halign: 'center', cellWidth: 25 },
+              2: { halign: 'left', cellWidth: 50 },
+              3: { halign: 'center', cellWidth: 15 },
+              4: { halign: 'right', cellWidth: 25 },
+              5: { halign: 'left', cellWidth: 15 },
+              6: { halign: 'right', cellWidth: 30 },
             },
-            margin: { left: 15, right: 15 },
+            margin: { left: 20, right: 20 },
           });
         } catch (error) {
           console.error('Error generating table:', error);
@@ -280,11 +290,11 @@ export const useInvoicePDFGenerator = () => {
         const finalY = (doc as any).lastAutoTable?.finalY || 350;
 
         // Total Amount section (bottom right) - exact format from template
-        const totalY = finalY + 10;
+        const totalY = finalY + 5;
         doc.setFont(undefined, 'bold');
-        doc.setFontSize(12);
-        doc.text('Total Amount', pageWidth - 80, totalY);
-        doc.text('Rs.', pageWidth - 45, totalY);
+        doc.setFontSize(11);
+        doc.text('Total Amount', pageWidth - 75, totalY);
+        doc.text('Rs.', pageWidth - 40, totalY);
         doc.text(`${grandTotal.toFixed(2)}`, pageWidth - 20, totalY, { align: 'right' });
 
         // FX note if USD was converted (small text above signatures)
