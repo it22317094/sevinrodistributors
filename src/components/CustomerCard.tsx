@@ -41,13 +41,6 @@ export function CustomerCard({ customer, onInvoiceClick }: CustomerCardProps) {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">View</Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => onInvoiceClick(customer.id, customer.name)}
-          >
-            Invoice
-          </Button>
         </div>
       </div>
     </div>
