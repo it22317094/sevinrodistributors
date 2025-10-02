@@ -76,12 +76,12 @@ export const useInvoiceGenerator = () => {
         const lineTotal = item.quantity * item.price;
         return [
           (index + 1).toString(),
-          item.item_code,
-          item.description,
+          item.item_code || '',
+          `${item.item_code} - ${item.description}`,
           item.quantity.toString(),
-          item.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Rs.',
-          lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          item.price.toFixed(2),
+          'RS',
+          lineTotal.toFixed(2)
         ];
       });
 
@@ -91,7 +91,7 @@ export const useInvoiceGenerator = () => {
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
 
-      // Add logo (top left) - scaled proportionally
+      // Add logo (top left) - with exact dimensions maintaining 1356×896 aspect ratio
       try {
         const logoImg = new Image();
         logoImg.src = '/assets/images/logo.png';
@@ -100,86 +100,80 @@ export const useInvoiceGenerator = () => {
           logoImg.onerror = reject;
         });
         
-        // Calculate scaled dimensions maintaining aspect ratio
-        const maxWidth = 50;
-        const maxHeight = 25;
-        const imgAspectRatio = logoImg.width / logoImg.height;
+        // Calculate dimensions to maintain aspect ratio (1356×896)
+        const aspectRatio = 1356 / 896;
+        const logoHeight = 20;
+        const logoWidth = logoHeight * aspectRatio;
         
-        let logoWidth = maxWidth;
-        let logoHeight = maxWidth / imgAspectRatio;
-        
-        if (logoHeight > maxHeight) {
-          logoHeight = maxHeight;
-          logoWidth = maxHeight * imgAspectRatio;
-        }
-        
-        doc.addImage(logoImg, 'PNG', 15, 10, logoWidth, logoHeight);
+        doc.addImage(logoImg, 'PNG', 20, 15, logoWidth, logoHeight);
       } catch (error) {
         console.log('Logo not loaded, continuing without it');
+        // Fallback to text logo
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(255, 165, 0);
+        doc.text('SEVINRO', 20, 25);
       }
 
       // Company details (top right)
-      doc.setFontSize(9);
+      doc.setFontSize(7);
       doc.setTextColor(0, 0, 0);
       doc.setFont(undefined, 'normal');
-      const rightX = pageWidth - 15;
-      doc.text('No: 138/A, Alkaravita, Gampaha', rightX, 15, { align: 'right' });
-      doc.text('Tel: 071 39 65 580, 0777 92 90 36', rightX, 20, { align: 'right' });
+      const rightX = pageWidth - 20;
+      doc.text('No - 136/A, Akurana, Gampaha', rightX, 20, { align: 'right' });
+      doc.text('Te: 071 39 69 580, 0777 52 90 58', rightX, 25, { align: 'right' });
 
       // INVOICE title (centered)
-      doc.setFontSize(22);
+      doc.setFontSize(18);
       doc.setFont(undefined, 'bold');
-      doc.text('INVOICE', pageWidth / 2, 45, { align: 'center' });
+      doc.text('INVOICE', pageWidth / 2, 50, { align: 'center' });
 
-      // Customer info - Left side (TO:)
-      doc.setFontSize(10);
+      // Customer info - Left side (TO:-)
+      doc.setFontSize(9);
       doc.setFont(undefined, 'bold');
-      doc.text('TO :-', 15, 60);
+      doc.text('TO:-', 20, 70);
       
       doc.setFont(undefined, 'normal');
-      doc.text(invoiceData.customer_name, 15, 68);
+      doc.text(invoiceData.customer_name, 32, 70);
       if (invoiceData.customer_address) {
-        doc.text(invoiceData.customer_address, 15, 73);
+        doc.text(invoiceData.customer_address, 20, 76);
       }
 
       // Invoice details - Right side
-      const invoiceDetailsX = pageWidth - 75;
+      const invoiceDetailsX = pageWidth - 70;
       doc.setFont(undefined, 'normal');
-      doc.setFontSize(9);
-      doc.text(`Invoice No - ${invoiceData.invoice_no}`, invoiceDetailsX, 60);
-      doc.text(`Order No - ${invoiceData.order_no}`, invoiceDetailsX, 65);
-      doc.text(`Date - ${new Date(invoiceData.invoice_date).toLocaleDateString('en-GB')}`, invoiceDetailsX, 70);
+      doc.setFontSize(8);
+      doc.text(`Invoice No - ${invoiceData.invoice_no}`, invoiceDetailsX, 70);
+      doc.text(`Order No - ${invoiceData.order_no || `ON00${invoiceData.invoice_no}`}`, invoiceDetailsX, 75);
+      doc.text(`Date - ${new Date(invoiceData.invoice_date).toLocaleDateString('en-GB')}`, invoiceDetailsX, 80);
 
-      // Items table with orange header and peach rows
+      // Items table with orange header
       autoTable(doc, {
-        head: [['No', 'Item', 'Description', 'Qty', 'Price', '', 'Total']],
+        head: [['No', 'Items', 'Description', 'Qty', 'Price', '', 'Total']],
         body: tableData,
-        startY: 85,
+        startY: 90,
         styles: {
-          fontSize: 9,
-          cellPadding: 5,
+          fontSize: 8,
+          cellPadding: 3.5,
           lineColor: [0, 0, 0],
           lineWidth: 0.1,
         },
         headStyles: {
-          fillColor: [230, 126, 34], // Orange #E67E22
+          fillColor: [255, 165, 0], // Orange
           textColor: [255, 255, 255],
           fontStyle: 'bold',
-          fontSize: 10,
-        },
-        alternateRowStyles: {
-          fillColor: [253, 235, 208], // Light peach #FDEBD0
+          fontSize: 9,
         },
         columnStyles: {
-          0: { halign: 'center', cellWidth: 15 },
+          0: { halign: 'center', cellWidth: 20 },
           1: { cellWidth: 25 },
-          2: { cellWidth: 50 },
+          2: { cellWidth: 45 },
           3: { halign: 'center', cellWidth: 20 },
           4: { halign: 'right', cellWidth: 25 },
           5: { halign: 'left', cellWidth: 15 },
           6: { halign: 'right', cellWidth: 30 },
         },
-        margin: { left: 15, right: 15 },
+        margin: { left: 20, right: 20 },
       });
 
       const finalY = (doc as any).lastAutoTable?.finalY || 250;
@@ -187,23 +181,23 @@ export const useInvoiceGenerator = () => {
       // Total section (right aligned)
       const totalY = finalY + 10;
       doc.setFont(undefined, 'bold');
-      doc.setFontSize(12);
+      doc.setFontSize(11);
       doc.text('Total Amount', pageWidth - 80, totalY);
-      doc.text('Rs.', pageWidth - 45, totalY);
-      doc.text(grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), pageWidth - 15, totalY, { align: 'right' });
+      doc.text('RS', pageWidth - 45, totalY);
+      doc.text(grandTotal.toFixed(2), pageWidth - 20, totalY, { align: 'right' });
 
       // Signature lines
-      const signatureY = Math.min(totalY + 30, 270);
+      const signatureY = totalY + 50;
       doc.setFont(undefined, 'normal');
-      doc.setFontSize(10);
+      doc.setFontSize(9);
       
       // Left signature line
-      doc.line(15, signatureY, 85, signatureY);
-      doc.text('Authorized By', 50, signatureY + 7, { align: 'center' });
+      doc.line(20, signatureY, 90, signatureY);
+      doc.text('Authorized By', 45, signatureY + 10, { align: 'center' });
       
       // Right signature line
-      doc.line(pageWidth - 85, signatureY, pageWidth - 15, signatureY);
-      doc.text('Customer Signature', pageWidth - 50, signatureY + 7, { align: 'center' });
+      doc.line(pageWidth - 90, signatureY, pageWidth - 20, signatureY);
+      doc.text('Customer Signature', pageWidth - 55, signatureY + 10, { align: 'center' });
 
       // Save PDF
       doc.save(`Invoice_${invoiceData.invoice_no}.pdf`);
