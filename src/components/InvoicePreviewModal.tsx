@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AggregatedItem } from "@/hooks/useInvoiceFromOrders";
-import { useInvoicePDFGenerator } from "@/hooks/useInvoicePDFGenerator";
+import { useInvoiceGenerator } from "@/hooks/useInvoiceGenerator";
 
 interface InvoicePreviewModalProps {
   open: boolean;
@@ -27,7 +27,7 @@ export function InvoicePreviewModal({
   showConfirmButton = true 
 }: InvoicePreviewModalProps) {
   const [isConfirming, setIsConfirming] = useState(false);
-  const { generateInvoicePDF, loading: pdfLoading } = useInvoicePDFGenerator();
+  const { generateInvoicePDF, loading: pdfLoading } = useInvoiceGenerator();
 
   const subtotal = items.reduce((sum, item) => sum + item.total, 0);
   const total = subtotal;

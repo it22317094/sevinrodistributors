@@ -34,17 +34,42 @@ export const useInvoiceGenerator = () => {
         throw new Error('Invoice not found');
       }
 
-      const invoiceData: InvoiceData = invoiceSnapshot.val();
+      const raw: any = invoiceSnapshot.val();
 
-      // Fetch invoice items
-      const itemsRef = ref(realtimeDb, `invoice_items/${invoiceId}`);
-      const itemsSnapshot = await get(itemsRef);
-      
-      if (!itemsSnapshot.exists()) {
-        throw new Error('Invoice items not found');
+      // Normalize invoice fields from different schemas
+      const invoiceData: InvoiceData = {
+        invoice_no: raw.invoice_no || (raw.number != null ? String(raw.number) : String(invoiceId)),
+        order_no: raw.order_no || raw.orderNo || '',
+        invoice_date: raw.invoice_date || raw.date || new Date().toISOString(),
+        customer_name: raw.customer_name || raw.customerName || 'Unknown Customer',
+        customer_address: raw.customer_address || raw.customerAddress || raw.customer_city || ''
+      };
+
+      // Prefer dedicated invoice_items path, fallback to items on invoice
+      let items: InvoiceItem[] = [];
+      try {
+        const itemsRef = ref(realtimeDb, `invoice_items/${invoiceId}`);
+        const itemsSnapshot = await get(itemsRef);
+        if (itemsSnapshot.exists()) {
+          items = Object.values(itemsSnapshot.val());
+        }
+      } catch (_) {
+        // ignore, we'll fallback
       }
 
-      const items: InvoiceItem[] = Object.values(itemsSnapshot.val());
+      if (!items.length && Array.isArray(raw.items)) {
+        items = raw.items.map((it: any) => ({
+          item_code: it.item_code || it.itemCode || it.code || it.item || '',
+          description: it.description || '',
+          quantity: it.quantity ?? it.qty ?? 0,
+          price: it.price ?? it.unitPrice ?? 0,
+        }));
+      }
+
+      if (!items.length) {
+        throw new Error('No invoice items found');
+      }
+
 
       // Calculate totals
       const tableData = items.map((item, index) => {

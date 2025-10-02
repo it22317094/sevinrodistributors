@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { Sale, InventoryItem, Customer } from '@/hooks/useFirebaseReports';
-import { useInvoicePDFGenerator } from '@/hooks/useInvoicePDFGenerator';
+import { useInvoiceGenerator } from '@/hooks/useInvoiceGenerator';
 
 interface ReportViewModalProps {
   open: boolean;
@@ -26,7 +26,7 @@ export default function ReportViewModal({
 }: ReportViewModalProps) {
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'unpaid' | 'partial'>('all');
   const [inventoryView, setInventoryView] = useState<'quantity' | 'value'>('quantity');
-  const { generateInvoicePDF, loading: pdfLoading } = useInvoicePDFGenerator();
+  const { generateInvoicePDF, loading: pdfLoading } = useInvoiceGenerator();
 
   const formatCurrency = (amount: number) => `LKR ${amount.toLocaleString()}`;
 

@@ -9,7 +9,7 @@ import { Plus, Search, FileText, DollarSign, Calendar, ChevronDown } from "lucid
 import { ref, get, update } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
-import { useInvoicePDFGenerator } from "@/hooks/useInvoicePDFGenerator";
+import { useInvoiceGenerator } from "@/hooks/useInvoiceGenerator";
 import CustomerInvoiceModal from "@/components/CustomerInvoiceModal";
 
 interface Invoice {
@@ -25,7 +25,7 @@ interface Invoice {
 export default function Invoices() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { generateInvoicePDF, loading: pdfLoading } = useInvoicePDFGenerator();
+  const { generateInvoicePDF, loading: pdfLoading } = useInvoiceGenerator();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [filteredInvoices, setFilteredInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
