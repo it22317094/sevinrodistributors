@@ -31,57 +31,67 @@ export const useInvoiceGenerator = () => {
       const invoiceSnapshot = await get(invoiceRef);
       
       if (!invoiceSnapshot.exists()) {
-        toast.error('Invoice not found');
-        return;
+        throw new Error('Invoice not found');
       }
 
-      const raw = invoiceSnapshot.val();
+      const raw: any = invoiceSnapshot.val();
 
-      // Normalize data
+      // Normalize invoice fields from different schemas
       const invoiceData: InvoiceData = {
-        invoice_no: raw.invoice_no || String(invoiceId),
-        order_no: raw.order_no || '',
-        invoice_date: raw.invoice_date || new Date().toISOString(),
-        customer_name: raw.customer_name || 'Unknown Customer',
-        customer_address: raw.customer_address || ''
+        invoice_no: raw.invoice_no || (raw.number != null ? String(raw.number) : String(invoiceId)),
+        order_no: raw.order_no || raw.orderNo || '',
+        invoice_date: raw.invoice_date || raw.date || new Date().toISOString(),
+        customer_name: raw.customer_name || raw.customerName || 'Unknown Customer',
+        customer_address: raw.customer_address || raw.customerAddress || raw.customer_city || ''
       };
 
-      // Fetch items
+      // Prefer dedicated invoice_items path, fallback to items on invoice
       let items: InvoiceItem[] = [];
-      const itemsRef = ref(realtimeDb, `invoice_items/${invoiceId}`);
-      const itemsSnapshot = await get(itemsRef);
-      
-      if (itemsSnapshot.exists()) {
-        items = Object.values(itemsSnapshot.val());
+      try {
+        const itemsRef = ref(realtimeDb, `invoice_items/${invoiceId}`);
+        const itemsSnapshot = await get(itemsRef);
+        if (itemsSnapshot.exists()) {
+          items = Object.values(itemsSnapshot.val());
+        }
+      } catch (_) {
+        // ignore, we'll fallback
+      }
+
+      if (!items.length && Array.isArray(raw.items)) {
+        items = raw.items.map((it: any) => ({
+          item_code: it.item_code || it.itemCode || it.code || it.item || '',
+          description: it.description || '',
+          quantity: it.quantity ?? it.qty ?? 0,
+          price: it.price ?? it.unitPrice ?? 0,
+        }));
       }
 
       if (!items.length) {
-        toast.error('No items found');
-        return;
+        throw new Error('No invoice items found');
       }
 
-      // Format currency
-      const formatCurrency = (amount: number) => {
-        return `Rs. ${amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
-      };
 
-      // Prepare table data
-      const tableData = items.map((item, index) => [
-        (index + 1).toString(),
-        item.item_code,
-        item.description,
-        item.quantity.toString(),
-        formatCurrency(item.price).replace('Rs. ', ''),
-        formatCurrency(item.quantity * item.price)
-      ]);
+      // Calculate totals
+      const tableData = items.map((item, index) => {
+        const lineTotal = item.quantity * item.price;
+        return [
+          (index + 1).toString(),
+          item.item_code,
+          item.description,
+          item.quantity.toString(),
+          item.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+          'Rs.',
+          lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        ];
+      });
 
       const grandTotal = items.reduce((sum, item) => sum + (item.quantity * item.price), 0);
 
-      // Create PDF
+      // Generate PDF
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
 
-      // Add logo (left aligned)
+      // Add logo (top left) - scaled proportionally
       try {
         const logoImg = new Image();
         logoImg.src = '/assets/images/logo.png';
@@ -90,108 +100,118 @@ export const useInvoiceGenerator = () => {
           logoImg.onerror = reject;
         });
         
-        const logoWidth = 40;
-        const logoHeight = 28;
-        doc.addImage(logoImg, 'PNG', 20, 10, logoWidth, logoHeight);
-      } catch {
-        doc.setFontSize(12);
-        doc.setFont(undefined, 'bold');
-        doc.text('COMPANY LOGO', 20, 25);
+        // Calculate scaled dimensions maintaining aspect ratio
+        const maxWidth = 50;
+        const maxHeight = 25;
+        const imgAspectRatio = logoImg.width / logoImg.height;
+        
+        let logoWidth = maxWidth;
+        let logoHeight = maxWidth / imgAspectRatio;
+        
+        if (logoHeight > maxHeight) {
+          logoHeight = maxHeight;
+          logoWidth = maxHeight * imgAspectRatio;
+        }
+        
+        doc.addImage(logoImg, 'PNG', 15, 10, logoWidth, logoHeight);
+      } catch (error) {
+        console.log('Logo not loaded, continuing without it');
       }
 
       // Company details (top right)
+      doc.setFontSize(9);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont(undefined, 'normal');
+      const rightX = pageWidth - 15;
+      doc.text('No: 138/A, Alkaravita, Gampaha', rightX, 15, { align: 'right' });
+      doc.text('Tel: 071 39 65 580, 0777 92 90 36', rightX, 20, { align: 'right' });
+
+      // INVOICE title (centered)
+      doc.setFontSize(22);
+      doc.setFont(undefined, 'bold');
+      doc.text('INVOICE', pageWidth / 2, 45, { align: 'center' });
+
+      // Customer info - Left side (TO:)
       doc.setFontSize(10);
-      doc.setFont(undefined, 'normal');
-      doc.text('No: 138/A, Alkaravita, Gampaha', pageWidth - 20, 15, { align: 'right' });
-      doc.text('Tel: 071 39 65 580, 0777 92 90 36', pageWidth - 20, 22, { align: 'right' });
-
-      // Invoice title
-      doc.setFontSize(20);
       doc.setFont(undefined, 'bold');
-      doc.text('INVOICE', pageWidth / 2, 50, { align: 'center' });
-
-      // Customer info
-      doc.setFontSize(12);
-      doc.setFont(undefined, 'bold');
-      doc.text('TO :-', 20, 70);
-      doc.setFont(undefined, 'normal');
-      doc.text(invoiceData.customer_name, 42, 70);
-
-      // Invoice details (right aligned)
-      doc.setFont(undefined, 'bold');
-      doc.text('Invoice No -', pageWidth - 75, 70);
-      doc.text('Order No -', pageWidth - 75, 78);
-      doc.text('Date -', pageWidth - 75, 86);
+      doc.text('TO :-', 15, 60);
       
       doc.setFont(undefined, 'normal');
-      doc.text(invoiceData.invoice_no, pageWidth - 20, 70, { align: 'right' });
-      doc.text(invoiceData.order_no, pageWidth - 20, 78, { align: 'right' });
-      doc.text(new Date(invoiceData.invoice_date).toLocaleDateString('en-GB'), pageWidth - 20, 86, { align: 'right' });
+      doc.text(invoiceData.customer_name, 15, 68);
+      if (invoiceData.customer_address) {
+        doc.text(invoiceData.customer_address, 15, 73);
+      }
 
-      // Prepare table data with separate Rs. column
-      const enhancedTableData = items.map((item, index) => [
-        (index + 1).toString(),
-        item.item_code,
-        item.description,
-        item.quantity.toString(),
-        formatCurrency(item.price).replace('Rs. ', ''),
-        'Rs.',
-        formatCurrency(item.quantity * item.price).replace('Rs. ', '')
-      ]);
+      // Invoice details - Right side
+      const invoiceDetailsX = pageWidth - 75;
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(9);
+      doc.text(`Invoice No - ${invoiceData.invoice_no}`, invoiceDetailsX, 60);
+      doc.text(`Order No - ${invoiceData.order_no}`, invoiceDetailsX, 65);
+      doc.text(`Date - ${new Date(invoiceData.invoice_date).toLocaleDateString('en-GB')}`, invoiceDetailsX, 70);
 
-      // Items table with orange header
+      // Items table with orange header and peach rows
       autoTable(doc, {
         head: [['No', 'Item', 'Description', 'Qty', 'Price', '', 'Total']],
-        body: enhancedTableData,
-        startY: 100,
-        styles: { 
-          fontSize: 11,
-          cellPadding: 5
+        body: tableData,
+        startY: 85,
+        styles: {
+          fontSize: 9,
+          cellPadding: 5,
+          lineColor: [0, 0, 0],
+          lineWidth: 0.1,
         },
-        headStyles: { 
-          fillColor: [255, 140, 0],
+        headStyles: {
+          fillColor: [230, 126, 34], // Orange #E67E22
           textColor: [255, 255, 255],
           fontStyle: 'bold',
-          halign: 'center'
+          fontSize: 10,
         },
         alternateRowStyles: {
-          fillColor: [255, 250, 240]
+          fillColor: [253, 235, 208], // Light peach #FDEBD0
         },
         columnStyles: {
           0: { halign: 'center', cellWidth: 15 },
-          1: { halign: 'center', cellWidth: 25 },
-          2: { halign: 'left', cellWidth: 50 },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 50 },
           3: { halign: 'center', cellWidth: 20 },
           4: { halign: 'right', cellWidth: 25 },
           5: { halign: 'left', cellWidth: 15 },
-          6: { halign: 'right', cellWidth: 30 }
-        }
+          6: { halign: 'right', cellWidth: 30 },
+        },
+        margin: { left: 15, right: 15 },
       });
 
-      const finalY = (doc as any).lastAutoTable.finalY + 15;
+      const finalY = (doc as any).lastAutoTable?.finalY || 250;
 
-      // Total amount (right aligned)
-      doc.setFontSize(14);
+      // Total section (right aligned)
+      const totalY = finalY + 10;
       doc.setFont(undefined, 'bold');
-      doc.text('Total Amount', pageWidth - 85, finalY);
-      doc.text('Rs.', pageWidth - 50, finalY);
-      doc.text(formatCurrency(grandTotal).replace('Rs. ', ''), pageWidth - 20, finalY, { align: 'right' });
+      doc.setFontSize(12);
+      doc.text('Total Amount', pageWidth - 80, totalY);
+      doc.text('Rs.', pageWidth - 45, totalY);
+      doc.text(grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), pageWidth - 15, totalY, { align: 'right' });
 
-      // Signatures
-      const signatureY = finalY + 20;
-      doc.line(20, signatureY, 80, signatureY);
-      doc.line(pageWidth - 80, signatureY, pageWidth - 20, signatureY);
+      // Signature lines
+      const signatureY = Math.min(totalY + 30, 270);
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(10);
       
-      doc.text('Authorized By', 50, signatureY + 10, { align: 'center' });
-      doc.text('Customer Signature', pageWidth - 50, signatureY + 10, { align: 'center' });
+      // Left signature line
+      doc.line(15, signatureY, 85, signatureY);
+      doc.text('Authorized By', 50, signatureY + 7, { align: 'center' });
+      
+      // Right signature line
+      doc.line(pageWidth - 85, signatureY, pageWidth - 15, signatureY);
+      doc.text('Customer Signature', pageWidth - 50, signatureY + 7, { align: 'center' });
 
       // Save PDF
-      doc.save(`invoice_${invoiceData.invoice_no}.pdf`);
-      toast.success('Invoice generated!');
-
+      doc.save(`Invoice_${invoiceData.invoice_no}.pdf`);
+      
+      toast.success('Invoice PDF generated successfully!');
     } catch (error) {
-      console.error('Error:', error);
-      toast.error('Failed to generate invoice');
+      console.error('Error generating invoice:', error);
+      toast.error('Failed to generate invoice PDF');
     } finally {
       setLoading(false);
     }
