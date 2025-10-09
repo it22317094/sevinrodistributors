@@ -79,9 +79,9 @@ export const useInvoiceGenerator = () => {
           item.item_code,
           item.description,
           item.quantity.toString(),
-          item.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+          item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
           'Rs.',
-          lineTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          lineTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         ];
       });
 
@@ -190,7 +190,7 @@ export const useInvoiceGenerator = () => {
       doc.setFontSize(12);
       doc.text('Total Amount', pageWidth - 80, totalY);
       doc.text('Rs.', pageWidth - 45, totalY);
-      doc.text(grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), pageWidth - 15, totalY, { align: 'right' });
+      doc.text(grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), pageWidth - 15, totalY, { align: 'right' });
 
       // Signature lines
       const signatureY = Math.min(totalY + 30, 270);
