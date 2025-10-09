@@ -132,7 +132,7 @@ export const generateInvoicePDF = async (
   doc.setFontSize(11);
   doc.text('Total Amount', pageWidth - 80, totalY);
   doc.text('RS', pageWidth - 45, totalY);
-  doc.text(`${sale.total.toFixed(2)}`, pageWidth - 20, totalY, { align: 'right' });
+  doc.text(`${sale.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - 20, totalY, { align: 'right' });
   
   // Signature lines
   const signatureY = totalY + 50;

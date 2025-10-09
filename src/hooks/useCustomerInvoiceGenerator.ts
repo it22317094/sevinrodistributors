@@ -291,7 +291,7 @@ export const useCustomerInvoiceGenerator = () => {
         doc.setFontSize(12);
         doc.text('Total Amount', pageWidth - 80, totalY);
         doc.text('Rs.', pageWidth - 45, totalY);
-        doc.text(`${grandTotal.toFixed(2)}`, pageWidth - 20, totalY, { align: 'right' });
+        doc.text(`${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - 20, totalY, { align: 'right' });
 
         // Signature lines
         const signatureY = totalY + 40;

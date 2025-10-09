@@ -284,7 +284,7 @@ export const useInvoicePDFGenerator = () => {
         doc.setFontSize(12);
         doc.text('Total Amount', pageWidth - 80, totalY);
         doc.text('Rs.', pageWidth - 45, totalY);
-        doc.text(`${grandTotal.toFixed(2)}`, pageWidth - 20, totalY, { align: 'right' });
+        doc.text(`${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - 20, totalY, { align: 'right' });
 
         // FX note if USD was converted (small text above signatures)
         let fxNoteY = totalY + 30;
