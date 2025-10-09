@@ -21,11 +21,19 @@ export interface Sale {
 
 export interface InventoryItem {
   id: string;
-  name: string;
-  sku: string;
+  inventoryNo?: string;
+  item?: string;
+  name?: string;
+  description?: string;
+  sku?: string;
   quantity: number;
-  costPrice: number;
-  sellingPrice: number;
+  unitPrice: number;
+  costPrice?: number;
+  sellingPrice?: number;
+  category?: string;
+  unit?: string;
+  minStock?: number;
+  supplier?: string;
 }
 
 export interface Customer {
@@ -170,7 +178,7 @@ export const useFirebaseReports = () => {
       .reduce((sum, sale) => sum + (sale.total || 0), 0);
 
     const inventoryValue = inventory.reduce((sum, item) => 
-      sum + ((item.quantity || 0) * (item.costPrice || 0)), 0);
+      sum + ((item.quantity || 0) * (item.unitPrice || item.costPrice || 0)), 0);
 
     const activeCustomers = customers.filter(customer => customer.isActive).length;
 
@@ -178,7 +186,7 @@ export const useFirebaseReports = () => {
     const currentMonthCOGS = currentMonthSales.reduce((sum, sale) => {
       const saleCOGS = sale.items.reduce((itemSum, item) => {
         const inventoryItem = inventory.find(inv => inv.sku === item.sku);
-        const costPrice = inventoryItem?.costPrice || 0;
+        const costPrice = inventoryItem?.unitPrice || inventoryItem?.costPrice || 0;
         return itemSum + (item.qty * costPrice);
       }, 0);
       return sum + saleCOGS;
