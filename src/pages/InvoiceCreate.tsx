@@ -37,9 +37,9 @@ const InvoiceCreate = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [currentInvoiceNumber, setCurrentInvoiceNumber] = useState<number | null>(null);
+  const [currentOrderNumber, setCurrentOrderNumber] = useState<string>('');
   
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
-  const [orderNumber, setOrderNumber] = useState<string>('');
   const [items, setItems] = useState<InvoiceItem[]>([
     { id: '1', item_code: '', description: '', quantity: 0, price: 0, total: 0 }
   ]);
@@ -107,6 +107,20 @@ const InvoiceCreate = () => {
     }
   };
 
+  // Function to get the next order number for display (without incrementing)
+  const getNextOrderNumber = async (): Promise<string> => {
+    try {
+      const counterRef = ref(realtimeDb, 'orderCounter');
+      const snapshot = await get(counterRef);
+      const currentValue = snapshot.val();
+      const nextNumber = currentValue === null ? 1 : currentValue + 1;
+      return `OR${String(nextNumber).padStart(4, '0')}`;
+    } catch (error) {
+      console.error('Error getting next order number:', error);
+      return 'OR0001';
+    }
+  };
+
   const generateNextInvoiceNumber = async (): Promise<number> => {
     const counterRef = ref(realtimeDb, 'invoiceCounter');
     
@@ -121,6 +135,24 @@ const InvoiceCreate = () => {
       return result.snapshot.val();
     } else {
       throw new Error('Failed to generate invoice number');
+    }
+  };
+
+  const generateNextOrderNumber = async (): Promise<string> => {
+    const counterRef = ref(realtimeDb, 'orderCounter');
+    
+    const result = await runTransaction(counterRef, (current) => {
+      if (current === null) {
+        return 1; // First order starts at 1
+      }
+      return current + 1;
+    });
+    
+    if (result.committed) {
+      const num = result.snapshot.val();
+      return `OR${String(num).padStart(4, '0')}`;
+    } else {
+      throw new Error('Failed to generate order number');
     }
   };
 
@@ -142,11 +174,13 @@ const InvoiceCreate = () => {
     }
   };
 
-  // Load the next invoice number, item codes, and customers when component mounts
+  // Load the next invoice number, order number, item codes, and customers when component mounts
   useEffect(() => {
     const loadData = async () => {
       const nextNumber = await getNextInvoiceNumber();
       setCurrentInvoiceNumber(nextNumber);
+      const nextOrder = await getNextOrderNumber();
+      setCurrentOrderNumber(nextOrder);
       await loadItemCodes();
       await loadCustomers();
     };
@@ -248,15 +282,16 @@ const InvoiceCreate = () => {
 
     setLoading(true);
     try {
-      // Generate new invoice number using transaction
+      // Generate new invoice number and order number using transactions
       const newInvoiceNumber = await generateNextInvoiceNumber();
+      const newOrderNumber = await generateNextOrderNumber();
       
       const subtotal = calculateSubtotal();
       const invoiceData = {
         number: newInvoiceNumber,
         customerId: selectedCustomer,
         customerName: customers.find(c => c.id === selectedCustomer)?.name,
-        orderNumber,
+        orderNumber: newOrderNumber,
         items: items.filter(item => item.description && item.quantity > 0),
         subtotal,
         total: subtotal,
@@ -350,9 +385,10 @@ const InvoiceCreate = () => {
                   <Label htmlFor="orderNumber">Order Number</Label>
                   <Input
                     id="orderNumber"
-                    value={orderNumber}
-                    onChange={(e) => setOrderNumber(e.target.value)}
-                    placeholder="e.g., OR000706"
+                    value={currentOrderNumber || 'Loading...'}
+                    readOnly
+                    className="bg-muted"
+                    placeholder="Loading..."
                   />
                 </div>
               </CardContent>
