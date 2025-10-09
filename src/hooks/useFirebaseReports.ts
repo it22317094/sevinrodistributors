@@ -180,7 +180,7 @@ export const useFirebaseReports = () => {
     const inventoryValue = inventory.reduce((sum, item) => 
       sum + ((item.quantity || 0) * (item.unitPrice || item.costPrice || 0)), 0);
 
-    const activeCustomers = customers.filter(customer => customer.isActive).length;
+    const activeCustomers = customers.length;
 
     // Calculate COGS for profit margin
     const currentMonthCOGS = currentMonthSales.reduce((sum, sale) => {
