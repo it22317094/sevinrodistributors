@@ -127,7 +127,7 @@ export const useInvoiceGenerator = () => {
       doc.text('Tel: 071 39 65 580, 0777 92 90 36', rightX, 20, { align: 'right' });
 
       // INVOICE title (centered)
-      doc.setFontSize(22);
+      doc.setFontSize(15);
       doc.setFont(undefined, 'bold');
       doc.text('INVOICE', pageWidth / 2, 45, { align: 'center' });
 
