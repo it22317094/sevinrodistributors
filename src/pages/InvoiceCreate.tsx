@@ -12,6 +12,7 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 
 interface InvoiceItem {
   id: string;
+  item_code: string;
   description: string;
   quantity: number;
   price: number;
@@ -40,7 +41,7 @@ const InvoiceCreate = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [orderNumber, setOrderNumber] = useState<string>('');
   const [items, setItems] = useState<InvoiceItem[]>([
-    { id: '1', description: '', quantity: 0, price: 0, total: 0 }
+    { id: '1', item_code: '', description: '', quantity: 0, price: 0, total: 0 }
   ]);
   
   // Item codes state
@@ -154,7 +155,7 @@ const InvoiceCreate = () => {
   }, []);
   const addItem = () => {
     const newId = (items.length + 1).toString();
-    setItems([...items, { id: newId, description: '', quantity: 0, price: 0, total: 0 }]);
+    setItems([...items, { id: newId, item_code: '', description: '', quantity: 0, price: 0, total: 0 }]);
   };
 
   const removeItem = (id: string) => {
@@ -179,6 +180,7 @@ const InvoiceCreate = () => {
   const selectPredefinedItem = (itemId: string, selectedCode: string) => {
     const predefined = [...predefinedItems, ...itemCodes].find(item => item.code === selectedCode);
     if (predefined) {
+      updateItem(itemId, 'item_code', predefined.code);
       updateItem(itemId, 'description', predefined.description);
       updateItem(itemId, 'price', predefined.price);
     }
