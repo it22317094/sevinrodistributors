@@ -37,7 +37,6 @@ const InvoiceCreate = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [currentInvoiceNumber, setCurrentInvoiceNumber] = useState<number | null>(null);
-  const [currentOrderNumber, setCurrentOrderNumber] = useState<string>('');
   
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [items, setItems] = useState<InvoiceItem[]>([
@@ -107,19 +106,6 @@ const InvoiceCreate = () => {
     }
   };
 
-  // Function to get the next order number for display (without incrementing)
-  const getNextOrderNumber = async (): Promise<string> => {
-    try {
-      const counterRef = ref(realtimeDb, 'orderCounter');
-      const snapshot = await get(counterRef);
-      const currentValue = snapshot.val();
-      const nextNumber = currentValue === null ? 10009 : currentValue + 1;
-      return `OR${String(nextNumber).padStart(5, '0')}`;
-    } catch (error) {
-      console.error('Error getting next order number:', error);
-      return 'OR10009';
-    }
-  };
 
   const generateNextInvoiceNumber = async (): Promise<number> => {
     const counterRef = ref(realtimeDb, 'invoiceCounter');
@@ -138,23 +124,6 @@ const InvoiceCreate = () => {
     }
   };
 
-  const generateNextOrderNumber = async (): Promise<string> => {
-    const counterRef = ref(realtimeDb, 'orderCounter');
-    
-    const result = await runTransaction(counterRef, (current) => {
-      if (current === null) {
-        return 10009; // First order starts at 10009
-      }
-      return current + 1;
-    });
-    
-    if (result.committed) {
-      const num = result.snapshot.val();
-      return `OR${String(num).padStart(5, '0')}`;
-    } else {
-      throw new Error('Failed to generate order number');
-    }
-  };
 
   // Load item codes from Firebase
   const loadItemCodes = async () => {
@@ -174,13 +143,11 @@ const InvoiceCreate = () => {
     }
   };
 
-  // Load the next invoice number, order number, item codes, and customers when component mounts
+  // Load the next invoice number, item codes, and customers when component mounts
   useEffect(() => {
     const loadData = async () => {
       const nextNumber = await getNextInvoiceNumber();
       setCurrentInvoiceNumber(nextNumber);
-      const nextOrder = await getNextOrderNumber();
-      setCurrentOrderNumber(nextOrder);
       await loadItemCodes();
       await loadCustomers();
     };
@@ -282,9 +249,10 @@ const InvoiceCreate = () => {
 
     setLoading(true);
     try {
-      // Generate new invoice number and order number using transactions
+      // Generate new invoice number using transaction
       const newInvoiceNumber = await generateNextInvoiceNumber();
-      const newOrderNumber = await generateNextOrderNumber();
+      // Generate order number based on invoice number (e.g., 10013 -> OR10013)
+      const newOrderNumber = `OR${newInvoiceNumber}`;
       
       const subtotal = calculateSubtotal();
       const invoiceData = {
@@ -385,7 +353,7 @@ const InvoiceCreate = () => {
                   <Label htmlFor="orderNumber">Order Number</Label>
                   <Input
                     id="orderNumber"
-                    value={currentOrderNumber || 'Loading...'}
+                    value={currentInvoiceNumber ? `OR${currentInvoiceNumber}` : 'Loading...'}
                     readOnly
                     className="bg-muted"
                     placeholder="Loading..."
