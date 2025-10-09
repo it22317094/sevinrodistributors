@@ -5,6 +5,11 @@
       ".write": "auth != null && (data.val() == null || newData.val() > data.val())",
       ".validate": "newData.isNumber() && newData.val() >= 10000"
     },
+    "orderCounter": {
+      ".read": "auth != null",
+      ".write": "auth != null && (data.val() == null || newData.val() > data.val())",
+      ".validate": "newData.isNumber() && newData.val() >= 10009"
+    },
     "invoices": {
       ".read": "auth != null",
       ".write": "auth != null",
