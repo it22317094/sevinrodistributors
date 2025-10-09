@@ -113,11 +113,11 @@ const InvoiceCreate = () => {
       const counterRef = ref(realtimeDb, 'orderCounter');
       const snapshot = await get(counterRef);
       const currentValue = snapshot.val();
-      const nextNumber = currentValue === null ? 1 : currentValue + 1;
-      return `OR${String(nextNumber).padStart(4, '0')}`;
+      const nextNumber = currentValue === null ? 10009 : currentValue + 1;
+      return `OR${String(nextNumber).padStart(5, '0')}`;
     } catch (error) {
       console.error('Error getting next order number:', error);
-      return 'OR0001';
+      return 'OR10009';
     }
   };
 
@@ -143,14 +143,14 @@ const InvoiceCreate = () => {
     
     const result = await runTransaction(counterRef, (current) => {
       if (current === null) {
-        return 1; // First order starts at 1
+        return 10009; // First order starts at 10009
       }
       return current + 1;
     });
     
     if (result.committed) {
       const num = result.snapshot.val();
-      return `OR${String(num).padStart(4, '0')}`;
+      return `OR${String(num).padStart(5, '0')}`;
     } else {
       throw new Error('Failed to generate order number');
     }
