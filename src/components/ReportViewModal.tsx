@@ -147,17 +147,25 @@ export default function ReportViewModal({
         if (inventoryView === 'quantity') {
           return b.quantity - a.quantity;
         }
-        return (b.quantity * b.costPrice) - (a.quantity * a.costPrice);
+        const aPrice = a.unitPrice || a.costPrice || 0;
+        const bPrice = b.unitPrice || b.costPrice || 0;
+        return (b.quantity * bPrice) - (a.quantity * aPrice);
       })
       .slice(0, 10);
 
-    const chartData = topItems.map(item => ({
-      name: item.name,
-      value: inventoryView === 'quantity' ? item.quantity : item.quantity * item.costPrice
-    }));
+    const chartData = topItems.map(item => {
+      const price = item.unitPrice || item.costPrice || 0;
+      return {
+        name: item.name || item.item || 'Unknown',
+        value: inventoryView === 'quantity' ? item.quantity : item.quantity * price
+      };
+    });
 
     const totalSKUs = inventory.length;
-    const totalValue = inventory.reduce((sum, item) => sum + (item.quantity * item.costPrice), 0);
+    const totalValue = inventory.reduce((sum, item) => {
+      const price = item.unitPrice || item.costPrice || 0;
+      return sum + (item.quantity * price);
+    }, 0);
     const lowStockCount = inventory.filter(item => item.quantity <= 5).length;
 
     return (
