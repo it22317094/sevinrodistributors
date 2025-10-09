@@ -273,16 +273,38 @@ export default function ReportViewModal({
           </LineChart>
         </ResponsiveContainer>
 
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer width="100%" height={300}>
           <PieChart>
             <Pie
               data={statusData}
               cx="50%"
               cy="50%"
-              innerRadius={40}
-              outerRadius={80}
+              innerRadius={60}
+              outerRadius={100}
               dataKey="value"
-              label={({ name, value }) => `${name}: ${value}`}
+              label={({ cx, cy, midAngle, innerRadius, outerRadius, name, value }) => {
+                const RADIAN = Math.PI / 180;
+                const radius = outerRadius + 30;
+                const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                
+                return (
+                  <text 
+                    x={x} 
+                    y={y} 
+                    fill="currentColor"
+                    textAnchor={x > cx ? 'start' : 'end'} 
+                    dominantBaseline="central"
+                    className="text-sm font-medium"
+                  >
+                    {`${name}: ${value}`}
+                  </text>
+                );
+              }}
+              labelLine={{
+                stroke: 'currentColor',
+                strokeWidth: 1
+              }}
             >
               {statusData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
