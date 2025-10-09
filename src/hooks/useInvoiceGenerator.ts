@@ -152,7 +152,7 @@ export const useInvoiceGenerator = () => {
 
       // Items table with orange header and peach rows
       autoTable(doc, {
-        head: [['No', 'Item', 'Description', 'Qty', 'Price', '', 'Total']],
+        head: [['No', 'Item Code', 'Description', 'Qty', 'Price', '', 'Total']],
         body: tableData,
         startY: 85,
         styles: {
