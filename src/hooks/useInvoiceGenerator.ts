@@ -101,8 +101,8 @@ export const useInvoiceGenerator = () => {
         });
         
         // Calculate scaled dimensions maintaining aspect ratio
-        const maxWidth = 50;
-        const maxHeight = 25;
+        const maxWidth = 80;
+        const maxHeight = 40;
         const imgAspectRatio = logoImg.width / logoImg.height;
         
         let logoWidth = maxWidth;
