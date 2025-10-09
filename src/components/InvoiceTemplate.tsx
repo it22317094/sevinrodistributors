@@ -80,9 +80,9 @@ export const generateInvoicePDF = async (
       item.sku,
       item.description || inventoryItem?.name || 'T-Shirt',
       item.qty.toString(),
-      `${item.price.toFixed(2)}`,
+      `${item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       `RS`,
-      `${(item.qty * item.price).toFixed(2)}`
+      `${(item.qty * item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     ];
   });
   

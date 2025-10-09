@@ -241,8 +241,8 @@ export const useCustomerInvoiceGenerator = () => {
             item.code,
             item.description,
             item.qty.toString(),
-            `Rs. ${item.price.toFixed(2)}`,
-            `Rs. ${item.total.toFixed(2)}`
+            `Rs. ${item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            `Rs. ${item.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
           ];
         });
 

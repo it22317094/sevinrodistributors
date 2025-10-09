@@ -229,8 +229,8 @@ export const useInvoicePDFGenerator = () => {
               item.code || item.item || '',
               item.description || '',
               item.qty.toString(),
-              `Rs. ${priceLkr.toFixed(2)}`,
-              `Rs. ${lineTotal.toFixed(2)}`
+              `Rs. ${priceLkr.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+              `Rs. ${lineTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
             ];
           });
 

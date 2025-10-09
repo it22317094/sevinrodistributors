@@ -107,8 +107,8 @@ export function InvoicePreviewModal({
                     <TableCell className="border-r border-gray-300">{item.itemCode}</TableCell>
                     <TableCell className="border-r border-gray-300">{item.description}</TableCell>
                     <TableCell className="border-r border-gray-300">{item.quantity}</TableCell>
-                    <TableCell className="border-r border-gray-300">Rs. {item.unitPrice.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">Rs. {item.total.toFixed(2)}</TableCell>
+                    <TableCell className="border-r border-gray-300">Rs. {item.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell className="text-right">Rs. {item.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                   </TableRow>
                 ))}
                 
@@ -132,7 +132,7 @@ export function InvoicePreviewModal({
                 <div className="text-right">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">Total Amount:</span>
-                    <span className="font-semibold">Rs. {total.toFixed(2)}</span>
+                    <span className="font-semibold">Rs. {total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                   </div>
                 </div>
               </div>
