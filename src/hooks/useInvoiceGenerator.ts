@@ -137,9 +137,9 @@ export const useInvoiceGenerator = () => {
       doc.text('TO :-', 15, 60);
       
       doc.setFont(undefined, 'normal');
-      doc.text(invoiceData.customer_name, 15, 68);
+      doc.text(invoiceData.customer_name, 32, 60);
       if (invoiceData.customer_address) {
-        doc.text(invoiceData.customer_address, 15, 73);
+        doc.text(invoiceData.customer_address, 15, 68);
       }
 
       // Invoice details - Right side
