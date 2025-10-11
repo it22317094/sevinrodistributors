@@ -469,7 +469,7 @@ const InvoiceCreate = () => {
                 {items.map((item, index) => (
                   <div key={item.id} className="grid grid-cols-12 gap-4 items-end">
                     <div className="col-span-2">
-                      <Label>Item Code</Label>
+                      <Label>Quick Select</Label>
                       <Select onValueChange={(value) => selectPredefinedItem(item.id, value)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select item" />
@@ -488,7 +488,17 @@ const InvoiceCreate = () => {
                       </Select>
                     </div>
                     
-                    <div className="col-span-4">
+                    <div className="col-span-2">
+                      <Label>Item Code *</Label>
+                      <Input
+                        value={item.item_code}
+                        onChange={(e) => updateItem(item.id, 'item_code', e.target.value)}
+                        placeholder="e.g., AU001"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="col-span-3">
                       <Label>Description *</Label>
                       <Input
                         value={item.description}
