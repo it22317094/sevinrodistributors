@@ -260,7 +260,13 @@ const InvoiceCreate = () => {
         customerId: selectedCustomer,
         customerName: customers.find(c => c.id === selectedCustomer)?.name,
         orderNumber: newOrderNumber,
-        items: items.filter(item => item.description && item.quantity > 0),
+        items: items.filter(item => item.description && item.quantity > 0).map(item => ({
+          item_code: item.item_code,
+          description: item.description,
+          quantity: item.quantity,
+          price: item.price,
+          total: item.total
+        })),
         subtotal,
         total: subtotal,
         date: new Date().toISOString().split('T')[0],
