@@ -3,15 +3,14 @@ import autoTable from 'jspdf-autotable';
 import { Sale, Customer, InventoryItem } from '@/hooks/useFirebaseReports';
 
 export const generateInvoicePDF = async (
-  sale: Sale, 
-  customer: Customer | undefined, 
+  sale: Sale,
+  customer: Customer | undefined,
   inventory: InventoryItem[],
-  invoiceNumber: number,
-  orderNumber?: string
+  invoiceNumber: number
 ) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
-  
+
   // Add company logo at top
   try {
     const logoImg = new Image();
@@ -21,7 +20,6 @@ export const generateInvoicePDF = async (
       logoImg.onerror = reject;
     });
     
-    // Calculate dimensions to maintain aspect ratio (1356×896)
     const aspectRatio = 1356 / 896;
     const logoHeight = 20;
     const logoWidth = logoHeight * aspectRatio;
@@ -29,7 +27,6 @@ export const generateInvoicePDF = async (
     doc.addImage(logoImg, 'PNG', 20, 15, logoWidth, logoHeight);
   } catch (error) {
     console.error('Error loading logo:', error);
-    // Fallback to text logo
     doc.setFontSize(16);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(255, 165, 0);
@@ -70,21 +67,25 @@ export const generateInvoicePDF = async (
   doc.setFont(undefined, 'normal');
   doc.setFontSize(8);
   doc.text(`Invoice No - SI00${invoiceNumber}`, invoiceDetailsX, 70);
-  doc.text(`Order No - ${orderNumber || `ON00${invoiceNumber}`}`, invoiceDetailsX, 75);
+  // FIXED: Use sale.orderNo from the sale object
+  doc.text(`Order No - ${sale.orderNo || ''}`, invoiceDetailsX, 75);
   doc.text(`Date - ${new Date(sale.date).toLocaleDateString('en-GB')}`, invoiceDetailsX, 80);
   
   // Items table
-  const tableData = sale.items.map((item, index) => {
+  // FIXED: Convert items object to array and use correct field names
+  const tableData = Object.values(sale.items).map((item: any, index) => {
     const inventoryItem = inventory.find(inv => inv.sku === item.sku);
-    const itemCode = (item as any).sku || (item as any).code || (item as any).item_code || (item as any).item || '';
+    const itemCode = item.item_code || item.code || '';
+    const quantity = item.qty || item.quantity || 0;
+    
     return [
       (index + 1).toString(),
       itemCode,
       item.description || inventoryItem?.name || 'T-Shirt',
-      item.qty.toString(),
+      quantity.toString(),
       `${item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       `RS`,
-      `${(item.qty * item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      `${(quantity * item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     ];
   });
   
@@ -96,7 +97,7 @@ export const generateInvoicePDF = async (
   
   try {
     autoTable(doc, {
-      head: [['No', 'Items', 'Description', 'Qty', 'Price', '', 'Total']],
+      head: [['No', 'Item Code', 'Description', 'Qty', 'Price', '', 'Total']], // FIXED: Header name
       body: tableData,
       startY: 90,
       styles: {
@@ -141,11 +142,9 @@ export const generateInvoicePDF = async (
   doc.setFont(undefined, 'normal');
   doc.setFontSize(9);
   
-  // Left signature line
   doc.line(20, signatureY, 90, signatureY);
   doc.text('Authorized By', 45, signatureY + 10, { align: 'center' });
   
-  // Right signature line
   doc.line(pageWidth - 90, signatureY, pageWidth - 20, signatureY);
   doc.text('Customer Signature', pageWidth - 55, signatureY + 10, { align: 'center' });
   

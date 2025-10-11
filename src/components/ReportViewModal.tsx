@@ -112,7 +112,7 @@ export default function ReportViewModal({
                   <td className="p-2">{new Date(sale.date).toLocaleDateString()}</td>
                   <td className="p-2">{sale.id}</td>
                   <td className="p-2">{customers.find(c => c.id === sale.customerId)?.name || 'Unknown'}</td>
-                  <td className="p-2">{sale.items.length}</td>
+                  <td className="p-2">{Object.keys(sale.items).length}</td>
                   <td className="p-2">{formatCurrency(sale.total)}</td>
                   <td className="p-2">
                     <Badge variant={sale.status === 'paid' ? 'default' : 'destructive'}>

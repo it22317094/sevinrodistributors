@@ -102,7 +102,7 @@ export default function GenerateReportsModal({
         sale.date,
         sale.id,
         customer?.name || 'Unknown',
-        sale.items.length,
+        Object.keys(sale.items).length,
         `LKR ${sale.total.toFixed(2)}`,
         sale.status
       ];

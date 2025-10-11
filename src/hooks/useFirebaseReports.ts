@@ -3,16 +3,22 @@ import { ref, onValue, off, get, runTransaction } from 'firebase/database';
 import { realtimeDb } from '@/lib/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 
+export interface SaleItem {
+  sku: string;
+  description: string;
+  qty: number;
+  quantity?: number;
+  price: number;
+  item_code?: string;
+  code?: string;
+}
+
 export interface Sale {
   id: string;
   date: string;
   customerId: string;
-  items: Array<{
-    sku: string;
-    description: string;
-    qty: number;
-    price: number;
-  }>;
+  orderNo?: string;
+  items: { [key: string]: SaleItem };
   subtotal: number;
   tax: number;
   total: number;
@@ -184,7 +190,8 @@ export const useFirebaseReports = () => {
 
     // Calculate COGS for profit margin
     const currentMonthCOGS = currentMonthSales.reduce((sum, sale) => {
-      const saleCOGS = sale.items.reduce((itemSum, item) => {
+      const itemsArray = Object.values(sale.items);
+      const saleCOGS = itemsArray.reduce((itemSum, item) => {
         const inventoryItem = inventory.find(inv => inv.sku === item.sku);
         const costPrice = inventoryItem?.unitPrice || inventoryItem?.costPrice || 0;
         return itemSum + (item.qty * costPrice);
