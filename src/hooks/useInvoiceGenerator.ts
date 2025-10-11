@@ -39,7 +39,7 @@ export const useInvoiceGenerator = () => {
       // Normalize invoice fields from different schemas
       const invoiceData: InvoiceData = {
         invoice_no: raw.invoice_no || (raw.number != null ? String(raw.number) : String(invoiceId)),
-        order_no: raw.order_no || raw.orderNo || '',
+        order_no: raw.order_no || raw.orderNo || raw.orderNumber || '',
         invoice_date: raw.invoice_date || raw.date || new Date().toISOString(),
         customer_name: raw.customer_name || raw.customerName || 'Unknown Customer',
         customer_address: raw.customer_address || raw.customerAddress || raw.customer_city || ''
@@ -59,7 +59,7 @@ export const useInvoiceGenerator = () => {
 
       if (!items.length && Array.isArray(raw.items)) {
         items = raw.items.map((it: any) => ({
-          item_code: it.item_code || it.itemCode || it.code || it.item || '',
+          item_code: it.item_code || it.itemCode || it.code || it.item || it.sku || '',
           description: it.description || '',
           quantity: it.quantity ?? it.qty ?? 0,
           price: it.price ?? it.unitPrice ?? 0,

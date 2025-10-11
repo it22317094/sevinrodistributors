@@ -199,8 +199,9 @@ export const useInvoicePDFGenerator = () => {
         doc.setFont(undefined, 'normal');
         doc.setFontSize(9);
         doc.text(`Invoice No : - ${invoiceNo}`, invoiceDetailsX, 70);
+        const orderNoToDisplay = invoiceData.orderNo || `OR${invoiceNo}`;
         if (invoiceData.orderNo) {
-          doc.text(`Order No : - ${invoiceData.orderNo}`, invoiceDetailsX, 75);
+          doc.text(`Order No : - ${orderNoToDisplay}`, invoiceDetailsX, 75);
           doc.text(`Date : - ${formattedDate}`, invoiceDetailsX, 80);
         } else {
           doc.text(`Date : - ${formattedDate}`, invoiceDetailsX, 75);
@@ -226,7 +227,7 @@ export const useInvoicePDFGenerator = () => {
             
             return [
               (index + 1).toString(),
-              item.code || item.item || '',
+              item.code || item.item || (item as any).item_code || (item as any).itemCode || (item as any).sku || '',
               item.description || '',
               item.qty.toString(),
               `Rs. ${priceLkr.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,

@@ -6,7 +6,8 @@ export const generateInvoicePDF = async (
   sale: Sale, 
   customer: Customer | undefined, 
   inventory: InventoryItem[],
-  invoiceNumber: number
+  invoiceNumber: number,
+  orderNumber?: string
 ) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
@@ -69,7 +70,7 @@ export const generateInvoicePDF = async (
   doc.setFont(undefined, 'normal');
   doc.setFontSize(8);
   doc.text(`Invoice No - SI00${invoiceNumber}`, invoiceDetailsX, 70);
-  doc.text(`Order No - ON00${invoiceNumber}`, invoiceDetailsX, 75);
+  doc.text(`Order No - ${orderNumber || `ON00${invoiceNumber}`}`, invoiceDetailsX, 75);
   doc.text(`Date - ${new Date(sale.date).toLocaleDateString('en-GB')}`, invoiceDetailsX, 80);
   
   // Items table
