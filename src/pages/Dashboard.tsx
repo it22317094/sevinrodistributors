@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AddSupplierModal } from "@/components/AddSupplierModal";
+import { realtimeDb } from "@/lib/firebase";
+import { ref, onValue } from "firebase/database";
 import { 
   Package, 
   Users, 
@@ -25,7 +27,82 @@ const recentActivity = [
 
 export default function Dashboard() {
   const [showSupplierModal, setShowSupplierModal] = useState(false);
+  const [overdueCount, setOverdueCount] = useState(0);
+  const [lowInventoryCount, setLowInventoryCount] = useState(0);
+  const [pendingDeliveriesCount, setPendingDeliveriesCount] = useState(0);
+  const [todayDeliveriesCount, setTodayDeliveriesCount] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Listen for overdue invoices
+    const invoicesRef = ref(realtimeDb, 'invoices');
+    const invoicesUnsubscribe = onValue(invoicesRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const invoices = snapshot.val();
+        const today = new Date();
+        let overdue = 0;
+        
+        Object.values(invoices).forEach((invoice: any) => {
+          if (invoice.dueDate) {
+            const dueDate = new Date(invoice.dueDate);
+            if (dueDate < today && invoice.status !== 'paid') {
+              overdue++;
+            }
+          }
+        });
+        
+        setOverdueCount(overdue);
+      }
+    });
+
+    // Listen for low inventory
+    const inventoryRef = ref(realtimeDb, 'inventory');
+    const inventoryUnsubscribe = onValue(inventoryRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const inventory = snapshot.val();
+        let lowStock = 0;
+        
+        Object.values(inventory).forEach((item: any) => {
+          const currentQty = item.quantity || 0;
+          const minQty = item.minQuantity || 10;
+          if (currentQty < minQty) {
+            lowStock++;
+          }
+        });
+        
+        setLowInventoryCount(lowStock);
+      }
+    });
+
+    // Listen for pending deliveries
+    const ordersRef = ref(realtimeDb, 'orders');
+    const ordersUnsubscribe = onValue(ordersRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const orders = snapshot.val();
+        let pending = 0;
+        let today = 0;
+        const todayDate = new Date().toISOString().split('T')[0];
+        
+        Object.values(orders).forEach((order: any) => {
+          if (order.status === 'pending' || order.status === 'processing') {
+            pending++;
+            if (order.deliveryDate === todayDate) {
+              today++;
+            }
+          }
+        });
+        
+        setPendingDeliveriesCount(pending);
+        setTodayDeliveriesCount(today);
+      }
+    });
+
+    return () => {
+      invoicesUnsubscribe();
+      inventoryUnsubscribe();
+      ordersUnsubscribe();
+    };
+  }, []);
 
   const handleQuickAction = (action: string) => {
     switch (action) {
@@ -204,45 +281,56 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <AlertTriangle className="h-4 w-4 text-destructive" />
-                  <span className="text-sm">12 customer accounts are overdue</span>
+              {overdueCount > 0 && (
+                <div className="flex items-center justify-between p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                    <span className="text-sm">{overdueCount} invoice{overdueCount !== 1 ? 's' : ''} overdue</span>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleAlert("overdue")}
+                  >
+                    View Details
+                  </Button>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleAlert("overdue")}
-                >
-                  View Details
-                </Button>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Package className="h-4 w-4 text-yellow-600" />
-                  <span className="text-sm">Low inventory: 5 items need restocking</span>
+              )}
+              {lowInventoryCount > 0 && (
+                <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Package className="h-4 w-4 text-yellow-600" />
+                    <span className="text-sm">Low inventory: {lowInventoryCount} item{lowInventoryCount !== 1 ? 's' : ''} need restocking</span>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleAlert("inventory")}
+                  >
+                    Reorder
+                  </Button>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleAlert("inventory")}
-                >
-                  Reorder
-                </Button>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Truck className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm">5 deliveries scheduled for today</span>
+              )}
+              {pendingDeliveriesCount > 0 && (
+                <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Truck className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm">{pendingDeliveriesCount} pending deliver{pendingDeliveriesCount !== 1 ? 'ies' : 'y'}{todayDeliveriesCount > 0 ? `, ${todayDeliveriesCount} scheduled today` : ''}</span>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleAlert("delivery")}
+                  >
+                    View Schedule
+                  </Button>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleAlert("delivery")}
-                >
-                  View Schedule
-                </Button>
-              </div>
+              )}
+              {overdueCount === 0 && lowInventoryCount === 0 && pendingDeliveriesCount === 0 && (
+                <div className="text-center py-4 text-muted-foreground">
+                  <p className="text-sm">No alerts at the moment. Everything looks good!</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
