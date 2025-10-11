@@ -75,9 +75,10 @@ export const generateInvoicePDF = async (
   // Items table
   const tableData = sale.items.map((item, index) => {
     const inventoryItem = inventory.find(inv => inv.sku === item.sku);
+    const itemCode = (item as any).sku || (item as any).code || (item as any).item_code || (item as any).item || '';
     return [
       (index + 1).toString(),
-      item.sku,
+      itemCode,
       item.description || inventoryItem?.name || 'T-Shirt',
       item.qty.toString(),
       `${item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
