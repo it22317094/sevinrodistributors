@@ -29,11 +29,19 @@ export interface Order {
   invoiceNumber?: number;
 }
 
+type SavedInvoiceItem = {
+  item_code: string;
+  description: string;
+  quantity: number;
+  price: number;
+  total: number;
+};
+
 export interface InvoiceData {
   number: number;
   customerId: string;
   customerName: string;
-  items: AggregatedItem[];
+  items: SavedInvoiceItem[];
   subtotal: number;
   total: number;
   date: string;
@@ -149,7 +157,13 @@ export function useInvoiceFromOrders() {
           number: newInvoiceNumber,
           customerId,
           customerName,
-          items: aggregatedItems,
+          items: aggregatedItems.map(({ itemCode, description, quantity, unitPrice, total }) => ({
+            item_code: itemCode,
+            description,
+            quantity,
+            price: unitPrice,
+            total,
+          })),
           subtotal,
           total,
           date: new Date().toISOString().split('T')[0],
