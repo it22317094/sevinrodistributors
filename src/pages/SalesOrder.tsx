@@ -223,41 +223,56 @@ export default function SalesOrder() {
         </div>
 
         {aggregatedData.length > 0 && (
-          <Card className="mb-6 border-primary/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Live Order Summary
-              </CardTitle>
+          <Card className="mb-6 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <TrendingUp className="h-6 w-6 text-primary" />
+                  Real-Time Order Dashboard
+                </CardTitle>
+                <div className="flex gap-4 text-sm">
+                  <div className="text-center">
+                    <p className="text-muted-foreground">Total Styles</p>
+                    <p className="text-2xl font-bold text-primary">{aggregatedData.length}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-muted-foreground">Total Units</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {aggregatedData.reduce((sum, item) => sum + item.totalQuantity, 0)}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Style No</TableHead>
-                      <TableHead>Total Quantity</TableHead>
-                      <TableHead>Sizes</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {aggregatedData.map((item) => (
-                      <TableRow key={item.styleNo}>
-                        <TableCell className="font-medium">{item.styleNo}</TableCell>
-                        <TableCell className="font-bold text-primary">{item.totalQuantity}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2 flex-wrap">
-                            {Object.entries(item.sizes).map(([size, qty]) => (
-                              <span key={size} className="px-2 py-1 bg-primary/10 rounded text-sm">
-                                {size}: {qty}
-                              </span>
-                            ))}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="grid gap-3">
+                {aggregatedData.map((item) => (
+                  <div 
+                    key={item.styleNo}
+                    className="bg-background rounded-lg border border-border p-4 hover:border-primary/50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <h4 className="font-semibold text-lg">{item.styleNo}</h4>
+                        <p className="text-sm text-muted-foreground">Style Number</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-primary">{item.totalQuantity}</p>
+                        <p className="text-sm text-muted-foreground">Total Quantity</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      {Object.entries(item.sizes).map(([size, qty]) => (
+                        <div 
+                          key={size} 
+                          className="px-3 py-1.5 bg-primary/10 text-primary rounded-md font-medium text-sm border border-primary/20"
+                        >
+                          {size}: <span className="font-bold">{qty}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
