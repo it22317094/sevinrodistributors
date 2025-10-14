@@ -58,7 +58,7 @@ export default function SalesOrder() {
   }, []);
 
   useEffect(() => {
-    const ordersRef = ref(realtimeDb, 'orders');
+    const ordersRef = ref(realtimeDb, 'salesOrders');
     
     const unsubscribe = onValue(ordersRef, (snapshot) => {
       const data = snapshot.val();
@@ -161,7 +161,7 @@ export default function SalesOrder() {
     }
  
      try {
-      const ordersRef = ref(realtimeDb, 'orders');
+      const ordersRef = ref(realtimeDb, 'salesOrders');
       await push(ordersRef, {
         userId: auth.currentUser!.uid,
         customerName,

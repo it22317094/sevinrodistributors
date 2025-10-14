@@ -38,7 +38,7 @@
         }
       }
     },
-    "orders": {
+    "salesOrders": {
       ".read": "auth != null",
       ".write": "auth != null"
     },
