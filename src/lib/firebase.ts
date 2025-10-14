@@ -10,6 +10,7 @@ import { getDatabase } from "firebase/database";
 const firebaseConfig = {
   apiKey: "AIzaSyBzTDTD2YN19kyE_BM-and62V2heGZbK5k",
   authDomain: "sevinro-distributors.firebaseapp.com",
+  databaseURL: "https://sevinro-distributors-default-rtdb.firebaseio.com",
   projectId: "sevinro-distributors",
   storageBucket: "sevinro-distributors.firebasestorage.app",
   messagingSenderId: "16376436724",
