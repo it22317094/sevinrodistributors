@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,9 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, TrendingUp } from "lucide-react";
 import { realtimeDb } from "@/lib/firebase";
-import { ref, push } from "firebase/database";
+import { ref, push, onValue } from "firebase/database";
 import { useToast } from "@/hooks/use-toast";
 
 interface OrderItem {
@@ -22,6 +22,12 @@ interface OrderItem {
   remarks: string;
 }
 
+interface AggregatedItem {
+  styleNo: string;
+  totalQuantity: number;
+  sizes: { [key: string]: number };
+}
+
 export default function SalesOrder() {
   const { toast } = useToast();
   const [customerName, setCustomerName] = useState("");
@@ -31,6 +37,47 @@ export default function SalesOrder() {
   const [items, setItems] = useState<OrderItem[]>([
     { id: "1", styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }
   ]);
+  const [aggregatedData, setAggregatedData] = useState<AggregatedItem[]>([]);
+
+  useEffect(() => {
+    const ordersRef = ref(realtimeDb, 'orders');
+    
+    const unsubscribe = onValue(ordersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        setAggregatedData([]);
+        return;
+      }
+
+      const itemsMap = new Map<string, AggregatedItem>();
+      
+      Object.values(data).forEach((order: any) => {
+        if (order.items) {
+          order.items.forEach((item: OrderItem) => {
+            if (!item.styleNo) return;
+            
+            if (itemsMap.has(item.styleNo)) {
+              const existing = itemsMap.get(item.styleNo)!;
+              existing.totalQuantity += item.quantity;
+              if (item.size) {
+                existing.sizes[item.size] = (existing.sizes[item.size] || 0) + item.quantity;
+              }
+            } else {
+              itemsMap.set(item.styleNo, {
+                styleNo: item.styleNo,
+                totalQuantity: item.quantity,
+                sizes: item.size ? { [item.size]: item.quantity } : {}
+              });
+            }
+          });
+        }
+      });
+
+      setAggregatedData(Array.from(itemsMap.values()));
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const addItem = () => {
     const newItem: OrderItem = {
@@ -126,6 +173,47 @@ export default function SalesOrder() {
           <h1 className="text-3xl font-bold text-primary mb-2">Create Sales Order</h1>
           <p className="text-muted-foreground">Create a new sales order for your customers</p>
         </div>
+
+        {aggregatedData.length > 0 && (
+          <Card className="mb-6 border-primary/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Live Order Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Style No</TableHead>
+                      <TableHead>Total Quantity</TableHead>
+                      <TableHead>Sizes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {aggregatedData.map((item) => (
+                      <TableRow key={item.styleNo}>
+                        <TableCell className="font-medium">{item.styleNo}</TableCell>
+                        <TableCell className="font-bold text-primary">{item.totalQuantity}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-2 flex-wrap">
+                            {Object.entries(item.sizes).map(([size, qty]) => (
+                              <span key={size} className="px-2 py-1 bg-primary/10 rounded text-sm">
+                                {size}: {qty}
+                              </span>
+                            ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="mb-6">
           <CardHeader>
