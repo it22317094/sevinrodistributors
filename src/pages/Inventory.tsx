@@ -16,11 +16,10 @@ import { useToast } from "@/hooks/use-toast";
 
 interface InventoryItem {
   id: string;
-  inventoryNo: string;
+  styleNo: string;
   item: string;
   description: string;
   unitPrice: number;
-  category: string;
   quantity?: number;
   unit?: string;
   minStock?: number;
@@ -56,14 +55,13 @@ export default function Inventory() {
   const [adjustNotes, setAdjustNotes] = useState("");
   
   const [formData, setFormData] = useState({
-    inventoryNo: "",
+    styleNo: "",
     item: "",
     description: "",
-    unitPrice: "",
-    category: ""
+    unitPrice: ""
   });
 
-  const categories = ["Cotton", "Silk", "Polyester", "Linen", "Wool", "Denim"];
+  
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -87,10 +85,6 @@ export default function Inventory() {
       item.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter(item => item.category === selectedCategory);
-    }
-
     filtered.sort((a, b) => {
       const aStock = a.quantity || 0;
       const bStock = b.quantity || 0;
@@ -98,7 +92,7 @@ export default function Inventory() {
     });
 
     setFilteredInventory(filtered);
-  }, [inventory, searchTerm, selectedCategory, sortOrder]);
+  }, [inventory, searchTerm, sortOrder]);
 
   const handleAddItem = async () => {
     if (!isAuthenticated) return;
@@ -108,11 +102,10 @@ export default function Inventory() {
       const newItemRef = push(inventoryRef);
       
       await set(newItemRef, {
-        inventoryNo: formData.inventoryNo,
+        styleNo: formData.styleNo,
         item: formData.item,
         description: formData.description,
         unitPrice: parseFloat(formData.unitPrice),
-        category: formData.category,
         quantity: 0,
         unit: "units",
         minStock: 10,
@@ -122,11 +115,10 @@ export default function Inventory() {
       });
 
       setFormData({
-        inventoryNo: "",
+        styleNo: "",
         item: "",
         description: "",
-        unitPrice: "",
-        category: ""
+        unitPrice: ""
       });
       setShowAddModal(false);
       
@@ -284,7 +276,6 @@ export default function Inventory() {
   const totalItems = inventory.length;
   const lowStockItems = inventory.filter(item => (item.quantity || 0) <= (item.minStock || 0)).length;
   const totalValue = inventory.reduce((sum, item) => sum + (item.unitPrice * (item.quantity || 0)), 0);
-  const uniqueCategories = [...new Set(inventory.map(item => item.category))].length;
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -301,7 +292,7 @@ export default function Inventory() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Items</CardTitle>
@@ -332,16 +323,6 @@ export default function Inventory() {
               <p className="text-xs text-muted-foreground">Current inventory value</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Categories</CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{uniqueCategories}</div>
-              <p className="text-xs text-muted-foreground">Fabric categories</p>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Search and Filter */}
@@ -357,17 +338,6 @@ export default function Inventory() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter by Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>{category}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <Button 
                 variant="outline" 
                 onClick={() => setSortOrder(sortOrder === "low-high" ? "high-low" : "low-high")}
@@ -389,7 +359,7 @@ export default function Inventory() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[120px]">Inventory No</TableHead>
+                    <TableHead className="w-[120px]">Style No</TableHead>
                     <TableHead>Item</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead className="text-right">Unit Price</TableHead>
@@ -410,11 +380,10 @@ export default function Inventory() {
                   {filteredInventory.length > 0 ? (
                     filteredInventory.map((item) => (
                       <TableRow key={item.id}>
-                        <TableCell className="font-medium">{item.inventoryNo}</TableCell>
+                        <TableCell className="font-medium">{item.styleNo}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{item.item}</span>
-                            <Badge variant="outline" className="text-xs">{item.category}</Badge>
                             {(item.quantity || 0) <= (item.minStock || 0) && (
                               <Badge variant="destructive" className="text-xs">Low Stock</Badge>
                             )}
@@ -464,12 +433,12 @@ export default function Inventory() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="inventoryNo">Inventory Number</Label>
+                <Label htmlFor="styleNo">Style No</Label>
                 <Input
-                  id="inventoryNo"
-                  value={formData.inventoryNo}
-                  onChange={(e) => setFormData({ ...formData, inventoryNo: e.target.value })}
-                  placeholder="INV-001"
+                  id="styleNo"
+                  value={formData.styleNo}
+                  onChange={(e) => setFormData({ ...formData, styleNo: e.target.value })}
+                  placeholder="STY-001"
                 />
               </div>
               <div>
@@ -501,26 +470,13 @@ export default function Inventory() {
                   placeholder="12.50"
                 />
               </div>
-              <div>
-                <Label htmlFor="category">Category</Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>{category}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={() => setShowAddModal(false)}>
                   Cancel
                 </Button>
                 <Button 
                   onClick={handleAddItem}
-                  disabled={!formData.inventoryNo || !formData.item || !formData.description || !formData.unitPrice || !formData.category}
+                  disabled={!formData.styleNo || !formData.item || !formData.description || !formData.unitPrice}
                 >
                   Save
                 </Button>
