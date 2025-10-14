@@ -161,37 +161,57 @@ export default function SalesOrder() {
     }
  
      try {
-      const ordersRef = ref(realtimeDb, 'salesOrders');
-      await push(ordersRef, {
-        userId: auth.currentUser!.uid,
-        customerName,
-        orderDate,
-        deliveryDate,
-        notes,
-        items: validItems,
-        total: calculateTotal(),
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      });
+       const payload = {
+         userId: auth.currentUser!.uid,
+         customerName,
+         orderDate,
+         deliveryDate,
+         notes,
+         items: validItems,
+         total: calculateTotal(),
+         status: 'pending',
+         createdAt: new Date().toISOString()
+       };
 
-      toast({
-        title: "Success",
-        description: "Sales order created successfully"
-      });
+       let saved = false;
 
-      // Reset form
-      setCustomerName("");
-      setDeliveryDate("");
-      setNotes("");
-      setItems([{ id: Date.now().toString(), styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }]);
-    } catch (error: any) {
-      console.error('Failed to create sales order:', error);
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to create sales order",
-        variant: "destructive"
-      });
-    }
+       // Attempt to save to the new path first
+       try {
+         const salesOrdersRef = ref(realtimeDb, 'salesOrders');
+         await push(salesOrdersRef, payload);
+         saved = true;
+       } catch (err: any) {
+         // If rules for 'salesOrders' aren't deployed yet, fallback to legacy 'orders'
+         const isPermissionDenied = (err?.code || err?.message || '').toString().toUpperCase().includes('PERMISSION_DENIED');
+         if (isPermissionDenied) {
+           const legacyOrdersRef = ref(realtimeDb, 'orders');
+           await push(legacyOrdersRef, payload);
+           saved = true;
+         } else {
+           throw err;
+         }
+       }
+
+       if (saved) {
+         toast({
+           title: "Success",
+           description: "Sales order created successfully"
+         });
+
+         // Reset form
+         setCustomerName("");
+         setDeliveryDate("");
+         setNotes("");
+         setItems([{ id: Date.now().toString(), styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }]);
+       }
+     } catch (error: any) {
+       console.error('Failed to create sales order:', error);
+       toast({
+         title: "Error",
+         description: error?.message || "Failed to create sales order",
+         variant: "destructive"
+       });
+     }
   };
 
   return (
