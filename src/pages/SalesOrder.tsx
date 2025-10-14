@@ -31,6 +31,7 @@ interface AggregatedItem {
 export default function SalesOrder() {
   const { toast } = useToast();
   const [customerName, setCustomerName] = useState("");
+  const [customers, setCustomers] = useState<string[]>([]);
   const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0]);
   const [deliveryDate, setDeliveryDate] = useState("");
   const [notes, setNotes] = useState("");
@@ -38,6 +39,23 @@ export default function SalesOrder() {
     { id: "1", styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }
   ]);
   const [aggregatedData, setAggregatedData] = useState<AggregatedItem[]>([]);
+
+  useEffect(() => {
+    const customersRef = ref(realtimeDb, 'customers');
+    
+    const unsubscribe = onValue(customersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        setCustomers([]);
+        return;
+      }
+
+      const customerNames = Object.values(data).map((customer: any) => customer.name).filter(Boolean);
+      setCustomers([...new Set(customerNames)]);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const ordersRef = ref(realtimeDb, 'orders');
@@ -223,12 +241,18 @@ export default function SalesOrder() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="customerName">Customer Name</Label>
-                <Input
-                  id="customerName"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="Enter customer name"
-                />
+                <Select value={customerName} onValueChange={setCustomerName}>
+                  <SelectTrigger id="customerName">
+                    <SelectValue placeholder="Select customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((name) => (
+                      <SelectItem key={name} value={name}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="orderDate">Order Date</Label>
