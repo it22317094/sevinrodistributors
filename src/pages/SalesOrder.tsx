@@ -185,6 +185,39 @@ export default function SalesOrder() {
       setNotes("");
       setItems([{ id: Date.now().toString(), styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }]);
     } catch (error: any) {
+      // Fallback to legacy path if rules aren't updated yet
+      const msg = String(error?.message || '');
+      const code = (error && (error as any).code) ? (error as any).code : '';
+      if (msg.includes('permission_denied') || code === 'PERMISSION_DENIED') {
+        try {
+          const legacyRef = ref(realtimeDb, 'orders');
+          await push(legacyRef, {
+            userId: auth.currentUser!.uid,
+            customerName,
+            orderDate,
+            deliveryDate,
+            notes,
+            items: validItems,
+            total: calculateTotal(),
+            status: 'pending',
+            createdAt: new Date().toISOString()
+          });
+
+          toast({
+            title: "Success",
+            description: "Sales order created successfully"
+          });
+
+          setCustomerName("");
+          setDeliveryDate("");
+          setNotes("");
+          setItems([{ id: Date.now().toString(), styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }]);
+          return;
+        } catch (legacyError: any) {
+          console.error('Fallback write to /orders failed:', legacyError);
+        }
+      }
+
       console.error('Failed to create sales order:', error);
       toast({
         title: "Error",

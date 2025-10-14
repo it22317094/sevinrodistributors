@@ -59,7 +59,7 @@ export function useInvoiceFromOrders() {
   const fetchEligibleOrders = async (customerId: string) => {
     try {
       setLoading(true);
-      const ordersRef = ref(realtimeDb, 'orders');
+      const ordersRef = ref(realtimeDb, 'salesOrders');
       const snapshot = await get(ordersRef);
       
       if (!snapshot.exists()) {
@@ -178,7 +178,7 @@ export function useInvoiceFromOrders() {
 
         // Update orders to mark as invoiced
         const updatePromises = eligibleOrders.map(order => {
-          const orderRef = ref(realtimeDb, `orders/${order.id}`);
+          const orderRef = ref(realtimeDb, `salesOrders/${order.id}`);
           return set(orderRef, {
             ...order,
             invoiced: true,
