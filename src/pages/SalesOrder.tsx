@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2, Save } from "lucide-react";
 import { realtimeDb } from "@/lib/firebase";
@@ -14,9 +15,11 @@ interface OrderItem {
   id: string;
   styleNo: string;
   description: string;
+  size: string;
   quantity: number;
   rate: number;
   amount: number;
+  remarks: string;
 }
 
 export default function SalesOrder() {
@@ -26,7 +29,7 @@ export default function SalesOrder() {
   const [deliveryDate, setDeliveryDate] = useState("");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<OrderItem[]>([
-    { id: "1", styleNo: "", description: "", quantity: 0, rate: 0, amount: 0 }
+    { id: "1", styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }
   ]);
 
   const addItem = () => {
@@ -34,9 +37,11 @@ export default function SalesOrder() {
       id: Date.now().toString(),
       styleNo: "",
       description: "",
+      size: "",
       quantity: 0,
       rate: 0,
-      amount: 0
+      amount: 0,
+      remarks: ""
     };
     setItems([...items, newItem]);
   };
@@ -104,7 +109,7 @@ export default function SalesOrder() {
       setCustomerName("");
       setDeliveryDate("");
       setNotes("");
-      setItems([{ id: Date.now().toString(), styleNo: "", description: "", quantity: 0, rate: 0, amount: 0 }]);
+      setItems([{ id: Date.now().toString(), styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }]);
     } catch (error) {
       toast({
         title: "Error",
@@ -184,9 +189,11 @@ export default function SalesOrder() {
                   <TableRow>
                     <TableHead>Style No</TableHead>
                     <TableHead>Description</TableHead>
+                    <TableHead>Size</TableHead>
                     <TableHead>Quantity</TableHead>
                     <TableHead>Rate</TableHead>
                     <TableHead>Amount</TableHead>
+                    <TableHead>Remarks</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -210,6 +217,23 @@ export default function SalesOrder() {
                         />
                       </TableCell>
                       <TableCell>
+                        <Select
+                          value={item.size}
+                          onValueChange={(value) => updateItem(item.id, 'size', value)}
+                        >
+                          <SelectTrigger className="w-24">
+                            <SelectValue placeholder="Size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="S">S</SelectItem>
+                            <SelectItem value="M">M</SelectItem>
+                            <SelectItem value="L">L</SelectItem>
+                            <SelectItem value="XL">XL</SelectItem>
+                            <SelectItem value="2XL">2XL</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
                         <Input
                           type="number"
                           value={item.quantity || ''}
@@ -229,6 +253,14 @@ export default function SalesOrder() {
                       </TableCell>
                       <TableCell className="font-medium">
                         Rs. {item.amount.toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={item.remarks}
+                          onChange={(e) => updateItem(item.id, 'remarks', e.target.value)}
+                          placeholder="Remarks"
+                          className="w-32"
+                        />
                       </TableCell>
                       <TableCell>
                         {items.length > 1 && (
