@@ -17,6 +17,7 @@ import Billing from "./pages/Billing";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Suppliers from "./pages/Suppliers";
+import SalesOrder from "./pages/SalesOrder";
 
 const queryClient = new QueryClient();
 
@@ -108,6 +109,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <Suppliers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sales-order"
+          element={
+            <ProtectedRoute>
+              <SalesOrder />
             </ProtectedRoute>
           }
         />

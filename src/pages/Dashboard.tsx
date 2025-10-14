@@ -111,7 +111,7 @@ export default function Dashboard() {
         navigate("/invoices/create");
         break;
       case "order":
-        navigate("/inventory");
+        navigate("/sales-order");
         break;
       case "customer":
         navigate("/customers");
