@@ -76,7 +76,7 @@ export default function Dashboard() {
     });
 
     // Listen for pending deliveries
-    const ordersRef = ref(realtimeDb, 'salesOrders');
+    const ordersRef = ref(realtimeDb, 'orders');
     const ordersUnsubscribe = onValue(ordersRef, (snapshot) => {
       if (snapshot.exists()) {
         const orders = snapshot.val();

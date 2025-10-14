@@ -65,7 +65,7 @@ export const useCustomerInvoiceGenerator = () => {
       const [companySnap, customerSnap, ordersSnap, exchangeRateSnap] = await Promise.all([
         get(ref(realtimeDb, 'company')),
         get(ref(realtimeDb, `customers/${params.customerId}`)),
-        get(ref(realtimeDb, 'salesOrders')),
+        get(ref(realtimeDb, 'orders')),
         get(ref(realtimeDb, 'settings/exchangeRates/usdToLkr'))
       ]);
 
