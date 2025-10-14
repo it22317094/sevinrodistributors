@@ -12,6 +12,7 @@ const navigationItems = [
   { name: "Dashboard", href: "/dashboard" },
   { name: "Customers", href: "/customers" },
   { name: "Inventory", href: "/inventory" },
+  { name: "Sales Order", href: "/sales-order" },
   { name: "Invoices", href: "/invoices" },
   { name: "Delivery", href: "/delivery" },
   { name: "Reports", href: "/reports" },
