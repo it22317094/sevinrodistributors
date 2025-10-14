@@ -160,6 +160,7 @@ export const useInvoiceGenerator = () => {
           cellPadding: 5,
           lineColor: [0, 0, 0],
           lineWidth: 0.1,
+          textColor: [0, 0, 0], // Black text color
         },
         headStyles: {
           fillColor: [230, 126, 34], // Orange #E67E22

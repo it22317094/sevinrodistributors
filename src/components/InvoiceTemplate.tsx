@@ -97,7 +97,7 @@ export const generateInvoicePDF = async (
   
   try {
     autoTable(doc, {
-      head: [['No', 'Item Code', 'Description', 'Qty', 'Price', '', 'Total']], // FIXED: Header name
+      head: [['No', 'Item Code', 'Description', 'Qty', 'Price', '', 'Total']],
       body: tableData,
       startY: 90,
       styles: {
@@ -105,6 +105,7 @@ export const generateInvoicePDF = async (
         cellPadding: 3.5,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
+        textColor: [0, 0, 0], // Black text color
       },
       headStyles: {
         fillColor: [255, 165, 0], // Orange header

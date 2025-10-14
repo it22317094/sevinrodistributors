@@ -262,6 +262,7 @@ export const useCustomerInvoiceGenerator = () => {
             cellPadding: 4,
             lineColor: [255, 165, 0], // Orange borders
             lineWidth: 0.5,
+            textColor: [0, 0, 0], // Black text color
           },
           headStyles: {
             fillColor: [255, 165, 0], // Orange header background
