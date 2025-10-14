@@ -193,9 +193,27 @@ export default function SalesOrder() {
        }
 
        if (saved) {
+         // Create delivery record
+         const totalItems = validItems.reduce((sum, item) => sum + item.quantity, 0);
+         const deliveryPayload = {
+           companyName: customerName,
+           address: notes || "To be determined",
+           deliveryDate,
+           itemsDelivered: totalItems,
+           status: "Scheduled",
+           createdAt: new Date().toISOString()
+         };
+
+         try {
+           const deliveriesRef = ref(realtimeDb, 'deliveries');
+           await push(deliveriesRef, deliveryPayload);
+         } catch (deliveryError) {
+           console.error('Failed to create delivery record:', deliveryError);
+         }
+
          toast({
            title: "Success",
-           description: "Sales order created successfully"
+           description: "Sales order and delivery created successfully"
          });
 
          // Reset form
