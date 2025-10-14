@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Trash2, Save, TrendingUp } from "lucide-react";
-import { realtimeDb } from "@/lib/firebase";
+import { realtimeDb, auth } from "@/lib/firebase";
 import { ref, push, onValue } from "firebase/database";
 import { useToast } from "@/hooks/use-toast";
 
@@ -151,10 +151,19 @@ export default function SalesOrder() {
       });
       return;
     }
-
-    try {
+    if (!auth.currentUser) {
+      toast({
+        title: "Session expired",
+        description: "Please sign in again to save orders",
+        variant: "destructive",
+      });
+      return;
+    }
+ 
+     try {
       const ordersRef = ref(realtimeDb, 'orders');
       await push(ordersRef, {
+        userId: auth.currentUser!.uid,
         customerName,
         orderDate,
         deliveryDate,
@@ -175,10 +184,11 @@ export default function SalesOrder() {
       setDeliveryDate("");
       setNotes("");
       setItems([{ id: Date.now().toString(), styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }]);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Failed to create sales order:', error);
       toast({
         title: "Error",
-        description: "Failed to create sales order",
+        description: error?.message || "Failed to create sales order",
         variant: "destructive"
       });
     }
