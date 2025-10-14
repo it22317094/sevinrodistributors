@@ -15,7 +15,8 @@ import {
   FileText,
   Truck,
   DollarSign,
-  Plus
+  Plus,
+  Warehouse
 } from "lucide-react";
 
 const recentActivity = [
@@ -117,6 +118,9 @@ export default function Dashboard() {
         break;
       case "delivery":
         navigate("/delivery");
+        break;
+      case "inventory":
+        navigate("/inventory");
         break;
       default:
         break;
@@ -238,6 +242,14 @@ export default function Dashboard() {
                 >
                   <Truck className="h-6 w-6 mb-2" />
                   Schedule Delivery
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="h-20 flex flex-col items-center justify-center"
+                  onClick={() => handleQuickAction("inventory")}
+                >
+                  <Warehouse className="h-6 w-6 mb-2" />
+                  Inventory
                 </Button>
               </div>
             </CardContent>
