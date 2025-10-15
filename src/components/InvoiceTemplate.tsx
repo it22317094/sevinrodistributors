@@ -72,20 +72,20 @@ export const generateInvoicePDF = async (
   doc.text(`Date - ${new Date(sale.date).toLocaleDateString('en-GB')}`, invoiceDetailsX, 80);
   
   // Items table
-  // FIXED: Convert items object to array and use correct field names
-  const tableData = Object.values(sale.items).map((item: any, index) => {
+  const tableData = Object.values(sale.items).map((item: any) => {
     const inventoryItem = inventory.find(inv => inv.sku === item.sku);
-    const itemCode = item.item_code || item.code || '';
+    const itemCode = item.item_code || item.code || item.styleNo || '';
     const quantity = item.qty || item.quantity || 0;
+    const amount = quantity * item.price;
     
     return [
-      (index + 1).toString(),
       itemCode,
-      item.description || inventoryItem?.name || 'T-Shirt',
+      item.description || inventoryItem?.name || '',
+      item.size || '',
       quantity.toString(),
       `${item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      `RS`,
-      `${(quantity * item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      item.remarks || ''
     ];
   });
   
@@ -97,7 +97,7 @@ export const generateInvoicePDF = async (
   
   try {
     autoTable(doc, {
-      head: [['No', 'Style No', 'Description', 'Qty', 'Price', '', 'Total']],
+      head: [['Style No', 'Description', 'Size', 'Quantity', 'Rate', 'Amount', 'Remarks']],
       body: tableData,
       startY: 90,
       styles: {
@@ -105,22 +105,22 @@ export const generateInvoicePDF = async (
         cellPadding: 3.5,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
-        textColor: [0, 0, 0], // Black text color
+        textColor: [0, 0, 0],
       },
       headStyles: {
-        fillColor: [255, 165, 0], // Orange header
+        fillColor: [255, 165, 0],
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         fontSize: 9,
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 20 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 45 },
-        3: { halign: 'center', cellWidth: 20 },
-        4: { halign: 'right', cellWidth: 25 },
-        5: { halign: 'left', cellWidth: 15 },
-        6: { halign: 'right', cellWidth: 30 },
+        0: { cellWidth: 22 },
+        1: { cellWidth: 35 },
+        2: { halign: 'center', cellWidth: 15 },
+        3: { halign: 'center', cellWidth: 18 },
+        4: { halign: 'right', cellWidth: 22 },
+        5: { halign: 'right', cellWidth: 25 },
+        6: { cellWidth: 33 },
       },
       margin: { left: 20, right: 20 },
     });
