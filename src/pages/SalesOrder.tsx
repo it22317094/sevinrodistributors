@@ -39,7 +39,6 @@ export default function SalesOrder() {
     { id: "1", styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }
   ]);
   const [aggregatedData, setAggregatedData] = useState<AggregatedItem[]>([]);
-  const [availableStyleCodes, setAvailableStyleCodes] = useState<Array<{ code: string; description: string; price: number }>>([]);
 
   useEffect(() => {
     const customersRef = ref(realtimeDb, 'customers');
@@ -53,28 +52,6 @@ export default function SalesOrder() {
 
       const customerNames = Object.values(data).map((customer: any) => customer.name).filter(Boolean);
       setCustomers([...new Set(customerNames)]);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // Fetch style codes from item codes
-  useEffect(() => {
-    const itemCodesRef = ref(realtimeDb, 'itemCodes');
-    
-    const unsubscribe = onValue(itemCodesRef, (snapshot) => {
-      const data = snapshot.val();
-      if (!data) {
-        setAvailableStyleCodes([]);
-        return;
-      }
-
-      const codes = Object.values(data).map((item: any) => ({
-        code: item.code,
-        description: item.description,
-        price: item.price
-      }));
-      setAvailableStyleCodes(codes);
     });
 
     return () => unsubscribe();
@@ -149,15 +126,6 @@ export default function SalesOrder() {
       }
       return item;
     }));
-  };
-
-  const selectStyleCode = (itemId: string, selectedCode: string) => {
-    const selectedItem = availableStyleCodes.find(item => item.code === selectedCode);
-    if (selectedItem) {
-      updateItem(itemId, 'styleNo', selectedItem.code);
-      updateItem(itemId, 'description', selectedItem.description);
-      updateItem(itemId, 'rate', selectedItem.price);
-    }
   };
 
   const calculateTotal = () => {
@@ -408,26 +376,12 @@ export default function SalesOrder() {
                   {items.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell>
-                        <div className="flex flex-col gap-2">
-                          <Select onValueChange={(value) => selectStyleCode(item.id, value)}>
-                            <SelectTrigger className="w-32">
-                              <SelectValue placeholder="Quick Select" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableStyleCodes.map((styleItem) => (
-                                <SelectItem key={styleItem.code} value={styleItem.code}>
-                                  {styleItem.code}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Input
-                            value={item.styleNo}
-                            onChange={(e) => updateItem(item.id, 'styleNo', e.target.value)}
-                            placeholder="Style No"
-                            className="w-32"
-                          />
-                        </div>
+                        <Input
+                          value={item.styleNo}
+                          onChange={(e) => updateItem(item.id, 'styleNo', e.target.value)}
+                          placeholder="Style No"
+                          className="w-32"
+                        />
                       </TableCell>
                       <TableCell>
                         <Input
