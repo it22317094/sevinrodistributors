@@ -56,7 +56,7 @@ export function Header() {
         {/* Logo */}
         <Link to="/dashboard" className="flex items-center space-x-2">
           <img 
-            src="/lovable-uploads/d3e71f67-5eb2-4568-acc2-f04fe120fa6b.png" 
+            src="/assets/images/sevinro-logo.png" 
             alt="Sevinro Distributors" 
             className="h-8 w-auto sm:h-10 md:h-12 lg:h-14 xl:h-16 max-w-none object-contain"
           />
@@ -101,7 +101,7 @@ export function Header() {
             <div className="flex flex-col space-y-4 mt-8">
               <div className="flex items-center space-x-2 mb-6">
                 <img 
-                  src="/lovable-uploads/d3e71f67-5eb2-4568-acc2-f04fe120fa6b.png" 
+                  src="/assets/images/sevinro-logo.png" 
                   alt="Sevinro Distributors" 
                   className="h-6 w-auto sm:h-8 md:h-10 object-contain"
                 />
