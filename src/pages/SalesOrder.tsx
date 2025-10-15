@@ -225,7 +225,7 @@ export default function SalesOrder() {
         }, {} as any),
         total: calculateTotal(),
         date: orderDate,
-        orderNo: `SO-${Date.now()}`
+        orderNo: orderNo
       };
 
       const customerData = customerName ? {
@@ -237,10 +237,10 @@ export default function SalesOrder() {
         saleData as any,
         customerData as any,
         [],
-        Math.floor(Date.now() / 1000)
+        parseInt(invoiceNo)
       );
 
-      doc.save(`Sales_Order_${customerName || 'Draft'}_${new Date().toLocaleDateString()}.pdf`);
+      doc.save(`Sales_Order_${customerName || 'Draft'}_${new Date().toLocaleDateString().replace(/\//g, '_')}.pdf`);
 
       toast({
         title: "PDF Generated",
