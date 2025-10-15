@@ -9,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { ref, push, get, runTransaction, set } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
-
 interface InvoiceItem {
   id: string;
   item_code: string;
@@ -18,49 +17,73 @@ interface InvoiceItem {
   price: number;
   total: number;
 }
-
 interface Customer {
   id: string;
   name: string;
   address: string;
 }
-
 interface ItemCode {
   id: string;
   code: string;
   description: string;
   price: number;
 }
-
 const InvoiceCreate = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const [loading, setLoading] = useState(false);
   const [currentInvoiceNumber, setCurrentInvoiceNumber] = useState<number | null>(null);
-  
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
-  const [items, setItems] = useState<InvoiceItem[]>([
-    { id: '1', item_code: '', description: '', quantity: 0, price: 0, total: 0 }
-  ]);
-  
+  const [items, setItems] = useState<InvoiceItem[]>([{
+    id: '1',
+    item_code: '',
+    description: '',
+    quantity: 0,
+    price: 0,
+    total: 0
+  }]);
+
   // Item codes state
   const [itemCodes, setItemCodes] = useState<ItemCode[]>([]);
-  const [newItemCode, setNewItemCode] = useState({ code: '', description: '', price: 0 });
+  const [newItemCode, setNewItemCode] = useState({
+    code: '',
+    description: '',
+    price: 0
+  });
   const [showAddItemCode, setShowAddItemCode] = useState(false);
 
   // Predefined items based on the invoice image
-  const predefinedItems = [
-    { code: 'AU001', description: 'T Shirt', price: 960 },
-    { code: 'SL1086', description: 'T Shirt', price: 890 },
-    { code: 'AU011', description: 'T Shirt', price: 890 },
-    { code: 'SL1069', description: 'T Shirt', price: 890 },
-    { code: 'SL1087', description: 'T Shirt', price: 960 },
-    { code: 'SL1082', description: 'T Shirt', price: 990 }
-  ];
+  const predefinedItems = [{
+    code: 'AU001',
+    description: 'T Shirt',
+    price: 960
+  }, {
+    code: 'SL1086',
+    description: 'T Shirt',
+    price: 890
+  }, {
+    code: 'AU011',
+    description: 'T Shirt',
+    price: 890
+  }, {
+    code: 'SL1069',
+    description: 'T Shirt',
+    price: 890
+  }, {
+    code: 'SL1087',
+    description: 'T Shirt',
+    price: 960
+  }, {
+    code: 'SL1082',
+    description: 'T Shirt',
+    price: 990
+  }];
 
   // Load customers from Firebase
   const [customers, setCustomers] = useState<Customer[]>([]);
-  
+
   // Load customers from Firebase
   const loadCustomers = async () => {
     try {
@@ -87,7 +110,6 @@ const InvoiceCreate = () => {
     const handleFocus = () => {
       loadCustomers();
     };
-    
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
@@ -105,25 +127,20 @@ const InvoiceCreate = () => {
       return 10000;
     }
   };
-
-
   const generateNextInvoiceNumber = async (): Promise<number> => {
     const counterRef = ref(realtimeDb, 'invoiceCounter');
-    
-    const result = await runTransaction(counterRef, (current) => {
+    const result = await runTransaction(counterRef, current => {
       if (current === null) {
         return 10000; // First invoice starts at 10000
       }
       return current + 1;
     });
-    
     if (result.committed) {
       return result.snapshot.val();
     } else {
       throw new Error('Failed to generate invoice number');
     }
   };
-
 
   // Load item codes from Firebase
   const loadItemCodes = async () => {
@@ -151,24 +168,31 @@ const InvoiceCreate = () => {
       await loadItemCodes();
       await loadCustomers();
     };
-    
     loadData();
   }, []);
   const addItem = () => {
     const newId = (items.length + 1).toString();
-    setItems([...items, { id: newId, item_code: '', description: '', quantity: 0, price: 0, total: 0 }]);
+    setItems([...items, {
+      id: newId,
+      item_code: '',
+      description: '',
+      quantity: 0,
+      price: 0,
+      total: 0
+    }]);
   };
-
   const removeItem = (id: string) => {
     if (items.length > 1) {
       setItems(items.filter(item => item.id !== id));
     }
   };
-
   const updateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
     setItems(items.map(item => {
       if (item.id === id) {
-        const updatedItem = { ...item, [field]: value };
+        const updatedItem = {
+          ...item,
+          [field]: value
+        };
         if (field === 'quantity' || field === 'price') {
           updatedItem.total = updatedItem.quantity * updatedItem.price;
         }
@@ -177,7 +201,6 @@ const InvoiceCreate = () => {
       return item;
     }));
   };
-
   const selectPredefinedItem = (itemId: string, selectedCode: string) => {
     const predefined = [...predefinedItems, ...itemCodes].find(item => item.code === selectedCode);
     if (predefined) {
@@ -193,21 +216,22 @@ const InvoiceCreate = () => {
       toast({
         variant: "destructive",
         title: "Validation Error",
-        description: "Please fill in all item code fields with valid values",
+        description: "Please fill in all item code fields with valid values"
       });
       return;
     }
-
     try {
       const itemCodesRef = ref(realtimeDb, 'itemCodes');
       await push(itemCodesRef, newItemCode);
-      
       toast({
         title: "Success",
-        description: "Item code added successfully!",
+        description: "Item code added successfully!"
       });
-      
-      setNewItemCode({ code: '', description: '', price: 0 });
+      setNewItemCode({
+        code: '',
+        description: '',
+        price: 0
+      });
       setShowAddItemCode(false);
       await loadItemCodes(); // Reload the item codes
     } catch (error) {
@@ -215,45 +239,38 @@ const InvoiceCreate = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to add item code",
+        description: "Failed to add item code"
       });
     }
   };
-
   const calculateSubtotal = () => {
     return items.reduce((sum, item) => sum + item.total, 0);
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate required fields (invoiceNumber is auto-generated, so not included)
     const validationErrors: string[] = [];
-    
     if (!selectedCustomer) {
       validationErrors.push("Customer is required");
     }
-    
     if (items.some(item => !item.description || item.quantity <= 0)) {
       validationErrors.push("All items must have a description and quantity greater than 0");
     }
-    
     if (validationErrors.length > 0) {
       toast({
         variant: "destructive",
         title: "Validation Error",
-        description: validationErrors.join(", "),
+        description: validationErrors.join(", ")
       });
       return;
     }
-
     setLoading(true);
     try {
       // Generate new invoice number using transaction
       const newInvoiceNumber = await generateNextInvoiceNumber();
       // Generate order number based on invoice number (e.g., 10013 -> OR10013)
       const newOrderNumber = `OR${newInvoiceNumber}`;
-      
       const subtotal = calculateSubtotal();
       const invoiceData = {
         number: newInvoiceNumber,
@@ -278,27 +295,23 @@ const InvoiceCreate = () => {
       // Save invoice under the numeric invoice number as key
       const invoiceRef = ref(realtimeDb, `invoices/${newInvoiceNumber}`);
       await set(invoiceRef, invoiceData);
-      
       toast({
         title: "Success",
-        description: "Invoice created successfully!",
+        description: "Invoice created successfully!"
       });
-      
       navigate('/invoices');
     } catch (error: any) {
       console.error('Error creating invoice:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to create invoice. Please check your permissions.",
+        description: error.message || "Failed to create invoice. Please check your permissions."
       });
     } finally {
       setLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center gap-4 mb-6">
           <Button variant="ghost" onClick={() => navigate('/dashboard')}>
@@ -320,22 +333,11 @@ const InvoiceCreate = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="invoiceNumber">Invoice Number</Label>
-                    <Input
-                      id="invoiceNumber"
-                      value={currentInvoiceNumber ? currentInvoiceNumber.toString() : 'Loading...'}
-                      readOnly
-                      className="bg-muted"
-                      placeholder="Loading..."
-                    />
+                    <Input id="invoiceNumber" value={currentInvoiceNumber ? currentInvoiceNumber.toString() : 'Loading...'} readOnly className="bg-muted" placeholder="Loading..." />
                   </div>
                   <div>
                     <Label htmlFor="date">Date</Label>
-                    <Input
-                      id="date"
-                      value={new Date().toLocaleDateString('en-CA')}
-                      readOnly
-                      className="bg-muted"
-                    />
+                    <Input id="date" value={new Date().toLocaleDateString('en-CA')} readOnly className="bg-muted" />
                   </div>
                 </div>
 
@@ -346,24 +348,16 @@ const InvoiceCreate = () => {
                       <SelectValue placeholder="Select a customer" />
                     </SelectTrigger>
                     <SelectContent>
-                      {customers.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
+                      {customers.map(customer => <SelectItem key={customer.id} value={customer.id}>
                           {customer.name} - {customer.address}
-                        </SelectItem>
-                      ))}
+                        </SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
                   <Label htmlFor="orderNumber">Order Number</Label>
-                  <Input
-                    id="orderNumber"
-                    value={currentInvoiceNumber ? `OR${currentInvoiceNumber}` : 'Loading...'}
-                    readOnly
-                    className="bg-muted"
-                    placeholder="Loading..."
-                  />
+                  <Input id="orderNumber" value={currentInvoiceNumber ? `OR${currentInvoiceNumber}` : 'Loading...'} readOnly className="bg-muted" placeholder="Loading..." />
                 </div>
               </CardContent>
             </Card>
@@ -398,139 +392,84 @@ const InvoiceCreate = () => {
                     <CardDescription>Add products and services</CardDescription>
                   </div>
                   <div className="flex gap-2">
-                    <Button 
-                      type="button" 
-                      onClick={() => setShowAddItemCode(!showAddItemCode)} 
-                      variant="outline"
-                      size="sm"
-                    >
-                      {showAddItemCode ? 'Cancel' : 'Add Style Code'}
+                    <Button type="button" onClick={() => setShowAddItemCode(!showAddItemCode)} variant="outline" size="sm">
+                      {showAddItemCode ? 'Cancel' : 'Add Item Code'}
                     </Button>
                     <Button type="button" onClick={addItem} variant="outline">
                       <Plus className="h-4 w-4 mr-2" />
-                      Add Style No
+                      Add Item
                     </Button>
                   </div>
                 </div>
             </CardHeader>
             <CardContent>
               {/* Add Item Code Section */}
-              {showAddItemCode && (
-                <div className="mb-6 p-4 border rounded-lg bg-muted/50">
-                  <h4 className="text-sm font-medium mb-3">Add New Item Code</h4>
+              {showAddItemCode && <div className="mb-6 p-4 border rounded-lg bg-muted/50">
+                  <h4 className="text-sm font-medium mb-3">Add New Style Code</h4>
                   <div className="grid grid-cols-4 gap-4">
                     <div>
                       <Label htmlFor="newCode">Code *</Label>
-                      <Input
-                        id="newCode"
-                        value={newItemCode.code}
-                        onChange={(e) => setNewItemCode({...newItemCode, code: e.target.value})}
-                        placeholder="e.g., AU001"
-                        className="bg-background"
-                      />
+                      <Input id="newCode" value={newItemCode.code} onChange={e => setNewItemCode({
+                    ...newItemCode,
+                    code: e.target.value
+                  })} placeholder="e.g., AU001" className="bg-background" />
                     </div>
                     <div>
                       <Label htmlFor="newDescription">Description *</Label>
-                      <Input
-                        id="newDescription"
-                        value={newItemCode.description}
-                        onChange={(e) => setNewItemCode({...newItemCode, description: e.target.value})}
-                        placeholder="e.g., T Shirt"
-                        className="bg-background"
-                      />
+                      <Input id="newDescription" value={newItemCode.description} onChange={e => setNewItemCode({
+                    ...newItemCode,
+                    description: e.target.value
+                  })} placeholder="e.g., T Shirt" className="bg-background" />
                     </div>
                     <div>
                       <Label htmlFor="newPrice">Price (RS) *</Label>
-                      <Input
-                        id="newPrice"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={newItemCode.price || ''}
-                        onChange={(e) => setNewItemCode({...newItemCode, price: parseFloat(e.target.value) || 0})}
-                        placeholder="0.00"
-                        className="bg-background"
-                      />
+                      <Input id="newPrice" type="number" min="0" step="0.01" value={newItemCode.price || ''} onChange={e => setNewItemCode({
+                    ...newItemCode,
+                    price: parseFloat(e.target.value) || 0
+                  })} placeholder="0.00" className="bg-background" />
                     </div>
                     <div className="flex items-end">
-                      <Button 
-                        type="button" 
-                        onClick={addItemCode}
-                        className="w-full"
-                      >
+                      <Button type="button" onClick={addItemCode} className="w-full">
                         Add Code
                       </Button>
                     </div>
                   </div>
-                </div>
-              )}
+                </div>}
               
               <div className="space-y-4">
-                {items.map((item, index) => (
-                  <div key={item.id} className="grid grid-cols-12 gap-4 items-end">
+                {items.map((item, index) => <div key={item.id} className="grid grid-cols-12 gap-4 items-end">
                     <div className="col-span-2">
                       <Label>Quick Select</Label>
-                      <Select onValueChange={(value) => selectPredefinedItem(item.id, value)}>
+                      <Select onValueChange={value => selectPredefinedItem(item.id, value)}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select item" />
                         </SelectTrigger>
                         <SelectContent className="bg-background border border-border shadow-lg z-50">
-                          {[...predefinedItems, ...itemCodes].map((predefined) => (
-                            <SelectItem 
-                              key={predefined.code} 
-                              value={predefined.code}
-                              className="bg-background hover:bg-accent"
-                            >
+                          {[...predefinedItems, ...itemCodes].map(predefined => <SelectItem key={predefined.code} value={predefined.code} className="bg-background hover:bg-accent">
                               {predefined.code} - RS {predefined.price}
-                            </SelectItem>
-                          ))}
+                            </SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     
                     <div className="col-span-2">
-                      <Label>Style No *</Label>
-                      <Input
-                        value={item.item_code}
-                        onChange={(e) => updateItem(item.id, 'item_code', e.target.value)}
-                        placeholder="e.g., AU001"
-                        required
-                      />
+                      <Label>Item Code *</Label>
+                      <Input value={item.item_code} onChange={e => updateItem(item.id, 'item_code', e.target.value)} placeholder="e.g., AU001" required />
                     </div>
                     
                     <div className="col-span-3">
                       <Label>Description *</Label>
-                      <Input
-                        value={item.description}
-                        onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                        placeholder="Item description"
-                        required
-                      />
+                      <Input value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} placeholder="Item description" required />
                     </div>
                     
                     <div className="col-span-2">
                       <Label>Quantity *</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={item.quantity || ''}
-                        onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 0)}
-                        placeholder="0"
-                        required
-                      />
+                      <Input type="number" min="0" value={item.quantity || ''} onChange={e => updateItem(item.id, 'quantity', parseInt(e.target.value) || 0)} placeholder="0" required />
                     </div>
                     
                     <div className="col-span-2">
                       <Label>Price (RS) *</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.price || ''}
-                        onChange={(e) => updateItem(item.id, 'price', parseFloat(e.target.value) || 0)}
-                        placeholder="0.00"
-                        required
-                      />
+                      <Input type="number" min="0" step="0.01" value={item.price || ''} onChange={e => updateItem(item.id, 'price', parseFloat(e.target.value) || 0)} placeholder="0.00" required />
                     </div>
                     
                     <div className="col-span-1">
@@ -541,18 +480,11 @@ const InvoiceCreate = () => {
                     </div>
                     
                     <div className="col-span-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeItem(item.id)}
-                        disabled={items.length === 1}
-                      >
+                      <Button type="button" variant="ghost" size="icon" onClick={() => removeItem(item.id)} disabled={items.length === 1}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
-                  </div>
-                ))}
+                  </div>)}
               </div>
             </CardContent>
           </Card>
@@ -568,8 +500,6 @@ const InvoiceCreate = () => {
           </div>
         </form>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default InvoiceCreate;
