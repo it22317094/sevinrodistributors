@@ -28,6 +28,13 @@ interface AggregatedItem {
   sizes: { [key: string]: number };
 }
 
+interface ItemCode {
+  id: string;
+  code: string;
+  description: string;
+  price: number;
+}
+
 export default function SalesOrder() {
   const { toast } = useToast();
   const [customerName, setCustomerName] = useState("");
@@ -39,7 +46,9 @@ export default function SalesOrder() {
     { id: "1", styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }
   ]);
   const [aggregatedData, setAggregatedData] = useState<AggregatedItem[]>([]);
+  const [availableItemCodes, setAvailableItemCodes] = useState<ItemCode[]>([]);
 
+  // Fetch customers
   useEffect(() => {
     const customersRef = ref(realtimeDb, 'customers');
     
@@ -52,6 +61,29 @@ export default function SalesOrder() {
 
       const customerNames = Object.values(data).map((customer: any) => customer.name).filter(Boolean);
       setCustomers([...new Set(customerNames)]);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch item codes from Create Invoice page
+  useEffect(() => {
+    const itemCodesRef = ref(realtimeDb, 'itemCodes');
+    
+    const unsubscribe = onValue(itemCodesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        setAvailableItemCodes([]);
+        return;
+      }
+
+      const codes = Object.keys(data).map(key => ({
+        id: key,
+        code: data[key].code,
+        description: data[key].description,
+        price: data[key].price
+      }));
+      setAvailableItemCodes(codes);
     });
 
     return () => unsubscribe();
@@ -126,6 +158,15 @@ export default function SalesOrder() {
       }
       return item;
     }));
+  };
+
+  const selectItemCode = (itemId: string, selectedCode: string) => {
+    const itemCode = availableItemCodes.find(ic => ic.code === selectedCode);
+    if (itemCode) {
+      updateItem(itemId, 'styleNo', itemCode.code);
+      updateItem(itemId, 'description', itemCode.description);
+      updateItem(itemId, 'rate', itemCode.price);
+    }
   };
 
   const calculateTotal = () => {
@@ -376,12 +417,18 @@ export default function SalesOrder() {
                   {items.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell>
-                        <Input
-                          value={item.styleNo}
-                          onChange={(e) => updateItem(item.id, 'styleNo', e.target.value)}
-                          placeholder="Style No"
-                          className="w-32"
-                        />
+                        <Select value={item.styleNo} onValueChange={(value) => selectItemCode(item.id, value)}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue placeholder="Select Style" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableItemCodes.map((ic) => (
+                              <SelectItem key={ic.id} value={ic.code}>
+                                {ic.code}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         <Input
