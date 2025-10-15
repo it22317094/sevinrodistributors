@@ -417,18 +417,28 @@ export default function SalesOrder() {
                   {items.map((item) => (
                     <TableRow key={item.id}>
                       <TableCell>
-                        <Select value={item.styleNo} onValueChange={(value) => selectItemCode(item.id, value)}>
-                          <SelectTrigger className="w-32">
-                            <SelectValue placeholder="Select Style" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableItemCodes.map((ic) => (
-                              <SelectItem key={ic.id} value={ic.code}>
-                                {ic.code}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <div className="space-y-2">
+                          {availableItemCodes.length > 0 && (
+                            <Select value={item.styleNo} onValueChange={(value) => selectItemCode(item.id, value)}>
+                              <SelectTrigger className="w-32">
+                                <SelectValue placeholder="Quick Select" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableItemCodes.map((ic) => (
+                                  <SelectItem key={ic.id} value={ic.code}>
+                                    {ic.code}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                          <Input
+                            value={item.styleNo}
+                            onChange={(e) => updateItem(item.id, 'styleNo', e.target.value)}
+                            placeholder="Style No"
+                            className="w-32"
+                          />
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Input
