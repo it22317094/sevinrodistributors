@@ -79,7 +79,29 @@
     },
     "deliveries": {
       ".read": "auth != null",
-      ".write": "auth != null"
+      ".write": "auth != null",
+      ".indexOn": ["companyName", "deliveryDate", "status", "createdAt"],
+      "$deliveryId": {
+        ".validate": "newData.hasChildren(['companyName', 'address', 'deliveryDate', 'status', 'itemsDelivered', 'createdAt'])",
+        "companyName": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "address": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "deliveryDate": {
+          ".validate": "newData.isString() && newData.val().length >= 10"
+        },
+        "status": {
+          ".validate": "newData.isString() && newData.val().matches(/^(Scheduled|In Transit|Delivered|Cancelled)$/)"
+        },
+        "itemsDelivered": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "createdAt": {
+          ".validate": "newData.isString()"
+        }
+      }
     }
   }
 }
