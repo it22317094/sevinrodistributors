@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Trash2, Save, TrendingUp, FileText } from "lucide-react";
 import { generateInvoicePDF } from "@/components/InvoiceTemplate";
 import { realtimeDb, auth } from "@/lib/firebase";
-import { ref, push, onValue } from "firebase/database";
+import { ref, push, onValue, get, runTransaction } from "firebase/database";
 import { useToast } from "@/hooks/use-toast";
 
 interface OrderItem {
@@ -67,6 +67,28 @@ export default function SalesOrder() {
     });
 
     return () => unsubscribe();
+  }, []);
+
+  // Auto-generate Invoice and Order numbers from database counters
+  useEffect(() => {
+    const loadCounters = async () => {
+      try {
+        // Get next invoice number
+        const invoiceCounterRef = ref(realtimeDb, 'salesInvoiceCounter');
+        const invoiceSnapshot = await get(invoiceCounterRef);
+        const nextInvoice = invoiceSnapshot.val() === null ? 1 : invoiceSnapshot.val() + 1;
+        setInvoiceNo(`SI${String(nextInvoice).padStart(4, '0')}`);
+
+        // Get next order number
+        const orderCounterRef = ref(realtimeDb, 'salesOrderCounter');
+        const orderSnapshot = await get(orderCounterRef);
+        const nextOrder = orderSnapshot.val() === null ? 1 : orderSnapshot.val() + 1;
+        setOrderNo(`SO${String(nextOrder).padStart(4, '0')}`);
+      } catch (error) {
+        console.error('Error loading counters:', error);
+      }
+    };
+    loadCounters();
   }, []);
 
   // Fetch item codes from Create Invoice page
@@ -263,6 +285,17 @@ export default function SalesOrder() {
     }
  
      try {
+       // Increment counters before saving
+       const invoiceCounterRef = ref(realtimeDb, 'salesInvoiceCounter');
+       await runTransaction(invoiceCounterRef, (current) => {
+         return current === null ? 1 : current + 1;
+       });
+
+       const orderCounterRef = ref(realtimeDb, 'salesOrderCounter');
+       await runTransaction(orderCounterRef, (current) => {
+         return current === null ? 1 : current + 1;
+       });
+
        const payload = {
          userId: auth.currentUser!.uid,
          customerName,
@@ -320,13 +353,20 @@ export default function SalesOrder() {
            description: "Sales order and delivery created successfully"
          });
 
-         // Reset form
+         // Reset form and regenerate new numbers
          setCustomerName("");
-         setInvoiceNo("");
-         setOrderNo("");
          setDeliveryDate("");
          setNotes("");
          setItems([{ id: Date.now().toString(), styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }]);
+         
+         // Generate new invoice and order numbers
+         const invoiceSnapshot = await get(invoiceCounterRef);
+         const nextInvoice = invoiceSnapshot.val() === null ? 1 : invoiceSnapshot.val() + 1;
+         setInvoiceNo(`SI${String(nextInvoice).padStart(4, '0')}`);
+
+         const orderSnapshot = await get(orderCounterRef);
+         const nextOrder = orderSnapshot.val() === null ? 1 : orderSnapshot.val() + 1;
+         setOrderNo(`SO${String(nextOrder).padStart(4, '0')}`);
        }
      } catch (error: any) {
        console.error('Failed to create sales order:', error);
