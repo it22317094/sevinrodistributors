@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Save, TrendingUp } from "lucide-react";
+import { Plus, Trash2, Save, TrendingUp, FileText } from "lucide-react";
+import { generateInvoicePDF } from "@/components/InvoiceTemplate";
 import { realtimeDb, auth } from "@/lib/firebase";
 import { ref, push, onValue } from "firebase/database";
 import { useToast } from "@/hooks/use-toast";
@@ -171,6 +172,64 @@ export default function SalesOrder() {
 
   const calculateTotal = () => {
     return items.reduce((sum, item) => sum + item.amount, 0);
+  };
+
+  const handleGeneratePDF = async () => {
+    const validItems = items.filter(item => item.styleNo && item.quantity > 0);
+    if (validItems.length === 0) {
+      toast({
+        title: "No Items",
+        description: "Please add at least one item to generate PDF",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Prepare sale data in the format expected by InvoiceTemplate
+      const saleData = {
+        items: validItems.reduce((acc, item) => {
+          acc[item.id] = {
+            item_code: item.styleNo,
+            description: item.description,
+            qty: item.quantity,
+            price: item.rate,
+            size: item.size,
+            remarks: item.remarks
+          };
+          return acc;
+        }, {} as any),
+        total: calculateTotal(),
+        date: orderDate,
+        orderNo: `SO-${Date.now()}`
+      };
+
+      const customerData = customerName ? {
+        name: customerName,
+        address: notes || ''
+      } : undefined;
+
+      const doc = await generateInvoicePDF(
+        saleData as any,
+        customerData as any,
+        [],
+        Math.floor(Date.now() / 1000)
+      );
+
+      doc.save(`Sales_Order_${customerName || 'Draft'}_${new Date().toLocaleDateString()}.pdf`);
+
+      toast({
+        title: "PDF Generated",
+        description: "Invoice PDF has been downloaded successfully"
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleSaveOrder = async () => {
@@ -393,10 +452,16 @@ export default function SalesOrder() {
         <Card className="mb-6">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Order Items</CardTitle>
-            <Button onClick={addItem} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Item
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleGeneratePDF} size="sm" variant="outline">
+                <FileText className="h-4 w-4 mr-2" />
+                Generate PDF
+              </Button>
+              <Button onClick={addItem} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Item
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
