@@ -35,6 +35,7 @@ const InvoiceCreate = () => {
   } = useToast();
   const [loading, setLoading] = useState(false);
   const [currentInvoiceNumber, setCurrentInvoiceNumber] = useState<number | null>(null);
+  const [currentOrderNumber, setCurrentOrderNumber] = useState<string>('');
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [items, setItems] = useState<InvoiceItem[]>([{
     id: '1',
@@ -160,13 +161,27 @@ const InvoiceCreate = () => {
     }
   };
 
-  // Load the next invoice number, item codes, and customers when component mounts
+  // Load the next invoice number, order number, item codes, and customers when component mounts
   useEffect(() => {
     const loadData = async () => {
-      const nextNumber = await getNextInvoiceNumber();
-      setCurrentInvoiceNumber(nextNumber);
-      await loadItemCodes();
-      await loadCustomers();
+      try {
+        // Get next invoice number (starts from 10016, synced with sales order)
+        const invoiceCounterRef = ref(realtimeDb, 'salesInvoiceCounter');
+        const invoiceSnapshot = await get(invoiceCounterRef);
+        const nextInvoice = invoiceSnapshot.val() === null ? 10016 : invoiceSnapshot.val() + 1;
+        setCurrentInvoiceNumber(nextInvoice);
+        
+        // Get next order number (starts from OR10016, synced with sales order)
+        const orderCounterRef = ref(realtimeDb, 'salesOrderCounter');
+        const orderSnapshot = await get(orderCounterRef);
+        const nextOrder = orderSnapshot.val() === null ? 10016 : orderSnapshot.val() + 1;
+        setCurrentOrderNumber(`OR${nextOrder}`);
+        
+        await loadItemCodes();
+        await loadCustomers();
+      } catch (error) {
+        console.error('Error loading counters:', error);
+      }
     };
     loadData();
   }, []);
@@ -330,17 +345,6 @@ const InvoiceCreate = () => {
                 <CardDescription>Basic invoice information</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="invoiceNumber">Invoice Number</Label>
-                    <Input id="invoiceNumber" value={currentInvoiceNumber ? currentInvoiceNumber.toString() : 'Loading...'} readOnly className="bg-muted" placeholder="Loading..." />
-                  </div>
-                  <div>
-                    <Label htmlFor="date">Date</Label>
-                    <Input id="date" value={new Date().toLocaleDateString('en-CA')} readOnly className="bg-muted" />
-                  </div>
-                </div>
-
                 <div>
                   <Label htmlFor="customer">Customer *</Label>
                   <Select value={selectedCustomer} onValueChange={setSelectedCustomer}>
@@ -355,9 +359,26 @@ const InvoiceCreate = () => {
                   </Select>
                 </div>
 
-                <div>
-                  <Label htmlFor="orderNumber">Order Number</Label>
-                  <Input id="orderNumber" value={currentInvoiceNumber ? `OR${currentInvoiceNumber}` : 'Loading...'} readOnly className="bg-muted" placeholder="Loading..." />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="invoiceNumber">Invoice Number</Label>
+                    <Input id="invoiceNumber" value={currentInvoiceNumber ? currentInvoiceNumber.toString() : 'Loading...'} readOnly className="bg-muted" placeholder="Loading..." />
+                  </div>
+                  <div>
+                    <Label htmlFor="orderNumber">Order Number</Label>
+                    <Input id="orderNumber" value={currentOrderNumber || 'Loading...'} readOnly className="bg-muted" placeholder="Loading..." />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="date">Date</Label>
+                    <Input id="date" value={new Date().toLocaleDateString('en-CA')} readOnly className="bg-muted" />
+                  </div>
+                  <div>
+                    <Label htmlFor="notes">Notes</Label>
+                    <Input id="notes" placeholder="Additional notes" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
