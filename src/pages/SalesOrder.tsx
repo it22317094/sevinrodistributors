@@ -40,6 +40,8 @@ export default function SalesOrder() {
   const { toast } = useToast();
   const [customerName, setCustomerName] = useState("");
   const [customers, setCustomers] = useState<string[]>([]);
+  const [invoiceNo, setInvoiceNo] = useState("");
+  const [orderNo, setOrderNo] = useState("");
   const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0]);
   const [deliveryDate, setDeliveryDate] = useState("");
   const [notes, setNotes] = useState("");
@@ -264,6 +266,8 @@ export default function SalesOrder() {
        const payload = {
          userId: auth.currentUser!.uid,
          customerName,
+         invoiceNo,
+         orderNo,
          orderDate,
          deliveryDate,
          notes,
@@ -318,6 +322,8 @@ export default function SalesOrder() {
 
          // Reset form
          setCustomerName("");
+         setInvoiceNo("");
+         setOrderNo("");
          setDeliveryDate("");
          setNotes("");
          setItems([{ id: Date.now().toString(), styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }]);
@@ -416,6 +422,26 @@ export default function SalesOrder() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Label htmlFor="invoiceNo">Invoice No</Label>
+                <Input
+                  id="invoiceNo"
+                  type="text"
+                  value={invoiceNo}
+                  onChange={(e) => setInvoiceNo(e.target.value)}
+                  placeholder="INV-001"
+                />
+              </div>
+              <div>
+                <Label htmlFor="orderNo">Order No</Label>
+                <Input
+                  id="orderNo"
+                  type="text"
+                  value={orderNo}
+                  onChange={(e) => setOrderNo(e.target.value)}
+                  placeholder="ORD-001"
+                />
               </div>
               <div>
                 <Label htmlFor="orderDate">Order Date</Label>
