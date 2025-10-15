@@ -489,7 +489,7 @@ const InvoiceCreate = () => {
                     </div>
                     
                     <div className="col-span-2">
-                      <Label>Item Code *</Label>
+                      <Label>Style No *</Label>
                       <Input
                         value={item.item_code}
                         onChange={(e) => updateItem(item.id, 'item_code', e.target.value)}

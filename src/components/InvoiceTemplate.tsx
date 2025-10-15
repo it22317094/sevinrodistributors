@@ -97,7 +97,7 @@ export const generateInvoicePDF = async (
   
   try {
     autoTable(doc, {
-      head: [['No', 'Item Code', 'Description', 'Qty', 'Price', '', 'Total']],
+      head: [['No', 'Style No', 'Description', 'Qty', 'Price', '', 'Total']],
       body: tableData,
       startY: 90,
       styles: {

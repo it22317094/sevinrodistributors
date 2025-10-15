@@ -93,7 +93,7 @@ export function InvoicePreviewModal({
               <TableHeader>
                 <TableRow className="bg-orange-200">
                   <TableHead className="w-16 border-r border-orange-300">No.</TableHead>
-                  <TableHead className="border-r border-orange-300">Item Code</TableHead>
+                  <TableHead className="border-r border-orange-300">Style No</TableHead>
                   <TableHead className="border-r border-orange-300">Description</TableHead>
                   <TableHead className="w-20 border-r border-orange-300">Qty</TableHead>
                   <TableHead className="w-32 border-r border-orange-300">Price</TableHead>
