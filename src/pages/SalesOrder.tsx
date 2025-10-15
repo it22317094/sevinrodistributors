@@ -333,7 +333,7 @@ export default function SalesOrder() {
       doc.setFontSize(9);
       
       doc.line(20, signatureY, 90, signatureY);
-      doc.text('Authorised By', 45, signatureY + 10, { align: 'center' });
+      doc.text('Authorized By', 45, signatureY + 10, { align: 'center' });
       
       doc.line(pageWidth - 90, signatureY, pageWidth - 20, signatureY);
       doc.text('Customer Signature', pageWidth - 55, signatureY + 10, { align: 'center' });
