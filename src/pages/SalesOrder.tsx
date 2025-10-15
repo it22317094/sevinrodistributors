@@ -73,17 +73,17 @@ export default function SalesOrder() {
   useEffect(() => {
     const loadCounters = async () => {
       try {
-        // Get next invoice number
+        // Get next invoice number (starts from 10016)
         const invoiceCounterRef = ref(realtimeDb, 'salesInvoiceCounter');
         const invoiceSnapshot = await get(invoiceCounterRef);
-        const nextInvoice = invoiceSnapshot.val() === null ? 1 : invoiceSnapshot.val() + 1;
-        setInvoiceNo(`SI${String(nextInvoice).padStart(4, '0')}`);
+        const nextInvoice = invoiceSnapshot.val() === null ? 10016 : invoiceSnapshot.val() + 1;
+        setInvoiceNo(String(nextInvoice));
 
-        // Get next order number
+        // Get next order number (starts from OR10016)
         const orderCounterRef = ref(realtimeDb, 'salesOrderCounter');
         const orderSnapshot = await get(orderCounterRef);
-        const nextOrder = orderSnapshot.val() === null ? 1 : orderSnapshot.val() + 1;
-        setOrderNo(`SO${String(nextOrder).padStart(4, '0')}`);
+        const nextOrder = orderSnapshot.val() === null ? 10016 : orderSnapshot.val() + 1;
+        setOrderNo(`OR${nextOrder}`);
       } catch (error) {
         console.error('Error loading counters:', error);
       }
@@ -288,12 +288,12 @@ export default function SalesOrder() {
        // Increment counters before saving
        const invoiceCounterRef = ref(realtimeDb, 'salesInvoiceCounter');
        await runTransaction(invoiceCounterRef, (current) => {
-         return current === null ? 1 : current + 1;
+         return current === null ? 10016 : current + 1;
        });
 
        const orderCounterRef = ref(realtimeDb, 'salesOrderCounter');
        await runTransaction(orderCounterRef, (current) => {
-         return current === null ? 1 : current + 1;
+         return current === null ? 10016 : current + 1;
        });
 
        const payload = {
@@ -361,12 +361,12 @@ export default function SalesOrder() {
          
          // Generate new invoice and order numbers
          const invoiceSnapshot = await get(invoiceCounterRef);
-         const nextInvoice = invoiceSnapshot.val() === null ? 1 : invoiceSnapshot.val() + 1;
-         setInvoiceNo(`SI${String(nextInvoice).padStart(4, '0')}`);
+         const nextInvoice = invoiceSnapshot.val() === null ? 10016 : invoiceSnapshot.val() + 1;
+         setInvoiceNo(String(nextInvoice));
 
          const orderSnapshot = await get(orderCounterRef);
-         const nextOrder = orderSnapshot.val() === null ? 1 : orderSnapshot.val() + 1;
-         setOrderNo(`SO${String(nextOrder).padStart(4, '0')}`);
+         const nextOrder = orderSnapshot.val() === null ? 10016 : orderSnapshot.val() + 1;
+         setOrderNo(`OR${nextOrder}`);
        }
      } catch (error: any) {
        console.error('Failed to create sales order:', error);
