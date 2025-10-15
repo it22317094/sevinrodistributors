@@ -404,7 +404,7 @@ const InvoiceCreate = () => {
                       variant="outline"
                       size="sm"
                     >
-                      {showAddItemCode ? 'Cancel' : 'Add Item Code'}
+                      {showAddItemCode ? 'Cancel' : 'Add Style Code'}
                     </Button>
                     <Button type="button" onClick={addItem} variant="outline">
                       <Plus className="h-4 w-4 mr-2" />
