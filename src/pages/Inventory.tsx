@@ -166,31 +166,17 @@ export default function Inventory() {
       }
 
       // Build updated item with new values for empty fields
-      const updatedItem: any = {
+      const updatedItem = {
         ...selectedItem,
         quantity: newQuantity,
+        item: updateFormData.item || selectedItem.item,
+        description: updateFormData.description || selectedItem.description,
+        unitPrice: updateFormData.unitPrice ? parseFloat(updateFormData.unitPrice) : selectedItem.unitPrice,
+        unit: updateFormData.unit || selectedItem.unit,
+        minStock: updateFormData.minStock ? parseInt(updateFormData.minStock) : selectedItem.minStock,
+        supplier: updateFormData.supplier || selectedItem.supplier,
         updatedAt: Date.now()
       };
-
-      // Only update fields if they were empty and user provided new values
-      if (!selectedItem.item && updateFormData.item) {
-        updatedItem.item = updateFormData.item;
-      }
-      if (!selectedItem.description && updateFormData.description) {
-        updatedItem.description = updateFormData.description;
-      }
-      if (!selectedItem.unitPrice && updateFormData.unitPrice) {
-        updatedItem.unitPrice = parseFloat(updateFormData.unitPrice);
-      }
-      if (!selectedItem.unit && updateFormData.unit) {
-        updatedItem.unit = updateFormData.unit;
-      }
-      if (!selectedItem.minStock && updateFormData.minStock) {
-        updatedItem.minStock = parseInt(updateFormData.minStock);
-      }
-      if (!selectedItem.supplier && updateFormData.supplier) {
-        updatedItem.supplier = updateFormData.supplier;
-      }
 
       // Update inventory item
       const itemRef = ref(realtimeDb, `inventory/${selectedItem.id}`);
@@ -228,7 +214,7 @@ export default function Inventory() {
       
       toast({
         title: "Success",
-        description: "Stock updated successfully",
+        description: "Stock quantity updated successfully",
       });
     } catch (error) {
       console.error("Error adjusting stock:", error);
@@ -496,7 +482,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="item">Item Name</Label>
+                <Label htmlFor="item">Item Name (Optional)</Label>
                 <Input
                   id="item"
                   value={formData.item}
@@ -505,7 +491,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">Description (Optional)</Label>
                 <Input
                   id="description"
                   value={formData.description}
@@ -514,7 +500,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="unitPrice">Unit Price</Label>
+                <Label htmlFor="unitPrice">Unit Price (Optional)</Label>
                 <Input
                   id="unitPrice"
                   type="number"
@@ -525,7 +511,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="unit">Unit</Label>
+                <Label htmlFor="unit">Unit (Optional)</Label>
                 <Input
                   id="unit"
                   value={formData.unit}
@@ -534,7 +520,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="minStock">Minimum Stock</Label>
+                <Label htmlFor="minStock">Minimum Stock (Optional)</Label>
                 <Input
                   id="minStock"
                   type="number"
@@ -544,7 +530,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="supplier">Supplier</Label>
+                <Label htmlFor="supplier">Supplier (Optional)</Label>
                 <Input
                   id="supplier"
                   value={formData.supplier}
@@ -571,12 +557,7 @@ export default function Inventory() {
         <Dialog open={showAdjustModal} onOpenChange={setShowAdjustModal}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>
-                {selectedItem && (
-                  !selectedItem.item || !selectedItem.description || !selectedItem.unitPrice || 
-                  !selectedItem.unit || !selectedItem.minStock || !selectedItem.supplier
-                ) ? `Update Item - ${selectedItem?.styleNo}` : `Adjust Stock - ${selectedItem?.item || selectedItem?.styleNo}`}
-              </DialogTitle>
+              <DialogTitle>Adjust Stock - {selectedItem?.item || selectedItem?.styleNo}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -677,12 +658,12 @@ export default function Inventory() {
               )}
               
               <div>
-                <Label htmlFor="notes">Notes</Label>
+                <Label htmlFor="notes">Notes (Optional)</Label>
                 <Input
                   id="notes"
                   value={adjustNotes}
                   onChange={(e) => setAdjustNotes(e.target.value)}
-                  placeholder="Reason for adjustment (optional)"
+                  placeholder="Reason for adjustment"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-4">
