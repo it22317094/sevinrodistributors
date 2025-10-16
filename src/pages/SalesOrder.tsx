@@ -368,107 +368,103 @@ export default function SalesOrder() {
       });
       return;
     }
+    
     if (!auth.currentUser) {
       toast({
-        title: "Session expired",
-        description: "Please sign in again to save orders",
+        title: "Authentication Required",
+        description: "Please sign in to save orders",
         variant: "destructive",
       });
       return;
     }
  
-     try {
-       // Increment counters before saving
-       const invoiceCounterRef = ref(realtimeDb, 'salesInvoiceCounter');
-       await runTransaction(invoiceCounterRef, (current) => {
-         return current === null ? 1 : current + 1;
-       });
+    try {
+      // Increment counters using transaction
+      const invoiceCounterRef = ref(realtimeDb, 'salesInvoiceCounter');
+      const orderCounterRef = ref(realtimeDb, 'salesOrderCounter');
+      
+      const invoiceResult = await runTransaction(invoiceCounterRef, (current) => {
+        return (current ?? 0) + 1;
+      });
+      
+      const orderResult = await runTransaction(orderCounterRef, (current) => {
+        return (current ?? 0) + 1;
+      });
 
-       const orderCounterRef = ref(realtimeDb, 'salesOrderCounter');
-       await runTransaction(orderCounterRef, (current) => {
-         return current === null ? 1 : current + 1;
-       });
+      const finalInvoiceNo = invoiceResult.snapshot.val();
+      const finalOrderNo = orderResult.snapshot.val();
 
-       const payload = {
-         userId: auth.currentUser!.uid,
-         customerName,
-         invoiceNo,
-         orderNo,
-         orderDate,
-         deliveryDate,
-         notes,
-         items: validItems,
-         total: calculateTotal(),
-         status: 'pending',
-         createdAt: new Date().toISOString()
-       };
+      // Prepare order payload with proper structure for real-time dashboard
+      const orderPayload = {
+        userId: auth.currentUser.uid,
+        customerName: customerName.trim(),
+        invoiceNo: `SI${String(finalInvoiceNo).padStart(4, '0')}`,
+        orderNo: `SO${String(finalOrderNo).padStart(4, '0')}`,
+        orderDate,
+        deliveryDate,
+        notes: notes.trim(),
+        items: validItems.map(item => ({
+          styleNo: item.styleNo.trim(),
+          description: item.description.trim(),
+          size: item.size,
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.amount,
+          remarks: item.remarks.trim()
+        })),
+        subtotal: calculateTotal(),
+        total: calculateTotal(),
+        status: 'Pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
 
-       let saved = false;
+      // Save to Firebase Realtime Database
+      const salesOrdersRef = ref(realtimeDb, 'salesOrders');
+      const newOrderRef = await push(salesOrdersRef, orderPayload);
 
-       // Attempt to save to the new path first
-       try {
-         const salesOrdersRef = ref(realtimeDb, 'salesOrders');
-         await push(salesOrdersRef, payload);
-         saved = true;
-       } catch (err: any) {
-         // If rules for 'salesOrders' aren't deployed yet, fallback to legacy 'orders'
-         const isPermissionDenied = (err?.code || err?.message || '').toString().toUpperCase().includes('PERMISSION_DENIED');
-         if (isPermissionDenied) {
-           const legacyOrdersRef = ref(realtimeDb, 'orders');
-           await push(legacyOrdersRef, payload);
-           saved = true;
-         } else {
-           throw err;
-         }
-       }
+      // Create delivery record
+      const totalItems = validItems.reduce((sum, item) => sum + item.quantity, 0);
+      const deliveryPayload = {
+        companyName: customerName.trim(),
+        address: notes.trim() || "To be determined",
+        deliveryDate,
+        itemsDelivered: totalItems,
+        status: "Scheduled",
+        createdAt: new Date().toISOString()
+      };
 
-       if (saved) {
-         // Create delivery record
-         const totalItems = validItems.reduce((sum, item) => sum + item.quantity, 0);
-         const deliveryPayload = {
-           companyName: customerName,
-           address: notes || "To be determined",
-           deliveryDate,
-           itemsDelivered: totalItems,
-           status: "Scheduled",
-           createdAt: new Date().toISOString()
-         };
+      const deliveriesRef = ref(realtimeDb, 'deliveries');
+      await push(deliveriesRef, deliveryPayload);
 
-         try {
-           const deliveriesRef = ref(realtimeDb, 'deliveries');
-           await push(deliveriesRef, deliveryPayload);
-         } catch (deliveryError) {
-           console.error('Failed to create delivery record:', deliveryError);
-         }
+      toast({
+        title: "Order Saved Successfully! ✅",
+        description: `Order ${orderPayload.orderNo} saved and will appear in Real-Time Dashboard`
+      });
 
-         toast({
-           title: "Success",
-           description: "Sales order and delivery created successfully"
-         });
-
-         // Reset form and regenerate new numbers
-         setCustomerName("");
-         setDeliveryDate("");
-         setNotes("");
-         setItems([{ id: Date.now().toString(), styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }]);
-         
-         // Generate new invoice and order numbers
-         const invoiceSnapshot = await get(invoiceCounterRef);
-         const nextInvoice = invoiceSnapshot.val() === null ? 1 : invoiceSnapshot.val() + 1;
-         setInvoiceNo(`SI${String(nextInvoice).padStart(4, '0')}`);
-
-         const orderSnapshot = await get(orderCounterRef);
-         const nextOrder = orderSnapshot.val() === null ? 1 : orderSnapshot.val() + 1;
-         setOrderNo(`SO${String(nextOrder).padStart(4, '0')}`);
-       }
-     } catch (error: any) {
-       console.error('Failed to create sales order:', error);
-       toast({
-         title: "Error",
-         description: error?.message || "Failed to create sales order",
-         variant: "destructive"
-       });
-     }
+      // Reset form
+      setCustomerName("");
+      setDeliveryDate("");
+      setNotes("");
+      setItems([{ id: Date.now().toString(), styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }]);
+      
+      // Update invoice and order numbers for next order
+      setInvoiceNo(`SI${String(finalInvoiceNo + 1).padStart(4, '0')}`);
+      setOrderNo(`SO${String(finalOrderNo + 1).padStart(4, '0')}`);
+      
+    } catch (error: any) {
+      console.error('Failed to save sales order:', error);
+      
+      const errorMessage = error?.code === 'PERMISSION_DENIED' 
+        ? "Permission denied. Please ensure Firebase rules are published correctly."
+        : error?.message || "Failed to save order";
+      
+      toast({
+        title: "Save Failed ❌",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
   };
 
   return (
