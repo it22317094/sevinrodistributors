@@ -423,7 +423,7 @@ export default function Inventory() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{item.item}</span>
-                            {(item.quantity || 0) < 10 && (
+                            {(item.quantity || 0) <= (item.minStock || 0) && (
                               <Badge variant="lowStock" className="text-xs">Low Stock</Badge>
                             )}
                           </div>
@@ -431,7 +431,7 @@ export default function Inventory() {
                         <TableCell className="max-w-[200px] truncate">{item.description}</TableCell>
                         <TableCell className="text-right">Rs. {item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                         <TableCell className="text-right">
-                          <span className={`font-semibold ${(item.quantity || 0) < 10 ? "text-destructive" : "text-primary"}`}>
+                          <span className={`font-semibold ${(item.quantity || 0) <= (item.minStock || 0) ? "text-destructive" : "text-primary"}`}>
                             {item.quantity || 0}
                           </span>
                           <span className="text-xs text-muted-foreground ml-1">{item.unit || 'units'}</span>
