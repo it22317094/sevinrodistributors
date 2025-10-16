@@ -292,8 +292,6 @@ export default function SalesOrder() {
           cellPadding: 3.5,
           lineColor: [0, 0, 0],
           lineWidth: 0.1,
-          textColor: [0, 0, 0],
-          fillColor: [255, 255, 255],
         },
         headStyles: {
           fillColor: [255, 165, 0],
@@ -304,6 +302,9 @@ export default function SalesOrder() {
         bodyStyles: {
           fillColor: [255, 255, 255],
           textColor: [0, 0, 0],
+        },
+        alternateRowStyles: {
+          fillColor: [255, 255, 255],
         },
         columnStyles: {
           0: { halign: 'center', cellWidth: 20 },
