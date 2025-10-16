@@ -77,7 +77,7 @@
       ".read": "auth != null",
       ".write": "auth != null",
       "$itemId": {
-        ".validate": "newData.hasChildren(['inventoryNo', 'item', 'description', 'unitPrice', 'category'])"
+        ".validate": "newData.hasChildren(['styleNo', 'createdAt', 'updatedAt']) && newData.child('styleNo').isString() && newData.child('styleNo').val().length > 0"
       }
     },
     "inventoryLogs": {
