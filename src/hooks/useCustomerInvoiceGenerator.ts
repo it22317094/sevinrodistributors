@@ -260,18 +260,21 @@ export const useCustomerInvoiceGenerator = () => {
           styles: {
             fontSize: 9,
             cellPadding: 4,
-            lineColor: [255, 165, 0], // Orange borders
-            lineWidth: 0.5,
-            textColor: [0, 0, 0], // Black text color
+            lineColor: [0, 0, 0],
+            lineWidth: 0.1,
           },
           headStyles: {
-            fillColor: [255, 165, 0], // Orange header background
-            textColor: [255, 255, 255], // White text
+            fillColor: [255, 165, 0],
+            textColor: [255, 255, 255],
             fontStyle: 'bold',
             fontSize: 10,
           },
           bodyStyles: {
-            fillColor: [255, 248, 240], // Light peach fill
+            fillColor: [255, 255, 255],
+            textColor: [0, 0, 0],
+          },
+          alternateRowStyles: {
+            fillColor: [255, 255, 255],
           },
           columnStyles: {
             0: { halign: 'center', cellWidth: 20 }, // No

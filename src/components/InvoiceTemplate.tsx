@@ -105,13 +105,19 @@ export const generateInvoicePDF = async (
         cellPadding: 3.5,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
-        textColor: [0, 0, 0], // Black text color
       },
       headStyles: {
-        fillColor: [255, 165, 0], // Orange header
+        fillColor: [255, 165, 0],
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         fontSize: 9,
+      },
+      bodyStyles: {
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
+      },
+      alternateRowStyles: {
+        fillColor: [255, 255, 255],
       },
       columnStyles: {
         0: { halign: 'center', cellWidth: 20 },

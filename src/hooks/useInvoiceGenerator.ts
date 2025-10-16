@@ -160,16 +160,19 @@ export const useInvoiceGenerator = () => {
           cellPadding: 5,
           lineColor: [0, 0, 0],
           lineWidth: 0.1,
-          textColor: [0, 0, 0], // Black text color
         },
         headStyles: {
-          fillColor: [230, 126, 34], // Orange #E67E22
+          fillColor: [255, 165, 0],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
           fontSize: 10,
         },
+        bodyStyles: {
+          fillColor: [255, 255, 255],
+          textColor: [0, 0, 0],
+        },
         alternateRowStyles: {
-          fillColor: [253, 235, 208], // Light peach #FDEBD0
+          fillColor: [255, 255, 255],
         },
         columnStyles: {
           0: { halign: 'center', cellWidth: 15 },
