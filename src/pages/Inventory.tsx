@@ -65,6 +65,7 @@ export default function Inventory() {
   });
 
   const [updateFormData, setUpdateFormData] = useState({
+    styleNo: "",
     item: "",
     description: "",
     unitPrice: "",
@@ -203,6 +204,7 @@ export default function Inventory() {
       setAdjustQuantity("");
       setAdjustNotes("");
       setUpdateFormData({
+        styleNo: "",
         item: "",
         description: "",
         unitPrice: "",
@@ -230,6 +232,7 @@ export default function Inventory() {
     setSelectedItem(item);
     setAdjustQuantity((item.quantity || 0).toString());
     setUpdateFormData({
+      styleNo: item.styleNo || "",
       item: item.item || "",
       description: item.description || "",
       unitPrice: item.unitPrice ? item.unitPrice.toString() : "",
@@ -553,6 +556,17 @@ export default function Inventory() {
                 />
               </div>
               
+              <div>
+                <Label htmlFor="updateStyleNo">Style No</Label>
+                <Input
+                  id="updateStyleNo"
+                  value={updateFormData.styleNo || selectedItem?.styleNo}
+                  disabled
+                  placeholder="Style No (read-only)"
+                  className="bg-muted"
+                />
+              </div>
+
               <div>
                 <Label htmlFor="updateItem">Item Name</Label>
                 <Input
