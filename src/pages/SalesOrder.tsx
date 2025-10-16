@@ -293,12 +293,17 @@ export default function SalesOrder() {
           lineColor: [0, 0, 0],
           lineWidth: 0.1,
           textColor: [0, 0, 0],
+          fillColor: [255, 255, 255],
         },
         headStyles: {
           fillColor: [255, 165, 0],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
           fontSize: 9,
+        },
+        bodyStyles: {
+          fillColor: [255, 255, 255],
+          textColor: [0, 0, 0],
         },
         columnStyles: {
           0: { halign: 'center', cellWidth: 20 },
