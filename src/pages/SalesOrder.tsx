@@ -483,14 +483,14 @@ export default function SalesOrder() {
                   <TrendingUp className="h-6 w-6 text-primary" />
                   Real-Time Order Dashboard
                 </CardTitle>
-                <div className="flex gap-4 text-sm">
+                <div className="flex gap-8">
                   <div className="text-center">
-                    <p className="text-muted-foreground">Total Styles</p>
-                    <p className="text-2xl font-bold text-primary">{aggregatedData.length}</p>
+                    <p className="text-sm text-muted-foreground mb-1">Total Styles</p>
+                    <p className="text-3xl font-bold text-primary">{aggregatedData.length}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-muted-foreground">Total Units</p>
-                    <p className="text-2xl font-bold text-primary">
+                    <p className="text-sm text-muted-foreground mb-1">Total Units</p>
+                    <p className="text-3xl font-bold text-primary">
                       {aggregatedData.reduce((sum, item) => sum + item.totalQuantity, 0)}
                     </p>
                   </div>
@@ -498,19 +498,19 @@ export default function SalesOrder() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-3">
+              <div className="grid gap-4">
                 {aggregatedData.map((item) => (
                   <div 
                     key={item.styleNo}
-                    className="bg-background rounded-lg border border-border p-4 hover:border-primary/50 transition-colors"
+                    className="bg-background rounded-lg border border-border p-5 hover:border-primary/50 transition-colors"
                   >
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h4 className="font-semibold text-lg">{item.styleNo}</h4>
+                        <h4 className="font-bold text-xl mb-1">{item.styleNo}</h4>
                         <p className="text-sm text-muted-foreground">Style Number</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-bold text-primary">{item.totalQuantity}</p>
+                        <p className="text-3xl font-bold text-primary">{item.totalQuantity}</p>
                         <p className="text-sm text-muted-foreground">Total Quantity</p>
                       </div>
                     </div>
@@ -518,9 +518,9 @@ export default function SalesOrder() {
                       {Object.entries(item.sizes).map(([size, qty]) => (
                         <div 
                           key={size} 
-                          className="px-3 py-1.5 bg-primary/10 text-primary rounded-md font-medium text-sm border border-primary/20"
+                          className="px-4 py-2 bg-primary/10 text-primary rounded-md font-semibold text-sm border border-primary/20"
                         >
-                          {size}: <span className="font-bold">{qty}</span>
+                          {size}: {qty}
                         </div>
                       ))}
                     </div>
