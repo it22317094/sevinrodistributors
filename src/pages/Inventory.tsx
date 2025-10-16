@@ -166,17 +166,31 @@ export default function Inventory() {
       }
 
       // Build updated item with new values for empty fields
-      const updatedItem = {
+      const updatedItem: any = {
         ...selectedItem,
         quantity: newQuantity,
-        item: updateFormData.item || selectedItem.item,
-        description: updateFormData.description || selectedItem.description,
-        unitPrice: updateFormData.unitPrice ? parseFloat(updateFormData.unitPrice) : selectedItem.unitPrice,
-        unit: updateFormData.unit || selectedItem.unit,
-        minStock: updateFormData.minStock ? parseInt(updateFormData.minStock) : selectedItem.minStock,
-        supplier: updateFormData.supplier || selectedItem.supplier,
         updatedAt: Date.now()
       };
+
+      // Only update fields if they were empty and user provided new values
+      if (!selectedItem.item && updateFormData.item) {
+        updatedItem.item = updateFormData.item;
+      }
+      if (!selectedItem.description && updateFormData.description) {
+        updatedItem.description = updateFormData.description;
+      }
+      if (!selectedItem.unitPrice && updateFormData.unitPrice) {
+        updatedItem.unitPrice = parseFloat(updateFormData.unitPrice);
+      }
+      if (!selectedItem.unit && updateFormData.unit) {
+        updatedItem.unit = updateFormData.unit;
+      }
+      if (!selectedItem.minStock && updateFormData.minStock) {
+        updatedItem.minStock = parseInt(updateFormData.minStock);
+      }
+      if (!selectedItem.supplier && updateFormData.supplier) {
+        updatedItem.supplier = updateFormData.supplier;
+      }
 
       // Update inventory item
       const itemRef = ref(realtimeDb, `inventory/${selectedItem.id}`);
@@ -214,7 +228,7 @@ export default function Inventory() {
       
       toast({
         title: "Success",
-        description: "Stock quantity updated successfully",
+        description: "Stock updated successfully",
       });
     } catch (error) {
       console.error("Error adjusting stock:", error);
@@ -557,7 +571,12 @@ export default function Inventory() {
         <Dialog open={showAdjustModal} onOpenChange={setShowAdjustModal}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Adjust Stock - {selectedItem?.item || selectedItem?.styleNo}</DialogTitle>
+              <DialogTitle>
+                {selectedItem && (
+                  !selectedItem.item || !selectedItem.description || !selectedItem.unitPrice || 
+                  !selectedItem.unit || !selectedItem.minStock || !selectedItem.supplier
+                ) ? `Update Item - ${selectedItem?.styleNo}` : `Adjust Stock - ${selectedItem?.item || selectedItem?.styleNo}`}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -658,12 +677,12 @@ export default function Inventory() {
               )}
               
               <div>
-                <Label htmlFor="notes">Notes (Optional)</Label>
+                <Label htmlFor="notes">Notes</Label>
                 <Input
                   id="notes"
                   value={adjustNotes}
                   onChange={(e) => setAdjustNotes(e.target.value)}
-                  placeholder="Reason for adjustment"
+                  placeholder="Reason for adjustment (optional)"
                 />
               </div>
               <div className="flex justify-end gap-2 pt-4">
