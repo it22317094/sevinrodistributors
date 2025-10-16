@@ -428,7 +428,7 @@ export default function Inventory() {
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{item.item}</span>
                             {(item.quantity || 0) <= (item.minStock || 0) && (
-                              <Badge variant="destructive" className="text-xs">Low Stock</Badge>
+                              <Badge variant="lowStock" className="text-xs">Low Stock</Badge>
                             )}
                           </div>
                         </TableCell>
