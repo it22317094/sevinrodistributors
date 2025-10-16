@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search, Package, AlertTriangle, Layers, Eye, Trash2, ArrowUpDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
-import { ref, push, set, onValue, query, orderByChild } from "firebase/database";
+import { ref, push, set, onValue, query, orderByChild, remove } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
 import { useToast } from "@/hooks/use-toast";
 
@@ -252,23 +252,19 @@ export default function Inventory() {
     if (!isAuthenticated || !selectedItem) return;
     
     try {
-      // Update inventory item to zero stock
+      // Delete inventory item from Firebase
       const itemRef = ref(realtimeDb, `inventory/${selectedItem.id}`);
-      await set(itemRef, {
-        ...selectedItem,
-        quantity: 0,
-        updatedAt: Date.now()
-      });
+      await remove(itemRef);
 
       // Log the removal
       const logsRef = ref(realtimeDb, 'inventoryLogs');
       const newLogRef = push(logsRef);
       await set(newLogRef, {
         inventoryId: selectedItem.id,
-        action: "Stock removed (set to 0)",
+        action: "Item deleted",
         quantity: 0,
         timestamp: Date.now(),
-        notes: "Stock completely removed"
+        notes: `Item "${selectedItem.item}" was deleted from inventory`
       });
 
       setShowRemoveConfirm(false);
@@ -276,13 +272,13 @@ export default function Inventory() {
       
       toast({
         title: "Success",
-        description: "Stock removed successfully",
+        description: "Item deleted successfully",
       });
     } catch (error) {
-      console.error("Error removing stock:", error);
+      console.error("Error deleting item:", error);
       toast({
         title: "Error",
-        description: "Failed to remove stock",
+        description: "Failed to delete item",
         variant: "destructive",
       });
     }
