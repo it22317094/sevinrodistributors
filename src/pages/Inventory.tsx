@@ -58,7 +58,19 @@ export default function Inventory() {
     styleNo: "",
     item: "",
     description: "",
-    unitPrice: ""
+    unitPrice: "",
+    unit: "",
+    minStock: "",
+    supplier: ""
+  });
+
+  const [updateFormData, setUpdateFormData] = useState({
+    item: "",
+    description: "",
+    unitPrice: "",
+    unit: "",
+    minStock: "",
+    supplier: ""
   });
 
   
@@ -95,7 +107,7 @@ export default function Inventory() {
   }, [inventory, searchTerm, sortOrder]);
 
   const handleAddItem = async () => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !formData.styleNo) return;
     
     try {
       const inventoryRef = ref(realtimeDb, 'inventory');
@@ -103,13 +115,13 @@ export default function Inventory() {
       
       await set(newItemRef, {
         styleNo: formData.styleNo,
-        item: formData.item,
-        description: formData.description,
-        unitPrice: parseFloat(formData.unitPrice),
+        item: formData.item || "",
+        description: formData.description || "",
+        unitPrice: formData.unitPrice ? parseFloat(formData.unitPrice) : 0,
         quantity: 0,
-        unit: "units",
-        minStock: 10,
-        supplier: "TBD",
+        unit: formData.unit || "",
+        minStock: formData.minStock ? parseInt(formData.minStock) : 0,
+        supplier: formData.supplier || "",
         createdAt: Date.now(),
         updatedAt: Date.now()
       });
@@ -118,7 +130,10 @@ export default function Inventory() {
         styleNo: "",
         item: "",
         description: "",
-        unitPrice: ""
+        unitPrice: "",
+        unit: "",
+        minStock: "",
+        supplier: ""
       });
       setShowAddModal(false);
       
@@ -150,13 +165,22 @@ export default function Inventory() {
         return;
       }
 
-      // Update inventory item
-      const itemRef = ref(realtimeDb, `inventory/${selectedItem.id}`);
-      await set(itemRef, {
+      // Build updated item with new values for empty fields
+      const updatedItem = {
         ...selectedItem,
         quantity: newQuantity,
+        item: updateFormData.item || selectedItem.item,
+        description: updateFormData.description || selectedItem.description,
+        unitPrice: updateFormData.unitPrice ? parseFloat(updateFormData.unitPrice) : selectedItem.unitPrice,
+        unit: updateFormData.unit || selectedItem.unit,
+        minStock: updateFormData.minStock ? parseInt(updateFormData.minStock) : selectedItem.minStock,
+        supplier: updateFormData.supplier || selectedItem.supplier,
         updatedAt: Date.now()
-      });
+      };
+
+      // Update inventory item
+      const itemRef = ref(realtimeDb, `inventory/${selectedItem.id}`);
+      await set(itemRef, updatedItem);
 
       // Log the adjustment
       const logsRef = ref(realtimeDb, 'inventoryLogs');
@@ -178,6 +202,14 @@ export default function Inventory() {
       setShowAdjustModal(false);
       setAdjustQuantity("");
       setAdjustNotes("");
+      setUpdateFormData({
+        item: "",
+        description: "",
+        unitPrice: "",
+        unit: "",
+        minStock: "",
+        supplier: ""
+      });
       setSelectedItem(null);
       
       toast({
@@ -197,6 +229,14 @@ export default function Inventory() {
   const openAdjustModal = (item: InventoryItem) => {
     setSelectedItem(item);
     setAdjustQuantity((item.quantity || 0).toString());
+    setUpdateFormData({
+      item: "",
+      description: "",
+      unitPrice: "",
+      unit: "",
+      minStock: "",
+      supplier: ""
+    });
     setShowAdjustModal(true);
   };
 
@@ -442,7 +482,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="item">Item Name</Label>
+                <Label htmlFor="item">Item Name (Optional)</Label>
                 <Input
                   id="item"
                   value={formData.item}
@@ -451,7 +491,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">Description (Optional)</Label>
                 <Input
                   id="description"
                   value={formData.description}
@@ -460,7 +500,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="unitPrice">Unit Price</Label>
+                <Label htmlFor="unitPrice">Unit Price (Optional)</Label>
                 <Input
                   id="unitPrice"
                   type="number"
@@ -470,13 +510,41 @@ export default function Inventory() {
                   placeholder="12.50"
                 />
               </div>
+              <div>
+                <Label htmlFor="unit">Unit (Optional)</Label>
+                <Input
+                  id="unit"
+                  value={formData.unit}
+                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                  placeholder="meters, yards, pieces, etc."
+                />
+              </div>
+              <div>
+                <Label htmlFor="minStock">Minimum Stock (Optional)</Label>
+                <Input
+                  id="minStock"
+                  type="number"
+                  value={formData.minStock}
+                  onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
+                  placeholder="10"
+                />
+              </div>
+              <div>
+                <Label htmlFor="supplier">Supplier (Optional)</Label>
+                <Input
+                  id="supplier"
+                  value={formData.supplier}
+                  onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
+                  placeholder="Supplier name"
+                />
+              </div>
               <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={() => setShowAddModal(false)}>
                   Cancel
                 </Button>
                 <Button 
                   onClick={handleAddItem}
-                  disabled={!formData.styleNo || !formData.item || !formData.description || !formData.unitPrice}
+                  disabled={!formData.styleNo}
                 >
                   Save
                 </Button>
@@ -489,7 +557,7 @@ export default function Inventory() {
         <Dialog open={showAdjustModal} onOpenChange={setShowAdjustModal}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Adjust Stock - {selectedItem?.item}</DialogTitle>
+              <DialogTitle>Adjust Stock - {selectedItem?.item || selectedItem?.styleNo}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -512,6 +580,83 @@ export default function Inventory() {
                   placeholder="Enter new quantity"
                 />
               </div>
+              
+              {/* Show fields only if they are empty in the item */}
+              {selectedItem && !selectedItem.item && (
+                <div>
+                  <Label htmlFor="updateItem">Item Name</Label>
+                  <Input
+                    id="updateItem"
+                    value={updateFormData.item}
+                    onChange={(e) => setUpdateFormData({ ...updateFormData, item: e.target.value })}
+                    placeholder="Enter item name"
+                  />
+                </div>
+              )}
+              
+              {selectedItem && !selectedItem.description && (
+                <div>
+                  <Label htmlFor="updateDescription">Description</Label>
+                  <Input
+                    id="updateDescription"
+                    value={updateFormData.description}
+                    onChange={(e) => setUpdateFormData({ ...updateFormData, description: e.target.value })}
+                    placeholder="Enter description"
+                  />
+                </div>
+              )}
+              
+              {selectedItem && !selectedItem.unitPrice && (
+                <div>
+                  <Label htmlFor="updateUnitPrice">Unit Price</Label>
+                  <Input
+                    id="updateUnitPrice"
+                    type="number"
+                    step="0.01"
+                    value={updateFormData.unitPrice}
+                    onChange={(e) => setUpdateFormData({ ...updateFormData, unitPrice: e.target.value })}
+                    placeholder="Enter unit price"
+                  />
+                </div>
+              )}
+              
+              {selectedItem && !selectedItem.unit && (
+                <div>
+                  <Label htmlFor="updateUnit">Unit</Label>
+                  <Input
+                    id="updateUnit"
+                    value={updateFormData.unit}
+                    onChange={(e) => setUpdateFormData({ ...updateFormData, unit: e.target.value })}
+                    placeholder="meters, yards, pieces, etc."
+                  />
+                </div>
+              )}
+              
+              {selectedItem && !selectedItem.minStock && (
+                <div>
+                  <Label htmlFor="updateMinStock">Minimum Stock</Label>
+                  <Input
+                    id="updateMinStock"
+                    type="number"
+                    value={updateFormData.minStock}
+                    onChange={(e) => setUpdateFormData({ ...updateFormData, minStock: e.target.value })}
+                    placeholder="Enter minimum stock"
+                  />
+                </div>
+              )}
+              
+              {selectedItem && !selectedItem.supplier && (
+                <div>
+                  <Label htmlFor="updateSupplier">Supplier</Label>
+                  <Input
+                    id="updateSupplier"
+                    value={updateFormData.supplier}
+                    onChange={(e) => setUpdateFormData({ ...updateFormData, supplier: e.target.value })}
+                    placeholder="Enter supplier name"
+                  />
+                </div>
+              )}
+              
               <div>
                 <Label htmlFor="notes">Notes (Optional)</Label>
                 <Input
@@ -527,9 +672,9 @@ export default function Inventory() {
                 </Button>
                 <Button 
                   onClick={handleAdjustStock}
-                  disabled={!adjustQuantity || adjustQuantity === (selectedItem?.quantity || 0).toString()}
+                  disabled={!adjustQuantity}
                 >
-                  Update Stock
+                  Update
                 </Button>
               </div>
             </div>
