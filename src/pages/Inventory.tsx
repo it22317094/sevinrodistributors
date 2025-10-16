@@ -230,9 +230,9 @@ export default function Inventory() {
     setSelectedItem(item);
     setAdjustQuantity((item.quantity || 0).toString());
     setUpdateFormData({
-      item: "",
-      description: "",
-      unitPrice: "",
+      item: item.item || "",
+      description: item.description || "",
+      unitPrice: item.unitPrice ? item.unitPrice.toString() : "",
       unit: "",
       minStock: "",
       supplier: ""
@@ -553,44 +553,37 @@ export default function Inventory() {
                 />
               </div>
               
-              {/* Show fields only if they are empty in the item */}
-              {selectedItem && !selectedItem.item && (
-                <div>
-                  <Label htmlFor="updateItem">Item Name</Label>
-                  <Input
-                    id="updateItem"
-                    value={updateFormData.item}
-                    onChange={(e) => setUpdateFormData({ ...updateFormData, item: e.target.value })}
-                    placeholder="Enter item name"
-                  />
-                </div>
-              )}
+              <div>
+                <Label htmlFor="updateItem">Item Name</Label>
+                <Input
+                  id="updateItem"
+                  value={updateFormData.item}
+                  onChange={(e) => setUpdateFormData({ ...updateFormData, item: e.target.value })}
+                  placeholder="Enter item name"
+                />
+              </div>
               
-              {selectedItem && !selectedItem.description && (
-                <div>
-                  <Label htmlFor="updateDescription">Description</Label>
-                  <Input
-                    id="updateDescription"
-                    value={updateFormData.description}
-                    onChange={(e) => setUpdateFormData({ ...updateFormData, description: e.target.value })}
-                    placeholder="Enter description"
-                  />
-                </div>
-              )}
+              <div>
+                <Label htmlFor="updateDescription">Description</Label>
+                <Input
+                  id="updateDescription"
+                  value={updateFormData.description}
+                  onChange={(e) => setUpdateFormData({ ...updateFormData, description: e.target.value })}
+                  placeholder="Enter description"
+                />
+              </div>
               
-              {selectedItem && !selectedItem.unitPrice && (
-                <div>
-                  <Label htmlFor="updateUnitPrice">Unit Price</Label>
-                  <Input
-                    id="updateUnitPrice"
-                    type="number"
-                    step="0.01"
-                    value={updateFormData.unitPrice}
-                    onChange={(e) => setUpdateFormData({ ...updateFormData, unitPrice: e.target.value })}
-                    placeholder="Enter unit price"
-                  />
-                </div>
-              )}
+              <div>
+                <Label htmlFor="updateUnitPrice">Unit Price</Label>
+                <Input
+                  id="updateUnitPrice"
+                  type="number"
+                  step="0.01"
+                  value={updateFormData.unitPrice}
+                  onChange={(e) => setUpdateFormData({ ...updateFormData, unitPrice: e.target.value })}
+                  placeholder="Enter unit price"
+                />
+              </div>
               
               {selectedItem && !selectedItem.unit && (
                 <div>
