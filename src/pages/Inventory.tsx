@@ -482,7 +482,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="item">Item Name (Optional)</Label>
+                <Label htmlFor="item">Item Name</Label>
                 <Input
                   id="item"
                   value={formData.item}
@@ -491,7 +491,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="description">Description (Optional)</Label>
+                <Label htmlFor="description">Description</Label>
                 <Input
                   id="description"
                   value={formData.description}
@@ -500,7 +500,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="unitPrice">Unit Price (Optional)</Label>
+                <Label htmlFor="unitPrice">Unit Price</Label>
                 <Input
                   id="unitPrice"
                   type="number"
@@ -511,7 +511,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="unit">Unit (Optional)</Label>
+                <Label htmlFor="unit">Unit</Label>
                 <Input
                   id="unit"
                   value={formData.unit}
@@ -520,7 +520,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="minStock">Minimum Stock (Optional)</Label>
+                <Label htmlFor="minStock">Minimum Stock</Label>
                 <Input
                   id="minStock"
                   type="number"
@@ -530,7 +530,7 @@ export default function Inventory() {
                 />
               </div>
               <div>
-                <Label htmlFor="supplier">Supplier (Optional)</Label>
+                <Label htmlFor="supplier">Supplier</Label>
                 <Input
                   id="supplier"
                   value={formData.supplier}
