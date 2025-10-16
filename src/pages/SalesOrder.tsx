@@ -272,7 +272,7 @@ export default function SalesOrder() {
       doc.text(`Order No - ${orderNo}`, invoiceDetailsX, 75);
       doc.text(`Date - ${new Date(orderDate).toLocaleDateString('en-GB')}`, invoiceDetailsX, 80);
       
-      // Items table
+      // Items table - only actual items, no empty rows
       const tableData = validItems.map((item, index) => [
         (index + 1).toString(),
         item.styleNo,
@@ -282,11 +282,6 @@ export default function SalesOrder() {
         `RS`,
         `${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
       ]);
-      
-      const emptyRowsNeeded = Math.max(0, 15 - tableData.length);
-      for (let i = 0; i < emptyRowsNeeded; i++) {
-        tableData.push(['', '', '', '', '', '', '']);
-      }
       
       autoTable(doc, {
         head: [['No', 'Style No', 'Description', 'Qty', 'Price', '', 'Total']],
