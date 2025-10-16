@@ -510,34 +510,6 @@ export default function Inventory() {
                   placeholder="12.50"
                 />
               </div>
-              <div>
-                <Label htmlFor="unit">Unit (Optional)</Label>
-                <Input
-                  id="unit"
-                  value={formData.unit}
-                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                  placeholder="meters, yards, pieces, etc."
-                />
-              </div>
-              <div>
-                <Label htmlFor="minStock">Minimum Stock (Optional)</Label>
-                <Input
-                  id="minStock"
-                  type="number"
-                  value={formData.minStock}
-                  onChange={(e) => setFormData({ ...formData, minStock: e.target.value })}
-                  placeholder="10"
-                />
-              </div>
-              <div>
-                <Label htmlFor="supplier">Supplier (Optional)</Label>
-                <Input
-                  id="supplier"
-                  value={formData.supplier}
-                  onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-                  placeholder="Supplier name"
-                />
-              </div>
               <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={() => setShowAddModal(false)}>
                   Cancel
