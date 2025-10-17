@@ -121,10 +121,10 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
       await set(customerRef, {
         name: formData.name,
         email: formData.email,
-        address: formData.address,
-        telephone: formData.telephone,
+        contact: formData.telephone,
         uniqueId: uniqueId,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         status: "Active",
         outstanding: 0,
       });
