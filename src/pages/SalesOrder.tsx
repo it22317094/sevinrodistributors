@@ -246,10 +246,10 @@ export default function SalesOrder() {
       doc.text('No - 136/A, Akurana, Gampaha', rightX, 20, { align: 'right' });
       doc.text('Te: 071 39 69 580, 0777 52 90 58', rightX, 25, { align: 'right' });
       
-      // INVOICE title
+      // Title
       doc.setFontSize(18);
       doc.setFont(undefined, 'bold');
-      doc.text('INVOICE', pageWidth / 2, 50, { align: 'center' });
+      doc.text('Sales Order Form', pageWidth / 2, 50, { align: 'center' });
       
       // Customer info
       doc.setFontSize(9);
@@ -280,11 +280,12 @@ export default function SalesOrder() {
         item.quantity.toString(),
         `${item.rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         `RS`,
-        `${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        `${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        item.remarks || ''
       ]);
       
       autoTable(doc, {
-        head: [['No', 'Style No', 'Description', 'Qty', 'Price', '', 'Total']],
+        head: [['No', 'Style No', 'Description', 'Qty', 'Price', '', 'Total', 'Remarks']],
         body: tableData,
         startY: 90,
         styles: {
@@ -307,13 +308,14 @@ export default function SalesOrder() {
           fillColor: [255, 255, 255],
         },
         columnStyles: {
-          0: { halign: 'center', cellWidth: 20 },
-          1: { cellWidth: 25 },
-          2: { cellWidth: 45 },
-          3: { halign: 'center', cellWidth: 20 },
-          4: { halign: 'right', cellWidth: 25 },
-          5: { halign: 'left', cellWidth: 15 },
-          6: { halign: 'right', cellWidth: 30 },
+          0: { halign: 'center', cellWidth: 15 },
+          1: { cellWidth: 20 },
+          2: { cellWidth: 35 },
+          3: { halign: 'center', cellWidth: 15 },
+          4: { halign: 'right', cellWidth: 20 },
+          5: { halign: 'left', cellWidth: 12 },
+          6: { halign: 'right', cellWidth: 25 },
+          7: { cellWidth: 38 },
         },
         margin: { left: 20, right: 20 },
       });
