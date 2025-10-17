@@ -321,8 +321,8 @@ export default function Inventory() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-primary mb-2">Inventory Items</h1>
-            <p className="text-muted-foreground">Manage your fabric inventory and stock levels</p>
+            <h1 className="text-3xl font-bold text-primary mb-2">Inventory Management</h1>
+            <p className="text-muted-foreground">Track and manage your fabric inventory</p>
           </div>
           <Button className="mt-4 sm:mt-0" onClick={() => setShowAddModal(true)}>
             <Plus className="h-4 w-4 mr-2" />
