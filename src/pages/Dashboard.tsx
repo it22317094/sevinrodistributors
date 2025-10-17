@@ -65,8 +65,8 @@ export default function Dashboard() {
         
         Object.values(inventory).forEach((item: any) => {
           const currentQty = item.quantity || 0;
-          const minQty = item.minQuantity || 10;
-          if (currentQty < minQty) {
+          const minQty = item.minStock || 0;
+          if (currentQty <= minQty) {
             lowStock++;
           }
         });
