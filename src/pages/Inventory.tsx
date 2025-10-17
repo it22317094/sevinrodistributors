@@ -313,7 +313,7 @@ export default function Inventory() {
   };
 
   const totalItems = inventory.length;
-  const lowStockItems = inventory.filter(item => (item.quantity || 0) <= (item.minStock || 0)).length;
+  const lowStockItems = inventory.filter(item => (item.quantity || 0) < 10).length;
   const totalValue = inventory.reduce((sum, item) => sum + (item.unitPrice * (item.quantity || 0)), 0);
   return (
     <div className="min-h-screen bg-background">
