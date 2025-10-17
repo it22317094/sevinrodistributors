@@ -155,6 +155,8 @@ export function AddSupplierModal({ open, onOpenChange, onSupplierAdded }: AddSup
         supplierId: supplierId,
         name: formData.supplierName,
         nameLower: formData.supplierName.trim().toLowerCase(),
+        address: "",
+        phone: "",
         status: "Active",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
