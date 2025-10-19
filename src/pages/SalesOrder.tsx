@@ -369,10 +369,10 @@ export default function SalesOrder() {
   };
 
   const handleSaveOrder = async () => {
-    if (!customerName || !deliveryDate) {
+    if (!customerName) {
       toast({
-        title: "Missing Information",
-        description: "Please fill in customer name and delivery date",
+        title: "Missing Customer Name",
+        description: "Please select a customer name",
         variant: "destructive"
       });
       return;
@@ -381,8 +381,8 @@ export default function SalesOrder() {
     const validItems = items.filter(item => item.styleNo && item.quantity > 0);
     if (validItems.length === 0) {
       toast({
-        title: "No Items",
-        description: "Please add at least one item with style number and quantity",
+        title: "No Items Added",
+        description: "Please add at least one item with Style No and Quantity greater than 0",
         variant: "destructive"
       });
       return;
@@ -420,7 +420,7 @@ export default function SalesOrder() {
         invoiceNo: `SI${String(finalInvoiceNo).padStart(4, '0')}`,
         orderNo: `SO${String(finalOrderNo).padStart(4, '0')}`,
         orderDate,
-        deliveryDate,
+        deliveryDate: deliveryDate || orderDate,
         notes: notes.trim(),
         items: validItems.map(item => ({
           styleNo: item.styleNo.trim(),
