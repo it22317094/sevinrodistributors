@@ -199,11 +199,22 @@ export default function SalesOrder() {
   };
 
   const handleGeneratePDF = async () => {
+    console.log("Current items:", items);
     const validItems = items.filter(item => item.styleNo && item.quantity > 0);
+    console.log("Valid items for PDF:", validItems);
+    
     if (validItems.length === 0) {
+      // Check what's missing
+      const itemsWithoutStyleNo = items.filter(item => !item.styleNo);
+      const itemsWithoutQty = items.filter(item => item.quantity <= 0);
+      
+      let errorMessage = "Please ensure each item has:\n";
+      if (itemsWithoutStyleNo.length > 0) errorMessage += "- Style No filled in\n";
+      if (itemsWithoutQty.length > 0) errorMessage += "- Quantity greater than 0";
+      
       toast({
-        title: "No Items",
-        description: "Please add at least one item to generate PDF",
+        title: "Cannot Generate PDF",
+        description: errorMessage,
         variant: "destructive"
       });
       return;
