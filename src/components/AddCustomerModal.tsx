@@ -42,56 +42,32 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
   };
 
   const validateForm = () => {
-    if (!formData.name.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Customer name is required.",
-        variant: "destructive",
-      });
-      return false;
+    // Validate email format if provided
+    if (formData.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        toast({
+          title: "Validation Error",
+          description: "Please enter a valid email address.",
+          variant: "destructive",
+        });
+        return false;
+      }
     }
-    if (!formData.email.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Email is required.",
-        variant: "destructive",
-      });
-      return false;
+    
+    // Validate phone format if provided
+    if (formData.telephone.trim()) {
+      const phoneRegex = /^[+]?[(]?[\d\s\-\(\)]{10,}$/;
+      if (!phoneRegex.test(formData.telephone)) {
+        toast({
+          title: "Validation Error",
+          description: "Please enter a valid telephone number.",
+          variant: "destructive",
+        });
+        return false;
+      }
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter a valid email address.",
-        variant: "destructive",
-      });
-      return false;
-    }
-    if (!formData.address.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Address is required.",
-        variant: "destructive",
-      });
-      return false;
-    }
-    if (!formData.telephone.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Telephone number is required.",
-        variant: "destructive",
-      });
-      return false;
-    }
-    const phoneRegex = /^[+]?[(]?[\d\s\-\(\)]{10,}$/;
-    if (!phoneRegex.test(formData.telephone)) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter a valid telephone number.",
-        variant: "destructive",
-      });
-      return false;
-    }
+    
     return true;
   };
 
@@ -172,7 +148,6 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Enter customer name"
-                required
               />
             </div>
             <div className="grid gap-2">
@@ -183,7 +158,6 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 placeholder="Enter email address"
-                required
               />
             </div>
             <div className="grid gap-2">
@@ -193,7 +167,6 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
                 value={formData.address}
                 onChange={(e) => handleInputChange("address", e.target.value)}
                 placeholder="Enter customer address"
-                required
               />
             </div>
             <div className="grid gap-2">
@@ -204,7 +177,6 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
                 value={formData.telephone}
                 onChange={(e) => handleInputChange("telephone", e.target.value)}
                 placeholder="Enter telephone number"
-                required
               />
             </div>
           </div>
