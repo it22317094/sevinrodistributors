@@ -447,7 +447,7 @@ export default function SalesOrder() {
       const deliveryPayload = {
         companyName: customerName.trim(),
         address: notes.trim() || "To be determined",
-        deliveryDate,
+        deliveryDate: deliveryDate || orderDate,
         itemsDelivered: totalItems,
         status: "Scheduled",
         createdAt: new Date().toISOString()
