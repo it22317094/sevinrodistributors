@@ -14,6 +14,7 @@ interface InvoiceItem {
   item_code: string;
   description: string;
   quantity: number;
+  branch: string;
   price: number;
   total: number;
 }
@@ -36,11 +37,13 @@ const InvoiceCreate = () => {
   const [loading, setLoading] = useState(false);
   const [currentInvoiceNumber, setCurrentInvoiceNumber] = useState<number | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
+  const [branch, setBranch] = useState<string>('');
   const [items, setItems] = useState<InvoiceItem[]>([{
     id: '1',
     item_code: '',
     description: '',
     quantity: 0,
+    branch: '',
     price: 0,
     total: 0
   }]);
@@ -177,6 +180,7 @@ const InvoiceCreate = () => {
       item_code: '',
       description: '',
       quantity: 0,
+      branch: '',
       price: 0,
       total: 0
     }]);
@@ -290,6 +294,7 @@ const InvoiceCreate = () => {
         number: newInvoiceNumber,
         customerId: selectedCustomer,
         customerName: customers.find(c => c.id === selectedCustomer)?.name || '',
+        branch: branch,
         orderNumber: newOrderNumber,
         items: itemsObject,
         subtotal,
@@ -361,6 +366,16 @@ const InvoiceCreate = () => {
                         </SelectItem>)}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="branch">Branch</Label>
+                  <Input 
+                    id="branch" 
+                    value={branch} 
+                    onChange={(e) => setBranch(e.target.value)} 
+                    placeholder="e.g., Branch 1" 
+                  />
                 </div>
 
                 <div>
@@ -460,19 +475,24 @@ const InvoiceCreate = () => {
                       </Select>
                     </div>
                     
-                    <div className="col-span-2">
+                    <div className="col-span-1">
                       <Label>Item Code *</Label>
-                      <Input value={item.item_code} onChange={e => updateItem(item.id, 'item_code', e.target.value)} placeholder="e.g., AU001" required />
+                      <Input value={item.item_code} onChange={e => updateItem(item.id, 'item_code', e.target.value)} placeholder="AU001" required />
                     </div>
                     
-                    <div className="col-span-3">
+                    <div className="col-span-2">
                       <Label>Description *</Label>
                       <Input value={item.description} onChange={e => updateItem(item.id, 'description', e.target.value)} placeholder="Item description" required />
                     </div>
                     
-                    <div className="col-span-2">
+                    <div className="col-span-1">
                       <Label>Quantity *</Label>
                       <Input type="number" min="0" value={item.quantity || ''} onChange={e => updateItem(item.id, 'quantity', parseInt(e.target.value) || 0)} placeholder="0" required />
+                    </div>
+
+                    <div className="col-span-2">
+                      <Label>Branch</Label>
+                      <Input value={item.branch} onChange={e => updateItem(item.id, 'branch', e.target.value)} placeholder="Branch 1" />
                     </div>
                     
                     <div className="col-span-2">
