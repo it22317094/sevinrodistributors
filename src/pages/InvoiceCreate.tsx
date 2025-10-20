@@ -272,18 +272,26 @@ const InvoiceCreate = () => {
       // Generate order number based on invoice number (e.g., 10013 -> OR10013)
       const newOrderNumber = `OR${newInvoiceNumber}`;
       const subtotal = calculateSubtotal();
-      const invoiceData = {
-        number: newInvoiceNumber,
-        customerId: selectedCustomer,
-        customerName: customers.find(c => c.id === selectedCustomer)?.name,
-        orderNumber: newOrderNumber,
-        items: items.filter(item => item.description && item.quantity > 0).map(item => ({
-          item_code: item.item_code,
+      const filteredItems = items.filter(item => item.description && item.quantity > 0);
+      
+      // Convert items array to object with numeric keys for Firebase
+      const itemsObject = filteredItems.reduce((acc, item, index) => {
+        acc[index] = {
+          item_code: item.item_code || '',
           description: item.description,
           quantity: item.quantity,
           price: item.price,
           total: item.total
-        })),
+        };
+        return acc;
+      }, {} as Record<number, any>);
+
+      const invoiceData = {
+        number: newInvoiceNumber,
+        customerId: selectedCustomer,
+        customerName: customers.find(c => c.id === selectedCustomer)?.name || '',
+        orderNumber: newOrderNumber,
+        items: itemsObject,
         subtotal,
         total: subtotal,
         date: new Date().toISOString().split('T')[0],
