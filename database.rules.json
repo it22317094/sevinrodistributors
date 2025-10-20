@@ -25,7 +25,10 @@
       ".write": "auth != null",
       ".indexOn": ["number"],
       "$invoiceNumber": {
-        ".validate": "newData.hasChildren(['number', 'customerId', 'customerName', 'items', 'subtotal', 'total', 'date', 'status', 'createdAt', 'updatedAt']) && newData.child('number').isNumber() && newData.child('number').val() >= 10000 && $invoiceNumber == newData.child('number').val()"
+        ".validate": "newData.hasChildren(['number', 'customerId', 'customerName', 'orderNumber', 'items', 'subtotal', 'total', 'date', 'status', 'createdAt', 'updatedAt']) && newData.child('number').isNumber() && newData.child('number').val() >= 10000 && $invoiceNumber == newData.child('number').val()",
+        "branch": {
+          ".validate": "newData.isString()"
+        }
       }
     },
     "invoice_items": {
