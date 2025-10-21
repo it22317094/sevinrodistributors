@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Save, TrendingUp, FileText } from "lucide-react";
+import { Plus, Trash2, Save, FileText } from "lucide-react";
 import { generateInvoicePDF } from "@/components/InvoiceTemplate";
 import { realtimeDb, auth } from "@/lib/firebase";
 import { ref, push, onValue, get, runTransaction } from "firebase/database";
@@ -18,15 +18,10 @@ interface OrderItem {
   description: string;
   size: string;
   quantity: number;
+  branch: string;
   rate: number;
   amount: number;
   remarks: string;
-}
-
-interface AggregatedItem {
-  styleNo: string;
-  totalQuantity: number;
-  sizes: { [key: string]: number };
 }
 
 interface ItemCode {
@@ -46,9 +41,8 @@ export default function SalesOrder() {
   const [deliveryDate, setDeliveryDate] = useState("");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<OrderItem[]>([
-    { id: "1", styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }
+    { id: "1", styleNo: "", description: "", size: "", quantity: 0, branch: "", rate: 0, amount: 0, remarks: "" }
   ]);
-  const [aggregatedData, setAggregatedData] = useState<AggregatedItem[]>([]);
   const [availableItemCodes, setAvailableItemCodes] = useState<ItemCode[]>([]);
 
   // Fetch customers
@@ -114,45 +108,6 @@ export default function SalesOrder() {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const ordersRef = ref(realtimeDb, 'salesOrders');
-    
-    const unsubscribe = onValue(ordersRef, (snapshot) => {
-      const data = snapshot.val();
-      if (!data) {
-        setAggregatedData([]);
-        return;
-      }
-
-      const itemsMap = new Map<string, AggregatedItem>();
-      
-      Object.values(data).forEach((order: any) => {
-        if (order.items) {
-          order.items.forEach((item: OrderItem) => {
-            if (!item.styleNo) return;
-            
-            if (itemsMap.has(item.styleNo)) {
-              const existing = itemsMap.get(item.styleNo)!;
-              existing.totalQuantity += item.quantity;
-              if (item.size) {
-                existing.sizes[item.size] = (existing.sizes[item.size] || 0) + item.quantity;
-              }
-            } else {
-              itemsMap.set(item.styleNo, {
-                styleNo: item.styleNo,
-                totalQuantity: item.quantity,
-                sizes: item.size ? { [item.size]: item.quantity } : {}
-              });
-            }
-          });
-        }
-      });
-
-      setAggregatedData(Array.from(itemsMap.values()));
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   const addItem = () => {
     const newItem: OrderItem = {
@@ -161,6 +116,7 @@ export default function SalesOrder() {
       description: "",
       size: "",
       quantity: 0,
+      branch: "",
       rate: 0,
       amount: 0,
       remarks: ""
@@ -427,6 +383,7 @@ export default function SalesOrder() {
           description: item.description.trim(),
           size: item.size,
           quantity: item.quantity,
+          branch: item.branch.trim(),
           rate: item.rate,
           amount: item.amount,
           remarks: item.remarks.trim()
@@ -465,7 +422,7 @@ export default function SalesOrder() {
       setCustomerName("");
       setDeliveryDate("");
       setNotes("");
-      setItems([{ id: Date.now().toString(), styleNo: "", description: "", size: "", quantity: 0, rate: 0, amount: 0, remarks: "" }]);
+      setItems([{ id: Date.now().toString(), styleNo: "", description: "", size: "", quantity: 0, branch: "", rate: 0, amount: 0, remarks: "" }]);
       
       // Update invoice and order numbers for next order
       setInvoiceNo(`SI${String(finalInvoiceNo + 1).padStart(4, '0')}`);
@@ -494,61 +451,6 @@ export default function SalesOrder() {
           <p className="text-muted-foreground">Create a new sales order for your customers</p>
         </div>
 
-        {aggregatedData.length > 0 && (
-          <Card className="mb-6 border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <TrendingUp className="h-6 w-6 text-primary" />
-                  Real-Time Order Dashboard
-                </CardTitle>
-                <div className="flex gap-8">
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Total Styles</p>
-                    <p className="text-3xl font-bold text-primary">{aggregatedData.length}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground mb-1">Total Units</p>
-                    <p className="text-3xl font-bold text-primary">
-                      {aggregatedData.reduce((sum, item) => sum + item.totalQuantity, 0)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                {aggregatedData.map((item) => (
-                  <div 
-                    key={item.styleNo}
-                    className="bg-background rounded-lg border border-border p-5 hover:border-primary/50 transition-colors"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h4 className="font-bold text-xl mb-1">{item.styleNo}</h4>
-                        <p className="text-sm text-muted-foreground">Style Number</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-3xl font-bold text-primary">{item.totalQuantity}</p>
-                        <p className="text-sm text-muted-foreground">Total Quantity</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                      {Object.entries(item.sizes).map(([size, qty]) => (
-                        <div 
-                          key={size} 
-                          className="px-4 py-2 bg-primary/10 text-primary rounded-md font-semibold text-sm border border-primary/20"
-                        >
-                          {size}: {qty}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         <Card className="mb-6">
           <CardHeader>
@@ -646,6 +548,7 @@ export default function SalesOrder() {
                     <TableHead>Description</TableHead>
                     <TableHead>Size</TableHead>
                     <TableHead>Quantity</TableHead>
+                    <TableHead>Branch</TableHead>
                     <TableHead>Rate</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Remarks</TableHead>
@@ -711,6 +614,14 @@ export default function SalesOrder() {
                           onChange={(e) => updateItem(item.id, 'quantity', parseFloat(e.target.value) || 0)}
                           placeholder="0"
                           className="w-24"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          value={item.branch}
+                          onChange={(e) => updateItem(item.id, 'branch', e.target.value)}
+                          placeholder="Branch"
+                          className="w-32"
                         />
                       </TableCell>
                       <TableCell>
