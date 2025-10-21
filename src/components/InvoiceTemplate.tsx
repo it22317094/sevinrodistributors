@@ -77,12 +77,14 @@ export const generateInvoicePDF = async (
     const inventoryItem = inventory.find(inv => inv.sku === item.sku);
     const itemCode = item.item_code || item.code || '';
     const quantity = item.qty || item.quantity || 0;
+    const branch = item.branch || '';
     
     return [
       (index + 1).toString(),
       itemCode,
       item.description || inventoryItem?.name || 'T-Shirt',
       quantity.toString(),
+      branch,
       `${item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       `RS`,
       `${(quantity * item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -92,12 +94,12 @@ export const generateInvoicePDF = async (
   // Add empty rows to fill the table (like in the design)
   const emptyRowsNeeded = Math.max(0, 15 - tableData.length);
   for (let i = 0; i < emptyRowsNeeded; i++) {
-    tableData.push(['', '', '', '', '', '', '']);
+    tableData.push(['', '', '', '', '', '', '', '']);
   }
   
   try {
     autoTable(doc, {
-      head: [['No', 'Style No', 'Description', 'Qty', 'Price', '', 'Total']],
+      head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', '', 'Total']],
       body: tableData,
       startY: 90,
       styles: {
@@ -120,13 +122,14 @@ export const generateInvoicePDF = async (
         fillColor: [255, 255, 255],
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 20 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 45 },
-        3: { halign: 'center', cellWidth: 20 },
-        4: { halign: 'right', cellWidth: 25 },
-        5: { halign: 'left', cellWidth: 15 },
-        6: { halign: 'right', cellWidth: 30 },
+        0: { halign: 'center', cellWidth: 15 },
+        1: { cellWidth: 22 },
+        2: { cellWidth: 40 },
+        3: { halign: 'center', cellWidth: 15 },
+        4: { cellWidth: 20 },
+        5: { halign: 'right', cellWidth: 22 },
+        6: { halign: 'left', cellWidth: 12 },
+        7: { halign: 'right', cellWidth: 28 },
       },
       margin: { left: 20, right: 20 },
     });
