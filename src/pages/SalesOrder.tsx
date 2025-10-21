@@ -247,13 +247,12 @@ export default function SalesOrder() {
         item.quantity.toString(),
         item.branch || '',
         `${item.rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        `RS`,
-        `${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `RS ${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         item.remarks || ''
       ]);
       
       autoTable(doc, {
-        head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', '', 'Total', 'Remarks']],
+        head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', 'Total', 'Remarks']],
         body: tableData,
         startY: 90,
         styles: {
@@ -276,15 +275,14 @@ export default function SalesOrder() {
           fillColor: [255, 255, 255],
         },
         columnStyles: {
-          0: { halign: 'center', cellWidth: 12 },
-          1: { cellWidth: 18 },
-          2: { cellWidth: 30 },
-          3: { halign: 'center', cellWidth: 12 },
-          4: { cellWidth: 18 },
-          5: { halign: 'right', cellWidth: 18 },
-          6: { halign: 'left', cellWidth: 10 },
-          7: { halign: 'right', cellWidth: 22 },
-          8: { cellWidth: 30 },
+          0: { halign: 'center', cellWidth: 12 },   // No
+          1: { cellWidth: 18 },                      // Style No
+          2: { cellWidth: 30 },                      // Description
+          3: { halign: 'center', cellWidth: 12 },    // Qty
+          4: { cellWidth: 25 },                      // Branch
+          5: { halign: 'right', cellWidth: 18 },     // Price
+          6: { halign: 'right', cellWidth: 32 },     // Total
+          7: { cellWidth: 30 },                      // Remarks
         },
         margin: { left: 20, right: 20 },
       });
