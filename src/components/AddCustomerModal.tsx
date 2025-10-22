@@ -151,22 +151,22 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email <span className="text-muted-foreground text-xs">(Optional)</span></Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                placeholder="Enter email address"
+                placeholder="Enter email address (optional)"
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="address">Address</Label>
+              <Label htmlFor="address">Address <span className="text-muted-foreground text-xs">(Optional)</span></Label>
               <Textarea
                 id="address"
                 value={formData.address}
                 onChange={(e) => handleInputChange("address", e.target.value)}
-                placeholder="Enter customer address"
+                placeholder="Enter customer address (optional)"
               />
             </div>
             <div className="grid gap-2">
