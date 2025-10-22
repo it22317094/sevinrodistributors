@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Save, FileText } from "lucide-react";
+import { Plus, Trash2, Save, FileText, Eye } from "lucide-react";
 import { generateInvoicePDF } from "@/components/InvoiceTemplate";
 import { realtimeDb, auth } from "@/lib/firebase";
 import { ref, push, onValue, get, runTransaction } from "firebase/database";
 import { useToast } from "@/hooks/use-toast";
+import { useInvoiceGenerator } from "@/hooks/useInvoiceGenerator";
+import { Badge } from "@/components/ui/badge";
 
 interface OrderItem {
   id: string;
@@ -31,8 +33,19 @@ interface ItemCode {
   price: number;
 }
 
+interface InvoiceData {
+  id: string;
+  invoiceNumber: string;
+  customerName: string;
+  total: number;
+  status: string;
+  date: string;
+  createdAt: string;
+}
+
 export default function SalesOrder() {
   const { toast } = useToast();
+  const { generateInvoicePDF } = useInvoiceGenerator();
   const [customerName, setCustomerName] = useState("");
   const [customers, setCustomers] = useState<string[]>([]);
   const [invoiceNo, setInvoiceNo] = useState("");
@@ -44,6 +57,7 @@ export default function SalesOrder() {
     { id: "1", styleNo: "", description: "", size: "", quantity: 0, branch: "", rate: 0, amount: 0, remarks: "" }
   ]);
   const [availableItemCodes, setAvailableItemCodes] = useState<ItemCode[]>([]);
+  const [existingInvoices, setExistingInvoices] = useState<InvoiceData[]>([]);
 
   // Fetch customers
   useEffect(() => {
@@ -103,6 +117,31 @@ export default function SalesOrder() {
         price: data[key].price
       }));
       setAvailableItemCodes(codes);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch existing invoices
+  useEffect(() => {
+    const invoicesRef = ref(realtimeDb, 'invoices');
+    
+    const unsubscribe = onValue(invoicesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        setExistingInvoices([]);
+        return;
+      }
+
+      const invoicesList: InvoiceData[] = Object.entries(data).map(([key, value]: [string, any]) => ({
+        id: key,
+        ...value
+      }));
+      
+      // Sort by creation date, newest first
+      invoicesList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      setExistingInvoices(invoicesList);
     });
 
     return () => unsubscribe();
@@ -451,6 +490,50 @@ export default function SalesOrder() {
           <p className="text-muted-foreground">Create a new sales order for your customers</p>
         </div>
 
+        {/* Existing Invoices Section */}
+        {existingInvoices.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Recent Invoices</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {existingInvoices.slice(0, 10).map((invoice) => (
+                  <div
+                    key={invoice.id}
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold">{invoice.invoiceNumber}</span>
+                        <Badge 
+                          variant={invoice.status === "paid" ? "default" : "secondary"}
+                        >
+                          {invoice.status}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        <span>{invoice.customerName}</span>
+                        <span className="mx-2">•</span>
+                        <span>{invoice.date}</span>
+                        <span className="mx-2">•</span>
+                        <span className="font-medium">RS {invoice.total?.toLocaleString()}</span>
+                      </div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => generateInvoicePDF(invoice.id)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View PDF
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="mb-6">
           <CardHeader>
