@@ -43,6 +43,20 @@ interface InvoiceData {
   createdAt: string;
 }
 
+interface SavedOrder {
+  id: string;
+  customerName: string;
+  invoiceNo: string;
+  orderNo: string;
+  orderDate: string;
+  deliveryDate: string;
+  notes: string;
+  items: OrderItem[];
+  total: number;
+  status: string;
+  createdAt: string;
+}
+
 export default function SalesOrder() {
   const { toast } = useToast();
   const { generateInvoicePDF } = useInvoiceGenerator();
@@ -58,6 +72,7 @@ export default function SalesOrder() {
   ]);
   const [availableItemCodes, setAvailableItemCodes] = useState<ItemCode[]>([]);
   const [existingInvoices, setExistingInvoices] = useState<InvoiceData[]>([]);
+  const [savedOrders, setSavedOrders] = useState<SavedOrder[]>([]);
 
   // Fetch customers
   useEffect(() => {
@@ -147,6 +162,31 @@ export default function SalesOrder() {
     return () => unsubscribe();
   }, []);
 
+  // Fetch saved sales orders
+  useEffect(() => {
+    const ordersRef = ref(realtimeDb, 'salesOrders');
+    
+    const unsubscribe = onValue(ordersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        setSavedOrders([]);
+        return;
+      }
+
+      const ordersList: SavedOrder[] = Object.entries(data).map(([key, value]: [string, any]) => ({
+        id: key,
+        ...value
+      }));
+      
+      // Sort by creation date, newest first
+      ordersList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      setSavedOrders(ordersList);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
 
   const addItem = () => {
     const newItem: OrderItem = {
@@ -191,6 +231,153 @@ export default function SalesOrder() {
 
   const calculateTotal = () => {
     return items.reduce((sum, item) => sum + item.amount, 0);
+  };
+
+  const handleGeneratePDFFromSavedOrder = async (order: SavedOrder) => {
+    try {
+      const jsPDF = (await import('jspdf')).default;
+      const autoTable = (await import('jspdf-autotable')).default;
+      
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+
+      // Add company logo
+      try {
+        const logoImg = new Image();
+        logoImg.src = '/assets/images/logo.png';
+        await new Promise((resolve, reject) => {
+          logoImg.onload = resolve;
+          logoImg.onerror = reject;
+        });
+        
+        const aspectRatio = 1356 / 896;
+        const logoHeight = 20;
+        const logoWidth = logoHeight * aspectRatio;
+        
+        doc.addImage(logoImg, 'PNG', 20, 15, logoWidth, logoHeight);
+      } catch (error) {
+        console.error('Error loading logo:', error);
+        doc.setFontSize(16);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(255, 165, 0);
+        doc.text('SEVINRO', 20, 25);
+      }
+      
+      // Company details
+      doc.setFontSize(7);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont(undefined, 'normal');
+      const rightX = pageWidth - 20;
+      doc.text('No - 136/A, Akurana, Gampaha', rightX, 20, { align: 'right' });
+      doc.text('Te: 071 39 69 580, 0777 52 90 58', rightX, 25, { align: 'right' });
+      
+      // Title
+      doc.setFontSize(18);
+      doc.setFont(undefined, 'bold');
+      doc.text('Sales Order Form', pageWidth / 2, 50, { align: 'center' });
+      
+      // Customer info
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'bold');
+      doc.text('TO:-', 20, 70);
+      
+      doc.setFont(undefined, 'normal');
+      doc.text(order.customerName, 32, 70);
+      if (order.notes) {
+        doc.text(order.notes, 20, 76);
+      }
+      
+      // Invoice details
+      const invoiceDetailsX = pageWidth - 70;
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(8);
+      doc.text(`Invoice No - ${order.invoiceNo}`, invoiceDetailsX, 70);
+      doc.text(`Order No - ${order.orderNo}`, invoiceDetailsX, 75);
+      doc.text(`Date - ${new Date(order.orderDate).toLocaleDateString('en-GB')}`, invoiceDetailsX, 80);
+      
+      // Items table
+      const tableData = order.items.map((item, index) => [
+        (index + 1).toString(),
+        item.styleNo,
+        item.description,
+        item.quantity.toString(),
+        item.branch || '',
+        `${item.rate.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        `RS ${item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        item.remarks || ''
+      ]);
+      
+      autoTable(doc, {
+        head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', 'Total', 'Remarks']],
+        body: tableData,
+        startY: 90,
+        styles: {
+          fontSize: 8,
+          cellPadding: 3.5,
+          lineColor: [0, 0, 0],
+          lineWidth: 0.1,
+        },
+        headStyles: {
+          fillColor: [255, 165, 0],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 9,
+        },
+        bodyStyles: {
+          fillColor: [255, 255, 255],
+          textColor: [0, 0, 0],
+        },
+        alternateRowStyles: {
+          fillColor: [255, 255, 255],
+        },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 12 },
+          1: { cellWidth: 18 },
+          2: { cellWidth: 30 },
+          3: { halign: 'center', cellWidth: 12 },
+          4: { cellWidth: 25 },
+          5: { halign: 'right', cellWidth: 18 },
+          6: { halign: 'right', cellWidth: 32 },
+          7: { cellWidth: 30 },
+        },
+        margin: { left: 20, right: 20 },
+      });
+      
+      const finalY = (doc as any).lastAutoTable?.finalY || 300;
+      
+      // Total section
+      const totalY = finalY + 10;
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(11);
+      doc.text('Total Amount', pageWidth - 80, totalY);
+      doc.text('RS', pageWidth - 45, totalY);
+      doc.text(`${order.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, pageWidth - 20, totalY, { align: 'right' });
+      
+      // Signature lines
+      const signatureY = totalY + 50;
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(9);
+      
+      doc.line(20, signatureY, 90, signatureY);
+      doc.text('Authorized By', 45, signatureY + 10, { align: 'center' });
+      
+      doc.line(pageWidth - 90, signatureY, pageWidth - 20, signatureY);
+      doc.text('Customer Signature', pageWidth - 55, signatureY + 10, { align: 'center' });
+
+      doc.save(`Sales_Order_${order.orderNo}_${order.customerName}.pdf`);
+
+      toast({
+        title: "PDF Generated",
+        description: "Sales order PDF has been downloaded successfully"
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleGeneratePDF = async () => {
@@ -529,6 +716,67 @@ export default function SalesOrder() {
                       onClick={() => generateInvoicePDF(invoice.id)}
                     >
                       <Eye className="h-4 w-4 mr-2" />
+                      Download PDF
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* All Saved Sales Orders Section */}
+        {savedOrders.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>All Saved Sales Orders</span>
+                <Badge variant="secondary">{savedOrders.length} Total</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                {savedOrders.map((order) => (
+                  <div
+                    key={order.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent transition-colors"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-semibold text-lg">{order.orderNo}</span>
+                        <Badge variant="secondary">{order.invoiceNo}</Badge>
+                        <Badge 
+                          variant={order.status === "Completed" ? "default" : "outline"}
+                        >
+                          {order.status}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div>
+                          <span className="font-medium">Customer:</span> {order.customerName}
+                        </div>
+                        <div className="flex gap-4">
+                          <span><span className="font-medium">Order Date:</span> {new Date(order.orderDate).toLocaleDateString('en-GB')}</span>
+                          <span><span className="font-medium">Delivery:</span> {new Date(order.deliveryDate).toLocaleDateString('en-GB')}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Items:</span> {order.items?.length || 0} items
+                          <span className="mx-2">•</span>
+                          <span className="font-semibold text-primary">RS {order.total?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        {order.notes && (
+                          <div className="text-xs italic">
+                            <span className="font-medium">Notes:</span> {order.notes}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleGeneratePDFFromSavedOrder(order)}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
                       Download PDF
                     </Button>
                   </div>
