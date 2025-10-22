@@ -490,15 +490,18 @@ export default function SalesOrder() {
           <p className="text-muted-foreground">Create a new sales order for your customers</p>
         </div>
 
-        {/* Existing Invoices Section */}
+        {/* All Previous Invoices Section */}
         {existingInvoices.length > 0 && (
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Recent Invoices</CardTitle>
+              <CardTitle className="flex items-center justify-between">
+                <span>All Previous Invoices</span>
+                <Badge variant="secondary">{existingInvoices.length} Total</Badge>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {existingInvoices.slice(0, 10).map((invoice) => (
+              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                {existingInvoices.map((invoice) => (
                   <div
                     key={invoice.id}
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors"
@@ -526,7 +529,7 @@ export default function SalesOrder() {
                       onClick={() => generateInvoicePDF(invoice.id)}
                     >
                       <Eye className="h-4 w-4 mr-2" />
-                      View PDF
+                      Download PDF
                     </Button>
                   </div>
                 ))}
