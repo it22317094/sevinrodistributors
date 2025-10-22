@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export interface Customer {
   id: string;
+  uniqueId?: string;
   name: string;
   contact: string;
   email: string;

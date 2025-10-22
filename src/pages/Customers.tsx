@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddCustomerModal } from "@/components/AddCustomerModal";
@@ -7,6 +7,8 @@ import { InvoicePreviewModal } from "@/components/InvoicePreviewModal";
 import { useInvoiceFromOrders } from "@/hooks/useInvoiceFromOrders";
 import { useFirebaseCustomers } from "@/hooks/useFirebaseCustomers";
 import { Plus, Users, CreditCard, AlertTriangle, TrendingUp } from "lucide-react";
+import { ref, get } from "firebase/database";
+import { realtimeDb } from "@/lib/firebase";
 
 export default function Customers() {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
@@ -14,8 +16,54 @@ export default function Customers() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [selectedCustomerName, setSelectedCustomerName] = useState<string>("");
   const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<number | null>(null);
+  const [customersWithInvoices, setCustomersWithInvoices] = useState<any[]>([]);
   
   const { customers, loading: customersLoading, fetchCustomers } = useFirebaseCustomers();
+
+  // Fetch invoices for each customer and enrich customer data
+  useEffect(() => {
+    const fetchCustomerInvoices = async () => {
+      if (customers.length === 0) {
+        setCustomersWithInvoices([]);
+        return;
+      }
+
+      const enrichedCustomers = await Promise.all(
+        customers.map(async (customer) => {
+          try {
+            // Fetch all invoices for this customer
+            const invoicesRef = ref(realtimeDb, 'invoices');
+            const invoicesSnapshot = await get(invoicesRef);
+            
+            if (!invoicesSnapshot.exists()) {
+              return { ...customer, outstandingInvoices: [] };
+            }
+
+            const allInvoices = invoicesSnapshot.val();
+            const customerInvoices = Object.values(allInvoices || {})
+              .filter((inv: any) => (inv.customerId === customer.uniqueId || inv.customerId === customer.id) && inv.status !== 'Paid')
+              .map((inv: any) => ({
+                invoiceNo: inv.invoiceNumber || inv.invoiceNo || 'N/A',
+                amount: inv.total || 0,
+                dueDate: inv.dueDate || inv.date || ''
+              }));
+
+            return {
+              ...customer,
+              outstandingInvoices: customerInvoices
+            };
+          } catch (error) {
+            console.error(`Error fetching invoices for customer ${customer.id}:`, error);
+            return { ...customer, outstandingInvoices: [] };
+          }
+        })
+      );
+
+      setCustomersWithInvoices(enrichedCustomers);
+    };
+
+    fetchCustomerInvoices();
+  }, [customers]);
 
   // Calculate real-time statistics from Firebase data
   const totalCustomers = customers.length;
@@ -137,15 +185,21 @@ export default function Customers() {
             <CardDescription>Manage your customer accounts and track outstanding balances</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {customers.map((customer) => (
-                <CustomerCard
-                  key={customer.id}
-                  customer={customer}
-                  onInvoiceClick={handleInvoiceClick}
-                />
-              ))}
-            </div>
+            {customersWithInvoices.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No customers found. Add your first customer to get started.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {customersWithInvoices.map((customer) => (
+                  <CustomerCard
+                    key={customer.id}
+                    customer={customer}
+                    onInvoiceClick={handleInvoiceClick}
+                  />
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
