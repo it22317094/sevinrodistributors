@@ -292,9 +292,10 @@ const InvoiceCreate = () => {
 
       const invoiceData = {
         number: newInvoiceNumber,
+        invoiceNumber: String(newInvoiceNumber),
         customerId: selectedCustomer,
         customerName: customers.find(c => c.id === selectedCustomer)?.name || '',
-        branch: branch,
+        branch: branch && branch.trim().length > 0 ? branch : 'General',
         orderNumber: newOrderNumber,
         items: itemsObject,
         subtotal,
