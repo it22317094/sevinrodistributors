@@ -19,10 +19,10 @@ interface Customer {
 
 interface CustomerCardProps {
   customer: Customer;
-  onInvoiceClick: (customerId: string, customerName: string) => void;
+  onViewDetails: (customerId: string, customerName: string) => void;
 }
 
-export function CustomerCard({ customer, onInvoiceClick }: CustomerCardProps) {
+export function CustomerCard({ customer, onViewDetails }: CustomerCardProps) {
   const hasOutstanding = customer.outstanding > 0;
   
   return (
@@ -112,19 +112,16 @@ export function CustomerCard({ customer, onInvoiceClick }: CustomerCardProps) {
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="px-6 pb-6 flex gap-2">
-        <Button variant="outline" size="sm" className="flex-1">
-          View Details
-        </Button>
+      {/* Action Button */}
+      <div className="px-6 pb-6">
         <Button 
           variant="default" 
           size="sm" 
-          className="flex-1"
-          onClick={() => onInvoiceClick(customer.id, customer.name)}
+          className="w-full"
+          onClick={() => onViewDetails(customer.id, customer.name)}
         >
           <FileText className="h-4 w-4 mr-2" />
-          Generate Invoice
+          View All Invoices
         </Button>
       </div>
     </div>

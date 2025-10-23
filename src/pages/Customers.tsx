@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AddCustomerModal } from "@/components/AddCustomerModal";
 import { CustomerCard } from "@/components/CustomerCard";
-import { InvoicePreviewModal } from "@/components/InvoicePreviewModal";
-import { useInvoiceFromOrders } from "@/hooks/useInvoiceFromOrders";
+import { CustomerInvoicesModal } from "@/components/CustomerInvoicesModal";
 import { useFirebaseCustomers } from "@/hooks/useFirebaseCustomers";
 import { Plus, Users, CreditCard, AlertTriangle, TrendingUp } from "lucide-react";
 import { ref, get } from "firebase/database";
@@ -12,10 +11,9 @@ import { realtimeDb } from "@/lib/firebase";
 
 export default function Customers() {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
-  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [showInvoicesModal, setShowInvoicesModal] = useState(false);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [selectedCustomerName, setSelectedCustomerName] = useState<string>("");
-  const [createdInvoiceNumber, setCreatedInvoiceNumber] = useState<number | null>(null);
   const [customersWithInvoices, setCustomersWithInvoices] = useState<any[]>([]);
   
   const { customers, loading: customersLoading, fetchCustomers } = useFirebaseCustomers();
@@ -70,29 +68,11 @@ export default function Customers() {
   const totalOutstanding = customers.reduce((sum, customer) => sum + customer.outstanding, 0);
   const overdueAccounts = customers.filter(customer => customer.status === 'Overdue').length;
   const activeCustomers = customers.filter(customer => customer.status === 'Active').length;
-  const { 
-    loading, 
-    aggregatedItems, 
-    fetchEligibleOrders, 
-    createInvoice 
-  } = useInvoiceFromOrders();
 
-  const handleInvoiceClick = async (customerId: string, customerName: string) => {
+  const handleViewDetails = (customerId: string, customerName: string) => {
     setSelectedCustomerId(customerId);
     setSelectedCustomerName(customerName);
-    setCreatedInvoiceNumber(null);
-    await fetchEligibleOrders(customerId);
-    setShowInvoiceModal(true);
-  };
-
-  const handleConfirmInvoice = async () => {
-    if (selectedCustomerId && selectedCustomerName) {
-      const invoiceNumber = await createInvoice(selectedCustomerId, selectedCustomerName);
-      if (invoiceNumber) {
-        setCreatedInvoiceNumber(invoiceNumber);
-        // Keep modal open to show the created invoice with PDF option
-      }
-    }
+    setShowInvoicesModal(true);
   };
 
   return (
@@ -195,7 +175,7 @@ export default function Customers() {
                   <CustomerCard
                     key={customer.id}
                     customer={customer}
-                    onInvoiceClick={handleInvoiceClick}
+                    onViewDetails={handleViewDetails}
                   />
                 ))}
               </div>
@@ -210,16 +190,12 @@ export default function Customers() {
           onCustomerAdded={fetchCustomers}
         />
 
-        {/* Invoice Preview Modal */}
-        <InvoicePreviewModal
-          open={showInvoiceModal}
-          onOpenChange={setShowInvoiceModal}
-          customerId={selectedCustomerId || ""}
+        {/* Customer Invoices Modal */}
+        <CustomerInvoicesModal
+          open={showInvoicesModal}
+          onOpenChange={setShowInvoicesModal}
+          customerId={selectedCustomerId}
           customerName={selectedCustomerName}
-          items={aggregatedItems}
-          invoiceNumber={createdInvoiceNumber || undefined}
-          onConfirm={handleConfirmInvoice}
-          showConfirmButton={!createdInvoiceNumber}
         />
       </div>
     </div>
