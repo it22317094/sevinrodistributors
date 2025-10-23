@@ -26,7 +26,40 @@
       ".indexOn": ["number"],
       "$invoiceNumber": {
         ".validate": "newData.hasChildren(['number', 'customerId', 'customerName', 'orderNumber', 'items', 'subtotal', 'total', 'date', 'status', 'createdAt', 'updatedAt']) && newData.child('number').isNumber() && newData.child('number').val() >= 10000 && $invoiceNumber == newData.child('number').val()",
+        "number": {
+          ".validate": "newData.isNumber() && newData.val() >= 10000"
+        },
+        "customerId": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "customerName": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
         "branch": {
+          ".validate": "newData.isString()"
+        },
+        "orderNumber": {
+          ".validate": "newData.isString() && newData.val().length > 0"
+        },
+        "items": {
+          ".validate": "newData.hasChildren()"
+        },
+        "subtotal": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "total": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "date": {
+          ".validate": "newData.isString() && newData.val().length >= 10"
+        },
+        "status": {
+          ".validate": "newData.isString() && newData.val().matches(/^(pending|paid|cancelled)$/)"
+        },
+        "createdAt": {
+          ".validate": "newData.isString()"
+        },
+        "updatedAt": {
           ".validate": "newData.isString()"
         }
       }
