@@ -80,7 +80,8 @@ export const useInvoiceGenerator = () => {
           item.description,
           item.quantity.toString(),
           item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          `RS ${lineTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          'Rs.',
+          lineTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         ];
       });
 
@@ -151,7 +152,7 @@ export const useInvoiceGenerator = () => {
 
       // Items table with orange header and peach rows
       autoTable(doc, {
-        head: [['No', 'Item Code', 'Description', 'Qty', 'Price', 'Total']],
+        head: [['No', 'Item Code', 'Description', 'Qty', 'Price', '', 'Total']],
         body: tableData,
         startY: 85,
         styles: {
@@ -176,10 +177,11 @@ export const useInvoiceGenerator = () => {
         columnStyles: {
           0: { halign: 'center', cellWidth: 15 },
           1: { cellWidth: 25 },
-          2: { cellWidth: 30 },
-          3: { halign: 'center', cellWidth: 12 },
-          4: { halign: 'right', cellWidth: 18 },
-          5: { halign: 'right', cellWidth: 32 },
+          2: { cellWidth: 50 },
+          3: { halign: 'center', cellWidth: 20 },
+          4: { halign: 'right', cellWidth: 25 },
+          5: { halign: 'left', cellWidth: 15 },
+          6: { halign: 'right', cellWidth: 30 },
         },
         margin: { left: 15, right: 15 },
       });
