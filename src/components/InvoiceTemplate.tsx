@@ -86,20 +86,19 @@ export const generateInvoicePDF = async (
       quantity.toString(),
       branch,
       `${item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      `RS`,
-      `${(quantity * item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      `RS ${(quantity * item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
     ];
   });
   
   // Add empty rows to fill the table (like in the design)
   const emptyRowsNeeded = Math.max(0, 15 - tableData.length);
   for (let i = 0; i < emptyRowsNeeded; i++) {
-    tableData.push(['', '', '', '', '', '', '', '']);
+    tableData.push(['', '', '', '', '', '', '']);
   }
   
   try {
     autoTable(doc, {
-      head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', '', 'Total']],
+      head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', 'Total']],
       body: tableData,
       startY: 90,
       styles: {
@@ -124,12 +123,11 @@ export const generateInvoicePDF = async (
       columnStyles: {
         0: { halign: 'center', cellWidth: 15 },
         1: { cellWidth: 22 },
-        2: { cellWidth: 40 },
-        3: { halign: 'center', cellWidth: 15 },
+        2: { cellWidth: 30 },
+        3: { halign: 'center', cellWidth: 12 },
         4: { cellWidth: 20 },
-        5: { halign: 'right', cellWidth: 22 },
-        6: { halign: 'left', cellWidth: 12 },
-        7: { halign: 'right', cellWidth: 28 },
+        5: { halign: 'right', cellWidth: 18 },
+        6: { halign: 'right', cellWidth: 32 },
       },
       margin: { left: 20, right: 20 },
     });
