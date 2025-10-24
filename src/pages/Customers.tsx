@@ -34,25 +34,42 @@ export default function Customers() {
             const invoicesSnapshot = await get(invoicesRef);
             
             if (!invoicesSnapshot.exists()) {
-              return { ...customer, outstandingInvoices: [] };
+              return { 
+                ...customer, 
+                outstandingInvoices: [],
+                outstanding: 0 
+              };
             }
 
             const allInvoices = invoicesSnapshot.val();
+            // Filter for pending/unpaid invoices only (not 'paid' or 'Paid')
             const customerInvoices = Object.values(allInvoices || {})
-              .filter((inv: any) => (inv.customerId === customer.uniqueId || inv.customerId === customer.id) && inv.status !== 'Paid')
+              .filter((inv: any) => {
+                const isPending = inv.status?.toLowerCase() !== 'paid';
+                const isCustomer = inv.customerId === customer.uniqueId || inv.customerId === customer.id;
+                return isCustomer && isPending;
+              })
               .map((inv: any) => ({
                 invoiceNo: inv.invoiceNumber || inv.invoiceNo || 'N/A',
                 amount: inv.total || 0,
                 dueDate: inv.dueDate || inv.date || ''
               }));
 
+            // Calculate outstanding as sum of pending invoice amounts
+            const calculatedOutstanding = customerInvoices.reduce((sum, inv) => sum + inv.amount, 0);
+
             return {
               ...customer,
-              outstandingInvoices: customerInvoices
+              outstandingInvoices: customerInvoices,
+              outstanding: calculatedOutstanding
             };
           } catch (error) {
             console.error(`Error fetching invoices for customer ${customer.id}:`, error);
-            return { ...customer, outstandingInvoices: [] };
+            return { 
+              ...customer, 
+              outstandingInvoices: [],
+              outstanding: 0 
+            };
           }
         })
       );
