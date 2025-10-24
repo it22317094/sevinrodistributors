@@ -33,16 +33,6 @@ interface ItemCode {
   price: number;
 }
 
-interface InvoiceData {
-  id: string;
-  invoiceNumber: string;
-  customerName: string;
-  total: number;
-  status: string;
-  date: string;
-  createdAt: string;
-}
-
 interface SavedOrder {
   id: string;
   customerName: string;
@@ -71,7 +61,6 @@ export default function SalesOrder() {
     { id: "1", styleNo: "", description: "", size: "", quantity: 0, branch: "", rate: 0, amount: 0, remarks: "" }
   ]);
   const [availableItemCodes, setAvailableItemCodes] = useState<ItemCode[]>([]);
-  const [existingInvoices, setExistingInvoices] = useState<InvoiceData[]>([]);
   const [savedOrders, setSavedOrders] = useState<SavedOrder[]>([]);
 
   // Fetch customers
@@ -132,31 +121,6 @@ export default function SalesOrder() {
         price: data[key].price
       }));
       setAvailableItemCodes(codes);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // Fetch existing invoices
-  useEffect(() => {
-    const invoicesRef = ref(realtimeDb, 'invoices');
-    
-    const unsubscribe = onValue(invoicesRef, (snapshot) => {
-      const data = snapshot.val();
-      if (!data) {
-        setExistingInvoices([]);
-        return;
-      }
-
-      const invoicesList: InvoiceData[] = Object.entries(data).map(([key, value]: [string, any]) => ({
-        id: key,
-        ...value
-      }));
-      
-      // Sort by creation date, newest first
-      invoicesList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
-      setExistingInvoices(invoicesList);
     });
 
     return () => unsubscribe();
@@ -676,54 +640,6 @@ export default function SalesOrder() {
           <h1 className="text-3xl font-bold text-primary mb-2">Create Sales Order</h1>
           <p className="text-muted-foreground">Create a new sales order for your customers</p>
         </div>
-
-        {/* All Previous Invoices Section */}
-        {existingInvoices.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>All Previous Invoices</span>
-                <Badge variant="secondary">{existingInvoices.length} Total</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
-                {existingInvoices.map((invoice) => (
-                  <div
-                    key={invoice.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold">{invoice.invoiceNumber}</span>
-                        <Badge 
-                          variant={invoice.status === "paid" ? "default" : "secondary"}
-                        >
-                          {invoice.status}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        <span>{invoice.customerName}</span>
-                        <span className="mx-2">•</span>
-                        <span>{invoice.date}</span>
-                        <span className="mx-2">•</span>
-                        <span className="font-medium">RS {invoice.total?.toLocaleString()}</span>
-                      </div>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => generateInvoicePDF(invoice.id)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      Download PDF
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* All Saved Sales Orders Section */}
         {savedOrders.length > 0 && (
