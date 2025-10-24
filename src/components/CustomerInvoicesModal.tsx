@@ -63,15 +63,36 @@ export function CustomerInvoicesModal({
           .filter(([_, invoice]: [string, any]) => 
             invoice.customerId === customerId
           )
-          .map(([id, invoice]: [string, any]) => ({
-            id,
-            invoiceNumber: invoice.invoiceNumber || invoice.invoiceNo || 'N/A',
-            date: invoice.date || invoice.createdAt || '',
-            dueDate: invoice.dueDate || '',
-            total: invoice.total || 0,
-            status: invoice.status || 'Pending',
-            items: invoice.items || []
-          }))
+          .map(([id, invoice]: [string, any]) => {
+            // Parse items - handle both array and object formats
+            let parsedItems: any[] = [];
+            if (invoice.items) {
+              if (Array.isArray(invoice.items)) {
+                parsedItems = invoice.items;
+              } else if (typeof invoice.items === 'object') {
+                // Convert object to array
+                parsedItems = Object.values(invoice.items);
+              }
+            }
+            
+            // Map items to ensure they have the correct structure
+            const mappedItems = parsedItems.map((item: any) => ({
+              name: item.name || item.description || 'Item',
+              quantity: item.quantity || item.qty || 0,
+              price: item.price || 0,
+              amount: item.amount || (item.quantity || item.qty || 0) * (item.price || 0)
+            }));
+            
+            return {
+              id,
+              invoiceNumber: invoice.invoiceNumber || invoice.invoiceNo || 'N/A',
+              date: invoice.date || invoice.createdAt || '',
+              dueDate: invoice.dueDate || '',
+              total: invoice.total || 0,
+              status: invoice.status || 'Pending',
+              items: mappedItems
+            };
+          })
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         
         setInvoices(customerInvoices);
