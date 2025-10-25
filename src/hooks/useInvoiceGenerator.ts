@@ -72,16 +72,17 @@ export const useInvoiceGenerator = () => {
 
 
       // Calculate totals
-      const tableData = items.map((item, index) => {
+      const tableData = items.map((item: any, index) => {
         const lineTotal = item.quantity * item.price;
+        const branch = item.branch || '';
         return [
           (index + 1).toString(),
           item.item_code,
           item.description,
           item.quantity.toString(),
+          branch,
           item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          'Rs.',
-          lineTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          `RS ${lineTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         ];
       });
 
@@ -152,7 +153,7 @@ export const useInvoiceGenerator = () => {
 
       // Items table with orange header and peach rows
       autoTable(doc, {
-        head: [['No', 'Item Code', 'Description', 'Qty', 'Price', '', 'Total']],
+        head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', 'Total']],
         body: tableData,
         startY: 85,
         styles: {
@@ -176,12 +177,12 @@ export const useInvoiceGenerator = () => {
         },
         columnStyles: {
           0: { halign: 'center', cellWidth: 15 },
-          1: { cellWidth: 25 },
-          2: { cellWidth: 50 },
-          3: { halign: 'center', cellWidth: 20 },
-          4: { halign: 'right', cellWidth: 25 },
-          5: { halign: 'left', cellWidth: 15 },
-          6: { halign: 'right', cellWidth: 30 },
+          1: { cellWidth: 22 },
+          2: { cellWidth: 30 },
+          3: { halign: 'center', cellWidth: 12 },
+          4: { cellWidth: 20 },
+          5: { halign: 'right', cellWidth: 18 },
+          6: { halign: 'right', cellWidth: 32 },
         },
         margin: { left: 15, right: 15 },
       });
