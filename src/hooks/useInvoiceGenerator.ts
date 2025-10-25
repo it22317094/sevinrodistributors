@@ -10,6 +10,7 @@ interface InvoiceItem {
   description: string;
   quantity: number;
   price: number;
+  branch?: string;
 }
 
 interface InvoiceData {
@@ -63,6 +64,7 @@ export const useInvoiceGenerator = () => {
           description: it.description || '',
           quantity: it.quantity ?? it.qty ?? 0,
           price: it.price ?? it.unitPrice ?? 0,
+          branch: it.branch || '',
         }));
       }
 
@@ -72,7 +74,7 @@ export const useInvoiceGenerator = () => {
 
 
       // Calculate totals
-      const tableData = items.map((item: any, index) => {
+      const tableData = items.map((item, index) => {
         const lineTotal = item.quantity * item.price;
         const branch = item.branch || '';
         return [
