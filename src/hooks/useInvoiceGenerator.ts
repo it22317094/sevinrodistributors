@@ -179,7 +179,7 @@ export const useInvoiceGenerator = () => {
           0: { halign: 'center', cellWidth: 12 },
           1: { cellWidth: 25 },
           2: { cellWidth: 45 },
-          3: { halign: 'center', cellWidth: 15 },
+          3: { halign: 'center', cellWidth: 18 },
           4: { cellWidth: 25 },
           5: { halign: 'right', cellWidth: 22 },
           6: { halign: 'right', cellWidth: 36 },
