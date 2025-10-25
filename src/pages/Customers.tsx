@@ -161,7 +161,7 @@ export default function Customers() {
                         .join(' + ')} = 
                     </div>
                     <div className="text-2xl font-bold text-red-600">
-                      Rs. {totalOutstanding.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      Rs. {totalOutstanding.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
                   </>
                 ) : (

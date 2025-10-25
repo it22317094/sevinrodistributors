@@ -68,7 +68,7 @@ export function CustomerCard({ customer, onViewDetails }: CustomerCardProps) {
           <div className={`text-2xl font-bold ${
             hasOutstanding ? 'text-destructive' : 'text-success'
           }`}>
-            Rs. {customer.outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            Rs. {customer.outstanding.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           {hasOutstanding && customer.outstandingInvoices && customer.outstandingInvoices.length > 0 && (
             <div className="text-xs text-muted-foreground mt-1">
@@ -103,7 +103,7 @@ export function CustomerCard({ customer, onViewDetails }: CustomerCardProps) {
                     )}
                   </div>
                   <div className="text-sm font-semibold text-destructive">
-                    Rs. {invoice.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    Rs. {invoice.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
               ))}
