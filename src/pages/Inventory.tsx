@@ -7,8 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, Package, AlertTriangle, Layers, Eye, Trash2, ArrowUpDown, Upload } from "lucide-react";
-import { BulkImportModal } from "@/components/BulkImportModal";
+import { Plus, Search, Package, AlertTriangle, Layers, Eye, Trash2, ArrowUpDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
 import { ref, push, set, onValue, query, orderByChild, remove } from "firebase/database";
@@ -49,7 +48,6 @@ export default function Inventory() {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
-  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [selectedItemHistory, setSelectedItemHistory] = useState<InventoryLog[]>([]);
   const [selectedItemName, setSelectedItemName] = useState("");
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
@@ -108,44 +106,6 @@ export default function Inventory() {
 
     setFilteredInventory(filtered);
   }, [inventory, searchTerm, sortOrder]);
-
-  const handleBulkImport = async (items: any[]) => {
-    if (!isAuthenticated) return;
-    
-    try {
-      const inventoryRef = ref(realtimeDb, 'inventory');
-      let successCount = 0;
-      
-      for (const item of items) {
-        const newItemRef = push(inventoryRef);
-        await set(newItemRef, {
-          styleNo: item.styleNo,
-          item: item.styleNo,
-          description: item.description || "",
-          unitPrice: item.unitPrice,
-          quantity: 0,
-          unit: "",
-          minStock: 0,
-          supplier: "",
-          createdAt: Date.now(),
-          updatedAt: Date.now()
-        });
-        successCount++;
-      }
-      
-      toast({
-        title: "Success",
-        description: `${successCount} items imported successfully`,
-      });
-    } catch (error) {
-      console.error("Error importing items:", error);
-      toast({
-        title: "Error",
-        description: "Failed to import items",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleAddItem = async () => {
     if (!isAuthenticated || !formData.styleNo) return;
@@ -364,16 +324,10 @@ export default function Inventory() {
             <h1 className="text-3xl font-bold text-primary mb-2">Inventory Management</h1>
             <p className="text-muted-foreground">Track and manage your fabric inventory</p>
           </div>
-          <div className="flex gap-2 mt-4 sm:mt-0">
-            <Button variant="outline" onClick={() => setShowBulkImportModal(true)}>
-              <Upload className="h-4 w-4 mr-2" />
-              Bulk Import
-            </Button>
-            <Button onClick={() => setShowAddModal(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Item
-            </Button>
-          </div>
+          <Button className="mt-4 sm:mt-0" onClick={() => setShowAddModal(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Item
+          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -750,13 +704,6 @@ export default function Inventory() {
             </div>
           </DialogContent>
         </Dialog>
-
-        {/* Bulk Import Modal */}
-        <BulkImportModal
-          open={showBulkImportModal}
-          onOpenChange={setShowBulkImportModal}
-          onImportSuccess={handleBulkImport}
-        />
       </div>
     </div>
   );

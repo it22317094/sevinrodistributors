@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { ref, push, get, runTransaction, set } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Upload } from "lucide-react";
+import { BulkImportModal } from "@/components/BulkImportModal";
 interface InvoiceItem {
   id: string;
   item_code: string;
@@ -56,6 +57,7 @@ const InvoiceCreate = () => {
     price: 0
   });
   const [showAddItemCode, setShowAddItemCode] = useState(false);
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
 
   // Predefined items based on the invoice image
   const predefinedItems = [{
@@ -212,6 +214,25 @@ const InvoiceCreate = () => {
       updateItem(itemId, 'description', predefined.description);
       updateItem(itemId, 'price', predefined.price);
     }
+  };
+
+  const handleBulkImport = (importedItems: any[]) => {
+    const newItems = importedItems.map((importItem, index) => ({
+      id: (items.length + index + 1).toString(),
+      item_code: importItem.styleNo,
+      description: importItem.description || '',
+      quantity: 0,
+      branch: branch || '',
+      price: importItem.unitPrice,
+      total: 0
+    }));
+    
+    setItems([...items, ...newItems]);
+    
+    toast({
+      title: "Success",
+      description: `${importedItems.length} items imported successfully`,
+    });
   };
 
   // Add new item code to Firebase
@@ -416,6 +437,10 @@ const InvoiceCreate = () => {
                     <CardDescription>Add products and services</CardDescription>
                   </div>
                   <div className="flex gap-2">
+                    <Button type="button" onClick={() => setShowBulkImportModal(true)} variant="outline" size="sm">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Bulk Import
+                    </Button>
                     <Button type="button" onClick={() => setShowAddItemCode(!showAddItemCode)} variant="outline" size="sm">
                       {showAddItemCode ? 'Cancel' : 'Add Item Code'}
                     </Button>
@@ -528,6 +553,13 @@ const InvoiceCreate = () => {
             </Button>
           </div>
         </form>
+
+        {/* Bulk Import Modal */}
+        <BulkImportModal
+          open={showBulkImportModal}
+          onOpenChange={setShowBulkImportModal}
+          onImportSuccess={handleBulkImport}
+        />
       </div>
     </div>;
 };
