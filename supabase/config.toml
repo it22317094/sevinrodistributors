@@ -1,0 +1,4 @@
+project_id = "oftsdgnxocpdgadptiis"
+
+[functions.parse-inventory-file]
+verify_jwt = false
