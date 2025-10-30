@@ -121,13 +121,13 @@ export const generateInvoicePDF = async (
         fillColor: [255, 255, 255],
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 22 },
-        1: { cellWidth: 22 },
-        2: { cellWidth: 22 },
-        3: { halign: 'center', cellWidth: 22 },
-        4: { cellWidth: 22 },
-        5: { halign: 'right', cellWidth: 22 },
-        6: { halign: 'right', cellWidth: 22 },
+        0: { halign: 'center', cellWidth: 18, overflow: 'ellipsize' }, // No -> wide enough for 2+ digits
+        1: { cellWidth: 28 },  // Style No
+        2: { cellWidth: 180 }, // Description -> make this the largest so text doesn't squeeze others
+        3: { halign: 'center', cellWidth: 24, overflow: 'ellipsize' }, // Qty
+        4: { cellWidth: 50 },  // Branch
+        5: { halign: 'right', cellWidth: 36, overflow: 'ellipsize' },  // Price
+        6: { halign: 'right', cellWidth: 46, overflow: 'ellipsize' }   // Total
       },
       margin: { left: 20, right: 20 },
     });
