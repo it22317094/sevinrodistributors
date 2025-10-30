@@ -121,7 +121,7 @@ export const generateInvoicePDF = async (
         fillColor: [255, 255, 255],
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 15 },
+        0: { halign: 'center', cellWidth: 22 },
         1: { cellWidth: 22 },
         2: { cellWidth: 30 },
         3: { halign: 'center', cellWidth: 12 },
