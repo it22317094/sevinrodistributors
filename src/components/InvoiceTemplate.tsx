@@ -123,11 +123,11 @@ export const generateInvoicePDF = async (
       columnStyles: {
         0: { halign: 'center', cellWidth: 22 },
         1: { cellWidth: 22 },
-        2: { cellWidth: 30 },
-        3: { halign: 'center', cellWidth: 12 },
-        4: { cellWidth: 20 },
-        5: { halign: 'right', cellWidth: 18 },
-        6: { halign: 'right', cellWidth: 32 },
+        2: { cellWidth: 22 },
+        3: { halign: 'center', cellWidth: 22 },
+        4: { cellWidth: 22 },
+        5: { halign: 'right', cellWidth: 22 },
+        6: { halign: 'right', cellWidth: 22 },
       },
       margin: { left: 20, right: 20 },
     });
