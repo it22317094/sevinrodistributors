@@ -96,6 +96,19 @@ export const generateInvoicePDF = async (
     tableData.push(['', '', '', '', '', '', '']);
   }
   
+  // Define column widths for A4 page (total usable width ~170 with margins)
+  const marginLeft = 20;
+  const marginRight = 20;
+  const widths = {
+    no: 12,           // No column
+    style: 30,        // Style No
+    description: 'auto' as const, // Description takes remaining space
+    qty: 18,          // Qty
+    branch: 35,       // Branch
+    price: 30,        // Price
+    total: 38         // Total
+  };
+  
   try {
     autoTable(doc, {
       head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', 'Total']],
@@ -121,15 +134,15 @@ export const generateInvoicePDF = async (
         fillColor: [255, 255, 255],
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 15 },  // No - centered, fits 2-digit numbers
-        1: { halign: 'left', cellWidth: 35 },    // Style No - left aligned
-        2: { halign: 'left', cellWidth: 'auto' }, // Description - left aligned, takes remaining space
-        3: { halign: 'center', cellWidth: 20 },  // Qty - centered
-        4: { halign: 'left', cellWidth: 45 },    // Branch - left aligned
-        5: { halign: 'right', cellWidth: 35 },   // Price - right aligned
-        6: { halign: 'right', cellWidth: 45 }    // Total - right aligned
+        0: { halign: 'center', cellWidth: widths.no, valign: 'middle' },    // No column
+        1: { halign: 'left',   cellWidth: widths.style },                   // Style No
+        2: { halign: 'left',   cellWidth: widths.description },             // Description
+        3: { halign: 'center', cellWidth: widths.qty },                     // Qty
+        4: { halign: 'left',   cellWidth: widths.branch },                  // Branch
+        5: { halign: 'right',  cellWidth: widths.price },                   // Price
+        6: { halign: 'right',  cellWidth: widths.total }                    // Total
       },
-      margin: { left: 20, right: 20 },
+      margin: { left: marginLeft, right: marginRight },
     });
   } catch (error) {
     console.error('Error generating table:', error);
