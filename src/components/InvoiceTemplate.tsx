@@ -99,14 +99,15 @@ export const generateInvoicePDF = async (
   // Define column widths for A4 page - matching reference design
   const marginLeft = 20;
   const marginRight = 20;
+  // REVISED WIDTHS: These now fit within the A4 page margins.
   const widths = {
-    no: 20,           // No column - wider to prevent vertical stacking
-    style: 32,        // Style No - medium width for product codes
-    description: 'auto' as const, // Description - auto-adjusts to fill remaining space
-    qty: 20,          // Qty - prevent number stacking
-    branch: 38,       // Branch - medium width for branch names
-    price: 32,        // Price - right-aligned price values
-    total: 42         // Total - widest for totals with "RS" prefix
+    no: 15,
+    style: 25,
+    description: 'auto' as const,
+    qty: 15,
+    branch: 30,
+    price: 30,
+    total: 35
   };
   
   try {
@@ -114,7 +115,7 @@ export const generateInvoicePDF = async (
       head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', 'Total']],
       body: tableData,
       startY: 90,
-      tableWidth: 'auto',
+      tableWidth: 'wrap', // Changed for better predictability
       styles: {
         fontSize: 8,
         cellPadding: 2.5,
@@ -141,13 +142,13 @@ export const generateInvoicePDF = async (
         fillColor: [255, 255, 255],
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: widths.no, valign: 'middle' },    // No
-        1: { halign: 'left',   cellWidth: widths.style },                   // Style No
-        2: { halign: 'left',   cellWidth: widths.description },             // Description
-        3: { halign: 'center', cellWidth: widths.qty },                     // Qty
-        4: { halign: 'left',   cellWidth: widths.branch },                  // Branch
-        5: { halign: 'right',  cellWidth: widths.price },                   // Price
-        6: { halign: 'right',  cellWidth: widths.total }                    // Total
+        0: { halign: 'center', cellWidth: widths.no },        // No
+        1: { halign: 'left',   cellWidth: widths.style },      // Style No
+        2: { halign: 'left',   cellWidth: widths.description },// Description
+        3: { halign: 'center', cellWidth: widths.qty },        // Qty
+        4: { halign: 'left',   cellWidth: widths.branch },     // Branch
+        5: { halign: 'right',  cellWidth: widths.price },      // Price
+        6: { halign: 'right',  cellWidth: widths.total }       // Total
       },
       margin: { left: marginLeft, right: marginRight },
     });
