@@ -100,10 +100,10 @@ export const generateInvoicePDF = async (
   const marginLeft = 20;
   const marginRight = 20;
   const widths = {
-    no: 15,           // No column - wide enough for 2-digit numbers
+    no: 20,           // No column - wider to prevent vertical stacking
     style: 32,        // Style No - medium width for product codes
     description: 'auto' as const, // Description - auto-adjusts to fill remaining space
-    qty: 18,          // Qty - narrow for quantities
+    qty: 20,          // Qty - prevent number stacking
     branch: 38,       // Branch - medium width for branch names
     price: 32,        // Price - right-aligned price values
     total: 42         // Total - widest for totals with "RS" prefix
@@ -114,15 +114,16 @@ export const generateInvoicePDF = async (
       head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', 'Total']],
       body: tableData,
       startY: 90,
-      tableWidth: 'auto', // IMPORTANT: honor cellWidth values
+      tableWidth: 'auto',
       styles: {
         fontSize: 8,
-        cellPadding: 3.5,
+        cellPadding: 2.5,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
-        overflow: 'ellipsize', // prevents breaking numbers into single characters
+        overflow: 'visible',
         valign: 'middle',
-        minCellHeight: 10
+        minCellHeight: 10,
+        halign: 'center'
       },
       headStyles: {
         fillColor: [255, 165, 0],
