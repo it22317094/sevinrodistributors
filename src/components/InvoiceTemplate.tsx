@@ -114,17 +114,23 @@ export const generateInvoicePDF = async (
       head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', 'Total']],
       body: tableData,
       startY: 90,
+      tableWidth: 'auto', // IMPORTANT: honor cellWidth values
       styles: {
         fontSize: 8,
         cellPadding: 3.5,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
+        overflow: 'ellipsize', // prevents breaking numbers into single characters
+        valign: 'middle',
+        minCellHeight: 10
       },
       headStyles: {
         fillColor: [255, 165, 0],
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         fontSize: 9,
+        halign: 'center',
+        valign: 'middle'
       },
       bodyStyles: {
         fillColor: [255, 255, 255],
@@ -134,7 +140,7 @@ export const generateInvoicePDF = async (
         fillColor: [255, 255, 255],
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: widths.no, valign: 'middle' },    // No column
+        0: { halign: 'center', cellWidth: widths.no, valign: 'middle' },    // No
         1: { halign: 'left',   cellWidth: widths.style },                   // Style No
         2: { halign: 'left',   cellWidth: widths.description },             // Description
         3: { halign: 'center', cellWidth: widths.qty },                     // Qty
