@@ -96,17 +96,17 @@ export const generateInvoicePDF = async (
     tableData.push(['', '', '', '', '', '', '']);
   }
   
-  // Define column widths for A4 page (total usable width ~170 with margins)
+  // Define column widths for A4 page - matching reference design
   const marginLeft = 20;
   const marginRight = 20;
   const widths = {
-    no: 12,           // No column
-    style: 30,        // Style No
-    description: 'auto' as const, // Description takes remaining space
-    qty: 18,          // Qty
-    branch: 35,       // Branch
-    price: 30,        // Price
-    total: 38         // Total
+    no: 15,           // No column - wide enough for 2-digit numbers
+    style: 32,        // Style No - medium width for product codes
+    description: 'auto' as const, // Description - auto-adjusts to fill remaining space
+    qty: 18,          // Qty - narrow for quantities
+    branch: 38,       // Branch - medium width for branch names
+    price: 32,        // Price - right-aligned price values
+    total: 42         // Total - widest for totals with "RS" prefix
   };
   
   try {
