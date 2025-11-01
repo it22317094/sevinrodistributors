@@ -115,7 +115,7 @@ export const generateInvoicePDF = async (
       head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', 'Total']],
       body: tableData,
       startY: 90,
-      tableWidth: 'wrap', // Changed for better predictability
+      tableWidth: 'auto', // Respects specified column widths
       styles: {
         fontSize: 8,
         cellPadding: 2.5,
