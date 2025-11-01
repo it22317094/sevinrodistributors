@@ -96,18 +96,17 @@ export const generateInvoicePDF = async (
     tableData.push(['', '', '', '', '', '', '']);
   }
   
-  // Define column widths for A4 page - matching reference design
+  // FIXED: Adjusted column widths to prevent vertical text wrapping
   const marginLeft = 20;
   const marginRight = 20;
-  // REVISED WIDTHS: These now fit within the A4 page margins.
   const widths = {
-    no: 25,           // No column - 25 units wide to prevent vertical stacking
-    style: 25,
-    description: 'auto' as const,
-    qty: 15,
-    branch: 30,
-    price: 30,
-    total: 35
+    no: 18,           // Increased for better spacing with 2-digit numbers
+    style: 25,        
+    description: 'auto' as const,  // Auto-fills remaining space
+    qty: 15,          
+    branch: 28,       
+    price: 28,        
+    total: 32         
   };
   
   try {
@@ -121,7 +120,7 @@ export const generateInvoicePDF = async (
         cellPadding: 2.5,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
-        overflow: 'visible',
+        overflow: 'linebreak',  // Changed from 'visible' to 'linebreak'
         valign: 'middle',
         minCellHeight: 10,
         halign: 'center'
@@ -142,13 +141,13 @@ export const generateInvoicePDF = async (
         fillColor: [255, 255, 255],
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: widths.no },        // No
-        1: { halign: 'left',   cellWidth: widths.style },      // Style No
-        2: { halign: 'left',   cellWidth: widths.description },// Description
-        3: { halign: 'center', cellWidth: widths.qty },        // Qty
-        4: { halign: 'left',   cellWidth: widths.branch },     // Branch
-        5: { halign: 'right',  cellWidth: widths.price },      // Price
-        6: { halign: 'right',  cellWidth: widths.total }       // Total
+        0: { halign: 'center', cellWidth: widths.no, overflow: 'linebreak' },        // No
+        1: { halign: 'left',   cellWidth: widths.style, overflow: 'linebreak' },     // Style No
+        2: { halign: 'left',   cellWidth: widths.description },                      // Description
+        3: { halign: 'center', cellWidth: widths.qty, overflow: 'linebreak' },       // Qty
+        4: { halign: 'left',   cellWidth: widths.branch, overflow: 'linebreak' },    // Branch
+        5: { halign: 'right',  cellWidth: widths.price, overflow: 'linebreak' },     // Price
+        6: { halign: 'right',  cellWidth: widths.total, overflow: 'linebreak' }      // Total
       },
       margin: { left: marginLeft, right: marginRight },
     });
