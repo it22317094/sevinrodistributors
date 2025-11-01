@@ -100,13 +100,13 @@ export const generateInvoicePDF = async (
   const marginLeft = 20;
   const marginRight = 20;
   const widths = {
-    no: 18,           // Increased for better spacing with 2-digit numbers
+    no: 28,           // Wide enough for 6-digit numbers displayed horizontally
     style: 25,        
     description: 'auto' as const,  // Auto-fills remaining space
     qty: 15,          
-    branch: 28,       
-    price: 28,        
-    total: 32         
+    branch: 25,       
+    price: 26,        
+    total: 30         
   };
   
   try {
