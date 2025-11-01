@@ -101,7 +101,7 @@ export const generateInvoicePDF = async (
   const marginRight = 20;
   // REVISED WIDTHS: These now fit within the A4 page margins.
   const widths = {
-    no: 15,
+    no: 25,           // No column - 25 units wide to prevent vertical stacking
     style: 25,
     description: 'auto' as const,
     qty: 15,
