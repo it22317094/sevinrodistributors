@@ -180,9 +180,9 @@ export const useInvoiceGenerator = () => {
         columnStyles: {
           0: { halign: 'center', cellWidth: 15 },
           1: { cellWidth: 22 },
-          2: { cellWidth: 50 },
-          3: { halign: 'center', cellWidth: 15 },
-          4: { cellWidth: 28 },
+          2: { cellWidth: 48 },
+          3: { halign: 'center', cellWidth: 20 },
+          4: { cellWidth: 27 },
           5: { halign: 'right', cellWidth: 25 },
           6: { halign: 'right', cellWidth: 35 },
         },
