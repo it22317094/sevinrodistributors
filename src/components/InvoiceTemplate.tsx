@@ -114,14 +114,14 @@ export const generateInvoicePDF = async (
         fillColor: [255, 255, 255],
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 12 },   // No
+        0: { halign: 'center', cellWidth: 15 },   // No - wider for better spacing
         1: { cellWidth: 18 },                      // Style No
-        2: { cellWidth: 30 },                      // Description
+        2: { cellWidth: 28 },                      // Description
         3: { halign: 'center', cellWidth: 12 },    // Qty
-        4: { cellWidth: 25 },                      // Branch
+        4: { cellWidth: 23 },                      // Branch
         5: { halign: 'right', cellWidth: 18 },     // Price
         6: { halign: 'right', cellWidth: 32 },     // Total
-        7: { cellWidth: 30 },                      // Remarks
+        7: { cellWidth: 28 },                      // Remarks
       },
       margin: { left: 20, right: 20 },
     });
