@@ -83,8 +83,8 @@ export const useInvoiceGenerator = () => {
           item.description,
           item.quantity.toString(),
           branch,
-          item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-          `RS ${lineTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          `${item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          `Rs ${lineTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
         ];
       });
 
@@ -178,13 +178,13 @@ export const useInvoiceGenerator = () => {
           fillColor: [255, 255, 255],
         },
         columnStyles: {
-          0: { halign: 'center', cellWidth: 12 },
-          1: { cellWidth: 25 },
-          2: { cellWidth: 45 },
-          3: { halign: 'center', cellWidth: 18 },
-          4: { cellWidth: 25 },
-          5: { halign: 'right', cellWidth: 22 },
-          6: { halign: 'right', cellWidth: 36 },
+          0: { halign: 'center', cellWidth: 15 },
+          1: { cellWidth: 22 },
+          2: { cellWidth: 50 },
+          3: { halign: 'center', cellWidth: 15 },
+          4: { cellWidth: 28 },
+          5: { halign: 'right', cellWidth: 25 },
+          6: { halign: 'right', cellWidth: 35 },
         },
         margin: { left: 15, right: 15 },
       });
