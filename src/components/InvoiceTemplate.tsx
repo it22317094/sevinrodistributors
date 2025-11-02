@@ -41,7 +41,7 @@ export const generateInvoicePDF = async (
   doc.text('No - 136/A, Akurana, Gampaha', rightX, 20, { align: 'right' });
   doc.text('Te: 071 39 69 580, 0777 52 90 58', rightX, 25, { align: 'right' });
   
-  // INVOICE title (centered)
+  // Title (centered)
   doc.setFontSize(18);
   doc.setFont(undefined, 'bold');
   doc.text('INVOICE', pageWidth / 2, 50, { align: 'center' });
@@ -67,12 +67,10 @@ export const generateInvoicePDF = async (
   doc.setFont(undefined, 'normal');
   doc.setFontSize(8);
   doc.text(`Invoice No - SI00${invoiceNumber}`, invoiceDetailsX, 70);
-  // FIXED: Use sale.orderNo from the sale object
   doc.text(`Order No - ${sale.orderNo || ''}`, invoiceDetailsX, 75);
   doc.text(`Date - ${new Date(sale.date).toLocaleDateString('en-GB')}`, invoiceDetailsX, 80);
   
-  // Items table
-  // FIXED: Convert items object to array and use correct field names
+  // Items table - using same structure as Sales Order
   const tableData = Object.values(sale.items).map((item: any, index) => {
     const inventoryItem = inventory.find(inv => inv.sku === item.sku);
     const itemCode = item.item_code || item.code || '';
@@ -84,54 +82,29 @@ export const generateInvoicePDF = async (
       itemCode,
       item.description || inventoryItem?.name || 'T-Shirt',
       quantity.toString(),
-      branch,
+      branch || '',
       `${item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      `RS ${(quantity * item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+      `RS ${(quantity * item.price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      item.remarks || ''
     ];
   });
   
-  // Add empty rows to fill the table (like in the design)
-  const emptyRowsNeeded = Math.max(0, 15 - tableData.length);
-  for (let i = 0; i < emptyRowsNeeded; i++) {
-    tableData.push(['', '', '', '', '', '', '']);
-  }
-  
-  // FIXED: Adjusted column widths to prevent vertical text wrapping
-  const marginLeft = 20;
-  const marginRight = 20;
-  const widths = {
-    no: 28,           // Wide enough for 6-digit numbers displayed horizontally
-    style: 25,        
-    description: 'auto' as const,  // Auto-fills remaining space
-    qty: 15,          
-    branch: 25,       
-    price: 26,        
-    total: 30         
-  };
-  
   try {
     autoTable(doc, {
-      head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', 'Total']],
+      head: [['No', 'Style No', 'Description', 'Qty', 'Branch', 'Price', 'Total', 'Remarks']],
       body: tableData,
       startY: 90,
-      tableWidth: 'auto', // Respects specified column widths
       styles: {
         fontSize: 8,
-        cellPadding: 2.5,
+        cellPadding: 3.5,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
-        overflow: 'linebreak',  // Changed from 'visible' to 'linebreak'
-        valign: 'middle',
-        minCellHeight: 10,
-        halign: 'center'
       },
       headStyles: {
         fillColor: [255, 165, 0],
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         fontSize: 9,
-        halign: 'center',
-        valign: 'middle'
       },
       bodyStyles: {
         fillColor: [255, 255, 255],
@@ -141,15 +114,16 @@ export const generateInvoicePDF = async (
         fillColor: [255, 255, 255],
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: widths.no, overflow: 'linebreak' },        // No
-        1: { halign: 'left',   cellWidth: widths.style, overflow: 'linebreak' },     // Style No
-        2: { halign: 'left',   cellWidth: widths.description },                      // Description
-        3: { halign: 'center', cellWidth: widths.qty, overflow: 'linebreak' },       // Qty
-        4: { halign: 'left',   cellWidth: widths.branch, overflow: 'linebreak' },    // Branch
-        5: { halign: 'right',  cellWidth: widths.price, overflow: 'linebreak' },     // Price
-        6: { halign: 'right',  cellWidth: widths.total, overflow: 'linebreak' }      // Total
+        0: { halign: 'center', cellWidth: 12 },   // No
+        1: { cellWidth: 18 },                      // Style No
+        2: { cellWidth: 30 },                      // Description
+        3: { halign: 'center', cellWidth: 12 },    // Qty
+        4: { cellWidth: 25 },                      // Branch
+        5: { halign: 'right', cellWidth: 18 },     // Price
+        6: { halign: 'right', cellWidth: 32 },     // Total
+        7: { cellWidth: 30 },                      // Remarks
       },
-      margin: { left: marginLeft, right: marginRight },
+      margin: { left: 20, right: 20 },
     });
   } catch (error) {
     console.error('Error generating table:', error);
