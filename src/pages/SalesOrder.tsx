@@ -295,13 +295,13 @@ export default function SalesOrder() {
           fillColor: [255, 255, 255],
         },
         columnStyles: {
-          0: { halign: 'center', cellWidth: 12 },
+          0: { halign: 'center', cellWidth: 15 },
           1: { cellWidth: 18 },
           2: { cellWidth: 30 },
           3: { halign: 'center', cellWidth: 12 },
           4: { cellWidth: 25 },
           5: { halign: 'right', cellWidth: 18 },
-          6: { halign: 'right', cellWidth: 32 },
+          6: { halign: 'right', cellWidth: 29 },
           7: { cellWidth: 30 },
         },
         margin: { left: 20, right: 20 },
@@ -465,13 +465,13 @@ export default function SalesOrder() {
           fillColor: [255, 255, 255],
         },
         columnStyles: {
-          0: { halign: 'center', cellWidth: 12 },   // No
+          0: { halign: 'center', cellWidth: 15 },   // No - space for up to 3 digits
           1: { cellWidth: 18 },                      // Style No
           2: { cellWidth: 30 },                      // Description
           3: { halign: 'center', cellWidth: 12 },    // Qty
           4: { cellWidth: 25 },                      // Branch
           5: { halign: 'right', cellWidth: 18 },     // Price
-          6: { halign: 'right', cellWidth: 32 },     // Total
+          6: { halign: 'right', cellWidth: 29 },     // Total
           7: { cellWidth: 30 },                      // Remarks
         },
         margin: { left: 20, right: 20 },
