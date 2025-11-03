@@ -239,12 +239,12 @@ export default function ReportViewModal({
         total
       }));
 
-    // Pie chart data for outstanding
+    // Pie chart data for invoice status
     const statusData = [
       { name: 'Paid', value: sales.filter(s => s.status === 'paid').length, color: '#22c55e' },
       { name: 'Unpaid', value: sales.filter(s => s.status === 'unpaid').length, color: '#ef4444' },
       { name: 'Partial', value: sales.filter(s => s.status === 'partial').length, color: '#f59e0b' }
-    ];
+    ].filter(item => item.value > 0); // Only show statuses that have data
 
     const totalOutstanding = sales
       .filter(sale => sale.status !== 'paid')
