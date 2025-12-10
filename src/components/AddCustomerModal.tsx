@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ref, set, get, child } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
@@ -19,6 +20,7 @@ interface CustomerFormData {
   email: string;
   address: string;
   telephone: string;
+  branch: string;
 }
 
 export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCustomerModalProps) {
@@ -27,6 +29,7 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
     email: "",
     address: "",
     telephone: "",
+    branch: "",
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -98,6 +101,7 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
         name: formData.name,
         email: formData.email,
         contact: formData.telephone,
+        branch: formData.branch,
         uniqueId: uniqueId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -111,7 +115,7 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
       });
 
       // Reset form and close modal
-      setFormData({ name: "", email: "", address: "", telephone: "" });
+      setFormData({ name: "", email: "", address: "", telephone: "", branch: "" });
       onOpenChange(false);
       
       // Notify parent component to refresh customer list
@@ -178,6 +182,25 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
                 onChange={(e) => handleInputChange("telephone", e.target.value)}
                 placeholder="Enter telephone number"
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="branch">Branch</Label>
+              <Select
+                value={formData.branch}
+                onValueChange={(value) => handleInputChange("branch", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Branch 1">Branch 1</SelectItem>
+                  <SelectItem value="Branch 2">Branch 2</SelectItem>
+                  <SelectItem value="Branch 3">Branch 3</SelectItem>
+                  <SelectItem value="Branch 4">Branch 4</SelectItem>
+                  <SelectItem value="Branch 5">Branch 5</SelectItem>
+                  <SelectItem value="Branch 6">Branch 6</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
