@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { ref, set, get, child } from "firebase/database";
 import { realtimeDb } from "@/lib/firebase";
@@ -20,7 +20,7 @@ interface CustomerFormData {
   email: string;
   address: string;
   telephone: string;
-  branch: string;
+  branches: string[];
 }
 
 export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCustomerModalProps) {
@@ -29,8 +29,19 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
     email: "",
     address: "",
     telephone: "",
-    branch: "",
+    branches: [],
   });
+  
+  const branchOptions = ["Branch 1", "Branch 2", "Branch 3", "Branch 4", "Branch 5", "Branch 6"];
+  
+  const handleBranchToggle = (branch: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      branches: checked 
+        ? [...prev.branches, branch]
+        : prev.branches.filter(b => b !== branch)
+    }));
+  };
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -101,7 +112,7 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
         name: formData.name,
         email: formData.email,
         contact: formData.telephone,
-        branch: formData.branch,
+        branches: formData.branches,
         uniqueId: uniqueId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -115,7 +126,7 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
       });
 
       // Reset form and close modal
-      setFormData({ name: "", email: "", address: "", telephone: "", branch: "" });
+      setFormData({ name: "", email: "", address: "", telephone: "", branches: [] });
       onOpenChange(false);
       
       // Notify parent component to refresh customer list
@@ -184,23 +195,21 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="branch">Branch</Label>
-              <Select
-                value={formData.branch}
-                onValueChange={(value) => handleInputChange("branch", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select branch" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Branch 1">Branch 1</SelectItem>
-                  <SelectItem value="Branch 2">Branch 2</SelectItem>
-                  <SelectItem value="Branch 3">Branch 3</SelectItem>
-                  <SelectItem value="Branch 4">Branch 4</SelectItem>
-                  <SelectItem value="Branch 5">Branch 5</SelectItem>
-                  <SelectItem value="Branch 6">Branch 6</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Branches</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {branchOptions.map((branch) => (
+                  <div key={branch} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={branch}
+                      checked={formData.branches.includes(branch)}
+                      onCheckedChange={(checked) => handleBranchToggle(branch, checked as boolean)}
+                    />
+                    <Label htmlFor={branch} className="text-sm font-normal cursor-pointer">
+                      {branch}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
           <DialogFooter>
