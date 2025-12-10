@@ -32,7 +32,14 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
     branches: [],
   });
   
-  const branchOptions = ["Branch 1", "Branch 2", "Branch 3", "Branch 4", "Branch 5", "Branch 6"];
+  const branchOptions = [
+    { value: "Branch 1", label: "Maharagama (M)" },
+    { value: "Branch 2", label: "Horana (H)" },
+    { value: "Branch 3", label: "Branch 3" },
+    { value: "Branch 4", label: "Branch 4" },
+    { value: "Branch 5", label: "Branch 5" },
+    { value: "Branch 6", label: "Branch 6" },
+  ];
   
   const handleBranchToggle = (branch: string, checked: boolean) => {
     setFormData(prev => ({
@@ -198,14 +205,14 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
               <Label>Branches</Label>
               <div className="grid grid-cols-3 gap-2">
                 {branchOptions.map((branch) => (
-                  <div key={branch} className="flex items-center space-x-2">
+                  <div key={branch.value} className="flex items-center space-x-2">
                     <Checkbox
-                      id={branch}
-                      checked={formData.branches.includes(branch)}
-                      onCheckedChange={(checked) => handleBranchToggle(branch, checked as boolean)}
+                      id={branch.value}
+                      checked={formData.branches.includes(branch.value)}
+                      onCheckedChange={(checked) => handleBranchToggle(branch.value, checked as boolean)}
                     />
-                    <Label htmlFor={branch} className="text-sm font-normal cursor-pointer">
-                      {branch}
+                    <Label htmlFor={branch.value} className="text-sm font-normal cursor-pointer">
+                      {branch.label}
                     </Label>
                   </div>
                 ))}
