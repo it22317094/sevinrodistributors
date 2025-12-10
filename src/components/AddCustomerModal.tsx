@@ -15,13 +15,27 @@ interface AddCustomerModalProps {
   onCustomerAdded?: () => void;
 }
 
+interface BranchData {
+  enabled: boolean;
+  name: string;
+}
+
 interface CustomerFormData {
   name: string;
   email: string;
   address: string;
   telephone: string;
-  branches: string[];
+  branches: { [key: string]: BranchData };
 }
+
+const initialBranches: { [key: string]: BranchData } = {
+  "Branch 1": { enabled: false, name: "" },
+  "Branch 2": { enabled: false, name: "" },
+  "Branch 3": { enabled: false, name: "" },
+  "Branch 4": { enabled: false, name: "" },
+  "Branch 5": { enabled: false, name: "" },
+  "Branch 6": { enabled: false, name: "" },
+};
 
 export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCustomerModalProps) {
   const [formData, setFormData] = useState<CustomerFormData>({
@@ -29,7 +43,7 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
     email: "",
     address: "",
     telephone: "",
-    branches: [],
+    branches: { ...initialBranches },
   });
   
   const branchOptions = ["Branch 1", "Branch 2", "Branch 3", "Branch 4", "Branch 5", "Branch 6"];
@@ -37,9 +51,20 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
   const handleBranchToggle = (branch: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      branches: checked 
-        ? [...prev.branches, branch]
-        : prev.branches.filter(b => b !== branch)
+      branches: {
+        ...prev.branches,
+        [branch]: { ...prev.branches[branch], enabled: checked }
+      }
+    }));
+  };
+
+  const handleBranchNameChange = (branch: string, name: string) => {
+    setFormData(prev => ({
+      ...prev,
+      branches: {
+        ...prev.branches,
+        [branch]: { ...prev.branches[branch], name }
+      }
     }));
   };
   const [loading, setLoading] = useState(false);
@@ -126,7 +151,7 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
       });
 
       // Reset form and close modal
-      setFormData({ name: "", email: "", address: "", telephone: "", branches: [] });
+      setFormData({ name: "", email: "", address: "", telephone: "", branches: { ...initialBranches } });
       onOpenChange(false);
       
       // Notify parent component to refresh customer list
@@ -196,17 +221,27 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
             </div>
             <div className="grid gap-2">
               <Label>Branches</Label>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-3">
                 {branchOptions.map((branch) => (
-                  <div key={branch} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={branch}
-                      checked={formData.branches.includes(branch)}
-                      onCheckedChange={(checked) => handleBranchToggle(branch, checked as boolean)}
-                    />
-                    <Label htmlFor={branch} className="text-sm font-normal cursor-pointer">
-                      {branch}
-                    </Label>
+                  <div key={branch} className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id={branch}
+                        checked={formData.branches[branch]?.enabled || false}
+                        onCheckedChange={(checked) => handleBranchToggle(branch, checked as boolean)}
+                      />
+                      <Label htmlFor={branch} className="text-sm font-normal cursor-pointer">
+                        {branch}
+                      </Label>
+                    </div>
+                    {formData.branches[branch]?.enabled && (
+                      <Input
+                        placeholder={`Enter ${branch} name`}
+                        value={formData.branches[branch]?.name || ""}
+                        onChange={(e) => handleBranchNameChange(branch, e.target.value)}
+                        className="ml-6"
+                      />
+                    )}
                   </div>
                 ))}
               </div>
