@@ -220,7 +220,7 @@ export function AddCustomerModal({ open, onOpenChange, onCustomerAdded }: AddCus
               />
             </div>
             <div className="grid gap-2">
-              <Label>Branches</Label>
+              <Label>Branches <span className="text-muted-foreground text-xs">(Optional)</span></Label>
               <div className="space-y-3">
                 {branchOptions.map((branch) => (
                   <div key={branch} className="space-y-2">
