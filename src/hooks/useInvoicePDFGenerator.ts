@@ -65,7 +65,7 @@ export const useInvoicePDFGenerator = () => {
       const invoiceData: InvoiceData = invoiceSnap.val();
       const companyData: CompanyData = companySnap.exists() ? companySnap.val() : {
         name: "Sevinro Distributors",
-        addressLine: "No : 138/A, Akaravita, Gampaha",
+        addressLine: "No - 136/A, Akarawita, Gampaha",
         phone: "071 39 65 580, 0777 92 90 36"
       };
 
