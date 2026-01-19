@@ -71,7 +71,7 @@ export const useCustomerInvoiceGenerator = () => {
 
       const companyData: CompanyData = companySnap.exists() ? companySnap.val() : {
         name: "Sevinro Distributors",
-        addressLine: "138/A, Alkaravita, Gampaha",
+        addressLine: "No - 136/A, Akarawita, Gampaha",
         phone: "071 39 65 580, 0777 92 90 36"
       };
 

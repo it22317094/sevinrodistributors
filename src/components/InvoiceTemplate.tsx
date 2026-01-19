@@ -38,7 +38,7 @@ export const generateInvoicePDF = async (
   doc.setTextColor(0, 0, 0);
   doc.setFont(undefined, 'normal');
   const rightX = pageWidth - 20;
-  doc.text('No - 136/A, Akurana, Gampaha', rightX, 20, { align: 'right' });
+  doc.text('No - 136/A, Akarawita, Gampaha', rightX, 20, { align: 'right' });
   doc.text('Te: 071 39 69 580, 0777 52 90 58', rightX, 25, { align: 'right' });
   
   // Title (centered)
