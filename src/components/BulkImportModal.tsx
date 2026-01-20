@@ -18,6 +18,7 @@ interface BulkImportModalProps {
 interface ParsedItem {
   styleNo: string;
   description: string;
+  quantity: number;
   unitPrice: number;
 }
 
@@ -191,6 +192,7 @@ export function BulkImportModal({ open, onOpenChange, onImportSuccess }: BulkImp
                     <tr>
                       <th className="text-left p-2 font-medium">Style No</th>
                       <th className="text-left p-2 font-medium">Description</th>
+                      <th className="text-right p-2 font-medium">Qty</th>
                       <th className="text-right p-2 font-medium">Unit Price</th>
                     </tr>
                   </thead>
@@ -199,6 +201,7 @@ export function BulkImportModal({ open, onOpenChange, onImportSuccess }: BulkImp
                       <tr key={idx} className="border-t">
                         <td className="p-2">{item.styleNo}</td>
                         <td className="p-2">{item.description || '-'}</td>
+                        <td className="p-2 text-right">{item.quantity || 1}</td>
                         <td className="p-2 text-right">Rs. {item.unitPrice.toFixed(2)}</td>
                       </tr>
                     ))}
