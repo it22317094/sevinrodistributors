@@ -58,7 +58,17 @@ export default function Login() {
         description: "Logged in successfully!",
       });
     } catch (error: any) {
-      setError(error.message);
+      console.error("Login error:", error.code);
+      // Map Firebase errors to generic messages to prevent information disclosure
+      const errorMessages: Record<string, string> = {
+        'auth/wrong-password': 'Invalid email or password',
+        'auth/user-not-found': 'Invalid email or password',
+        'auth/invalid-email': 'Please enter a valid email address',
+        'auth/user-disabled': 'This account has been disabled',
+        'auth/too-many-requests': 'Too many attempts. Please try again later',
+        'auth/invalid-credential': 'Invalid email or password',
+      };
+      setError(errorMessages[error.code] || 'An error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -78,7 +88,10 @@ export default function Login() {
         description: "Check your email for password reset instructions",
       });
     } catch (error: any) {
-      setError(error.message);
+      console.error("Password reset error:", error.code);
+      // Generic message to prevent email enumeration
+      setError("If an account exists with this email, you will receive reset instructions.");
+      setResetEmailSent(true);
     }
   };
 
