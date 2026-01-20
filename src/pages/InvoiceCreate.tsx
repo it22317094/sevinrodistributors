@@ -217,15 +217,19 @@ const InvoiceCreate = () => {
   };
 
   const handleBulkImport = (importedItems: any[]) => {
-    const newItems = importedItems.map((importItem, index) => ({
-      id: (items.length + index + 1).toString(),
-      item_code: importItem.styleNo,
-      description: importItem.description || '',
-      quantity: 1,
-      branch: branch || '',
-      price: importItem.unitPrice,
-      total: importItem.unitPrice
-    }));
+    const newItems = importedItems.map((importItem, index) => {
+      const qty = importItem.quantity || 1;
+      const price = importItem.unitPrice;
+      return {
+        id: (items.length + index + 1).toString(),
+        item_code: importItem.styleNo,
+        description: importItem.description || '',
+        quantity: qty,
+        branch: branch || '',
+        price: price,
+        total: qty * price
+      };
+    });
     
     setItems([...items, ...newItems]);
     

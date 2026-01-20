@@ -33,7 +33,11 @@ You MUST extract the following fields from each row:
    "Description", "Item Description", "Details", "Item", "Product Description", etc.
    If missing, return an empty string.
 
-3. unitPrice (required) → Can be labeled as:
+3. quantity (optional) → Can be labeled as:
+   "Packing Quantity", "Packing Qty", "Qty", "Quantity", "Pack Qty", "Units", "Count", "Pcs", etc.
+   Convert to a number. If missing or invalid, return 1.
+
+4. unitPrice (required) → Can be labeled as:
    "Unit Price", "Price", "Rate", "Cost", "Unit Cost", etc.
    Convert to a number (remove commas, currency symbols, and text).
    If the value is not a valid number, skip the row.
@@ -45,6 +49,7 @@ Return ONLY a valid JSON array of objects formatted exactly like this:
   {
     "styleNo": "STRING",
     "description": "STRING (may be empty)",
+    "quantity": NUMBER,
     "unitPrice": NUMBER
   }
 ]
