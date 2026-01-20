@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Upload, FileSpreadsheet } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toTabularText } from "@/lib/tabularFile";
 
 interface BulkImportModalProps {
   open: boolean;
@@ -55,10 +56,14 @@ export function BulkImportModal({ open, onOpenChange, onImportSuccess }: BulkImp
 
     setIsProcessing(true);
     try {
-      const fileContent = await file.text();
-      
-      console.log("Sending file to parse:", file.name);
-      
+      const { fileContent, inferredType, sheetName, rowCount } = await toTabularText(file);
+
+      console.log(
+        "Sending file to parse:",
+        file.name,
+        inferredType === "xlsx" ? `(sheet: ${sheetName}, rows: ${rowCount ?? "?"})` : ""
+      );
+
       const { data, error } = await supabase.functions.invoke('parse-inventory-file', {
         body: {
           fileContent,
