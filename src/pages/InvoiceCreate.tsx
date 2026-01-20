@@ -221,10 +221,10 @@ const InvoiceCreate = () => {
       id: (items.length + index + 1).toString(),
       item_code: importItem.styleNo,
       description: importItem.description || '',
-      quantity: 0,
+      quantity: 1,
       branch: branch || '',
       price: importItem.unitPrice,
-      total: 0
+      total: importItem.unitPrice
     }));
     
     setItems([...items, ...newItems]);
