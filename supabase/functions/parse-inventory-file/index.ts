@@ -135,8 +135,9 @@ RULES:
     });
   } catch (error) {
     console.error("Error in parse-inventory-file function:", error);
+    // Return generic error message to prevent information disclosure
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "Failed to process file. Please check the file format and try again." }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
