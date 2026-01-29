@@ -99,29 +99,32 @@ export const generateInvoicePDF = async (
         cellPadding: 3.5,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
+        valign: 'middle',
       },
       headStyles: {
         fillColor: [255, 165, 0],
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         fontSize: 9,
+        valign: 'middle',
       },
       bodyStyles: {
         fillColor: [255, 255, 255],
         textColor: [0, 0, 0],
+        valign: 'middle',
       },
       alternateRowStyles: {
         fillColor: [255, 255, 255],
       },
       columnStyles: {
-        0: { halign: 'center', cellWidth: 15 },   // No - wider for better spacing
-        1: { cellWidth: 18 },                      // Style No
-        2: { cellWidth: 28 },                      // Description
-        3: { halign: 'center', cellWidth: 12 },    // Qty
-        4: { cellWidth: 23 },                      // Branch
-        5: { halign: 'right', cellWidth: 18 },     // Price
-        6: { halign: 'right', cellWidth: 32 },     // Total
-        7: { cellWidth: 28 },                      // Remarks
+        0: { halign: 'center', valign: 'middle', cellWidth: 15 },
+        1: { valign: 'middle', cellWidth: 18 },
+        2: { valign: 'middle', cellWidth: 28 },
+        3: { halign: 'center', valign: 'middle', cellWidth: 12 },
+        4: { valign: 'middle', cellWidth: 23 },
+        5: { halign: 'right', valign: 'middle', cellWidth: 18 },
+        6: { halign: 'right', valign: 'middle', cellWidth: 32 },
+        7: { valign: 'middle', cellWidth: 28 },
       },
       margin: { left: 20, right: 20 },
     });

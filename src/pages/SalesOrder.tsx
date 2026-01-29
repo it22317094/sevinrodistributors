@@ -280,29 +280,32 @@ export default function SalesOrder() {
           cellPadding: 3.5,
           lineColor: [0, 0, 0],
           lineWidth: 0.1,
+          valign: 'middle',
         },
         headStyles: {
           fillColor: [255, 165, 0],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
           fontSize: 9,
+          valign: 'middle',
         },
         bodyStyles: {
           fillColor: [255, 255, 255],
           textColor: [0, 0, 0],
+          valign: 'middle',
         },
         alternateRowStyles: {
           fillColor: [255, 255, 255],
         },
         columnStyles: {
-          0: { halign: 'center', cellWidth: 15 },
-          1: { cellWidth: 18 },
-          2: { cellWidth: 30 },
-          3: { halign: 'center', cellWidth: 12 },
-          4: { cellWidth: 25 },
-          5: { halign: 'right', cellWidth: 18 },
-          6: { halign: 'right', cellWidth: 29 },
-          7: { cellWidth: 30 },
+          0: { halign: 'center', valign: 'middle', cellWidth: 15 },
+          1: { valign: 'middle', cellWidth: 18 },
+          2: { valign: 'middle', cellWidth: 30 },
+          3: { halign: 'center', valign: 'middle', cellWidth: 12 },
+          4: { valign: 'middle', cellWidth: 25 },
+          5: { halign: 'right', valign: 'middle', cellWidth: 18 },
+          6: { halign: 'right', valign: 'middle', cellWidth: 29 },
+          7: { valign: 'middle', cellWidth: 30 },
         },
         margin: { left: 20, right: 20 },
       });
@@ -450,29 +453,32 @@ export default function SalesOrder() {
           cellPadding: 3.5,
           lineColor: [0, 0, 0],
           lineWidth: 0.1,
+          valign: 'middle',
         },
         headStyles: {
           fillColor: [255, 165, 0],
           textColor: [255, 255, 255],
           fontStyle: 'bold',
           fontSize: 9,
+          valign: 'middle',
         },
         bodyStyles: {
           fillColor: [255, 255, 255],
           textColor: [0, 0, 0],
+          valign: 'middle',
         },
         alternateRowStyles: {
           fillColor: [255, 255, 255],
         },
         columnStyles: {
-          0: { halign: 'center', cellWidth: 15 },   // No - space for up to 3 digits
-          1: { cellWidth: 18 },                      // Style No
-          2: { cellWidth: 30 },                      // Description
-          3: { halign: 'center', cellWidth: 12 },    // Qty
-          4: { cellWidth: 25 },                      // Branch
-          5: { halign: 'right', cellWidth: 18 },     // Price
-          6: { halign: 'right', cellWidth: 29 },     // Total
-          7: { cellWidth: 30 },                      // Remarks
+          0: { halign: 'center', valign: 'middle', cellWidth: 15 },
+          1: { valign: 'middle', cellWidth: 18 },
+          2: { valign: 'middle', cellWidth: 30 },
+          3: { halign: 'center', valign: 'middle', cellWidth: 12 },
+          4: { valign: 'middle', cellWidth: 25 },
+          5: { halign: 'right', valign: 'middle', cellWidth: 18 },
+          6: { halign: 'right', valign: 'middle', cellWidth: 29 },
+          7: { valign: 'middle', cellWidth: 30 },
         },
         margin: { left: 20, right: 20 },
       });

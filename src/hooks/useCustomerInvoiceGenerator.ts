@@ -262,27 +262,30 @@ export const useCustomerInvoiceGenerator = () => {
             cellPadding: 4,
             lineColor: [0, 0, 0],
             lineWidth: 0.1,
+            valign: 'middle',
           },
           headStyles: {
             fillColor: [255, 165, 0],
             textColor: [255, 255, 255],
             fontStyle: 'bold',
             fontSize: 10,
+            valign: 'middle',
           },
           bodyStyles: {
             fillColor: [255, 255, 255],
             textColor: [0, 0, 0],
+            valign: 'middle',
           },
           alternateRowStyles: {
             fillColor: [255, 255, 255],
           },
           columnStyles: {
-            0: { halign: 'center', cellWidth: 20 }, // No
-            1: { cellWidth: 35 }, // Item (SKU)
-            2: { cellWidth: 45 }, // Description
-            3: { halign: 'center', cellWidth: 20 }, // Qty
-            4: { halign: 'right', cellWidth: 30 }, // Price
-            5: { halign: 'right', cellWidth: 35 }, // Total
+            0: { halign: 'center', valign: 'middle', cellWidth: 20 },
+            1: { valign: 'middle', cellWidth: 35 },
+            2: { valign: 'middle', cellWidth: 45 },
+            3: { halign: 'center', valign: 'middle', cellWidth: 20 },
+            4: { halign: 'right', valign: 'middle', cellWidth: 30 },
+            5: { halign: 'right', valign: 'middle', cellWidth: 35 },
           },
           margin: { left: 15, right: 15 },
         });
