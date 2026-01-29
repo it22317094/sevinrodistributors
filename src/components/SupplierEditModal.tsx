@@ -312,8 +312,8 @@ export function SupplierEditModal({ open, onOpenChange, supplier, onSupplierUpda
               <CardTitle>Purchase Orders</CardTitle>
               <div className="flex gap-4 text-sm text-muted-foreground">
                 <span>Active Orders: {activeOrders.length}</span>
-                <span>Total Amount: LKR {totalAmount.toLocaleString()}</span>
-                <span>Total Balance: LKR {totalBalance.toLocaleString()}</span>
+                <span>Total Amount: Rs. {totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span>Total Balance: Rs. {totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </CardHeader>
             <CardContent>
@@ -344,10 +344,10 @@ export function SupplierEditModal({ open, onOpenChange, supplier, onSupplierUpda
                         <TableRow key={order.id}>
                           <TableCell className="font-medium">{order.orderId || order.id}</TableCell>
                           <TableCell>{order.date ? format(new Date(order.date), "MMM dd, yyyy") : "—"}</TableCell>
-                          <TableCell>LKR {(order.amount || 0).toLocaleString()}</TableCell>
+                          <TableCell>Rs. {(order.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                           <TableCell>
                             <span className={order.balance > 0 ? "text-destructive font-medium" : ""}>
-                              LKR {(order.balance || 0).toLocaleString()}
+                              Rs. {(order.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </span>
                           </TableCell>
                           <TableCell>{getStatusBadge(order.status)}</TableCell>

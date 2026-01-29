@@ -62,7 +62,7 @@ export default function Reports() {
 
   const kpis = calculateKPIs;
 
-  const formatCurrency = (amount: number) => `LKR ${amount.toLocaleString()}`;
+  const formatCurrency = (amount: number) => `Rs. ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const formatPercentage = (value: number) => `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
 
   const quickStats = [

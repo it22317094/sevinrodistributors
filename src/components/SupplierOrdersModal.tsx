@@ -86,7 +86,7 @@ export default function SupplierOrdersModal({ open, onOpenChange, supplier, orde
                         </span>
                         <span className="flex items-center gap-1">
                           <DollarSign className="h-4 w-4" />
-                          LKR {order.totalAmount}
+                          Rs. {typeof order.totalAmount === 'number' ? order.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : order.totalAmount}
                         </span>
                       </div>
                     </div>

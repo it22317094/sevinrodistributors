@@ -28,7 +28,7 @@ export default function ReportViewModal({
   const [inventoryView, setInventoryView] = useState<'quantity' | 'value'>('quantity');
   const { generateInvoicePDF, loading: pdfLoading } = useInvoiceGenerator();
 
-  const formatCurrency = (amount: number) => `LKR ${amount.toLocaleString()}`;
+  const formatCurrency = (amount: number) => `Rs. ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   const renderMonthlySalesChart = () => {
     const now = new Date();

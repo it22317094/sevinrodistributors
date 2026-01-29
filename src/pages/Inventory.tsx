@@ -358,7 +358,7 @@ export default function Inventory() {
               <Layers className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Rs. {totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+              <div className="text-2xl font-bold">Rs. {totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
               <p className="text-xs text-muted-foreground">Current inventory value</p>
             </CardContent>
           </Card>
@@ -429,7 +429,7 @@ export default function Inventory() {
                           </div>
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate">{item.description}</TableCell>
-                        <TableCell className="text-right">Rs. {item.unitPrice.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                        <TableCell className="text-right">Rs. {item.unitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                         <TableCell className="text-right">
                           <span className={`font-semibold ${(item.quantity || 0) < 10 ? "text-destructive" : "text-primary"}`}>
                             {item.quantity || 0}
