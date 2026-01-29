@@ -155,7 +155,7 @@ export function CustomerInvoicesModal({
                 <span className="text-xs font-medium text-muted-foreground uppercase">Paid</span>
               </div>
               <div className="text-2xl font-bold text-success">
-                Rs. {paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                Rs. {paidAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </CardContent>
           </Card>
@@ -167,7 +167,7 @@ export function CustomerInvoicesModal({
                 <span className="text-xs font-medium text-muted-foreground uppercase">Pending</span>
               </div>
               <div className="text-2xl font-bold text-destructive">
-                Rs. {pendingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                Rs. {pendingAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </CardContent>
           </Card>
@@ -229,7 +229,7 @@ export function CustomerInvoicesModal({
                     <div className="flex-shrink-0 text-right">
                       <div className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Amount</div>
                       <div className="text-3xl font-bold text-primary">
-                        Rs. {invoice.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        Rs. {invoice.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </div>
                     </div>
                   </div>
@@ -244,9 +244,9 @@ export function CustomerInvoicesModal({
                             <span className="font-medium">{item.name}</span>
                             <div className="flex items-center gap-3 text-muted-foreground">
                               <span>Qty: {item.quantity}</span>
-                              <span>@ Rs. {item.price.toLocaleString('en-IN')}</span>
+                              <span>@ Rs. {item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                               <span className="font-semibold text-foreground">
-                                Rs. {item.amount.toLocaleString('en-IN')}
+                                Rs. {item.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
                             </div>
                           </div>

@@ -184,7 +184,7 @@ export function SupplierOrdersDrawer({ open, onOpenChange, supplier }: SupplierO
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">LKR {summary.totalAmount.toLocaleString()}</div>
+              <div className="text-2xl font-bold">Rs. {summary.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             </CardContent>
           </Card>
           <Card>
@@ -193,7 +193,7 @@ export function SupplierOrdersDrawer({ open, onOpenChange, supplier }: SupplierO
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">LKR {summary.totalPaid.toLocaleString()}</div>
+              <div className="text-2xl font-bold">Rs. {summary.totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             </CardContent>
           </Card>
           <Card>
@@ -202,7 +202,7 @@ export function SupplierOrdersDrawer({ open, onOpenChange, supplier }: SupplierO
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">LKR {summary.totalBalance.toLocaleString()}</div>
+              <div className="text-2xl font-bold">Rs. {summary.totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             </CardContent>
           </Card>
         </div>
@@ -274,11 +274,11 @@ export function SupplierOrdersDrawer({ open, onOpenChange, supplier }: SupplierO
                     <TableCell>{order.date ? format(new Date(order.date), "MMM dd, yyyy") : "—"}</TableCell>
                     <TableCell>{order.items?.length || 0}</TableCell>
                     <TableCell>{order.qtyTotal || 0}</TableCell>
-                    <TableCell>LKR {(order.amount || 0).toLocaleString()}</TableCell>
-                    <TableCell>LKR {(order.paid || 0).toLocaleString()}</TableCell>
+                    <TableCell>Rs. {(order.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    <TableCell>Rs. {(order.paid || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                     <TableCell>
                       <span className={order.balance > 0 ? "text-destructive font-medium" : ""}>
-                        LKR {(order.balance || 0).toLocaleString()}
+                        Rs. {(order.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </TableCell>
                     <TableCell>{getStatusBadge(order.status)}</TableCell>

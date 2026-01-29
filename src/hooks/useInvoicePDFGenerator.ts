@@ -296,7 +296,7 @@ export const useInvoicePDFGenerator = () => {
         if (hasConvertedUSD) {
           doc.setFont(undefined, 'normal');
           doc.setFontSize(8);
-          doc.text(`FX: 1 USD = ${usdToLkr} LKR`, pageWidth - 20, fxNoteY, { align: 'right' });
+          doc.text(`FX: 1 USD = ${usdToLkr} Rs.`, pageWidth - 20, fxNoteY, { align: 'right' });
           fxNoteY += 15;
         }
 
